@@ -21,6 +21,12 @@ Deadline: **15 Nov 2026**.
 
 ## Core features (scope for the prototype)
 
+### Portfolio
+- [x] Holdings with quantity + average cost (`api/app/data/portfolio.json`): value, weight, unrealised and period P&L
+- [x] Value-weighted period returns vs Nifty 50; leaders and laggards
+- [x] Daily candle / line charts with volume for any NSE ticker
+- [x] Company news (Google News RSS), shown as secondary context, never a research input
+
 ### Push
 - [x] Windowed digest with priority ranking (`api/app/services/priority.py`)
 - [x] Configurable EOD triggers: price ±X%, volume N× its N-day average
@@ -28,16 +34,17 @@ Deadline: **15 Nov 2026**.
 - [x] **Management change** → incoming person's bio + who in my network overlaps with them
 - [x] **Results** → Revenue / EBITDA / PBT / PAT, QoQ + YoY
 - [x] **Material event** (M&A / capex / litigation) → best person to call, and why
-- [ ] Live NSE announcements feed (fixtures today)
-- [ ] Live yfinance EOD (fixtures today)
-- [ ] Results-PDF number extraction
+- [x] Live NSE announcements feed
+- [x] Live yfinance EOD
+- [x] Results headline numbers (from standardised quarterly statements)
 - [ ] One-line summaries for mid-priority filings
 
 ### Pull
 - [x] Works for **any** NSE ticker (no hard-wiring to the demo set)
 - [x] Section scaffold, with "Who can help" woven in
 - [ ] **Promised vs delivered** across the last 4 quarters (the headline feature)
-- [ ] Business / financial snapshot, trajectory, balance sheet, cash quality, guidance, bull vs bear
+- [x] Business, financial snapshot, trajectory, balance sheet, cash quality, shareholding: deterministic, from statements
+- [ ] Guidance, bull vs bear (LLM over transcripts)
 - [ ] Every claim cites a primary-source page (AR / concall transcript only)
 
 ### Network

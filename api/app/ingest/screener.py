@@ -43,6 +43,7 @@ def _tables(t: LexborHTMLParser) -> list[dict]:
             if len(cells) != len(periods) + 1 or not cells[0]:
                 continue
             line = re.sub(r"\s*\+$", "", cells[0]).strip()
+            line = re.sub(r"(?<=[a-z%A-Z])(?=[A-Z][a-z]+ of )", "\n", line).split("\n")[0]  # drop tooltip text glued to the label
             if line == "Raw PDF":
                 continue
             for i, (p, v) in enumerate(zip(periods, cells[1:])):

@@ -167,6 +167,7 @@ SectionKey = Literal[
     "narrative_vs_numbers",
     "guidance",
     "bull_bear",
+    "shareholding",
 ]
 
 
@@ -194,6 +195,8 @@ class GuidanceCheck(BaseModel):
 
 class ResearchReport(BaseModel):
     company: Company
+    fundamentals: "Fundamentals | None" = None
+    position: "Holding | None" = None  # the investor's own holding, if any
     sections: list[ResearchSection]
     guidance_vs_delivery: list[GuidanceCheck] = []
     network: list[NetworkHint] = []
@@ -227,17 +230,86 @@ class Holding(BaseModel):
     last_close: float | None
     as_of: str | None
     day_change_pct: float | None
-    return_pct: float | None  # over the selected period
+    return_pct: float | None  # price return over the selected period
     spark: list[float]
+    qty: int = 0
+    avg_cost: float | None = None
+    value: float | None = None  # qty × last close, ₹
+    weight_pct: float | None = None  # share of portfolio value
+    pnl: float | None = None  # unrealised, ₹ vs avg cost
+    pnl_pct: float | None = None
+    period_pnl: float | None = None  # ₹ gained/lost over the selected period
+    day_pnl: float | None = None  # ₹ change on the last session
 
 
 class PortfolioPerformance(BaseModel):
     period: PerfPeriod
     as_of: str | None
-    portfolio_return_pct: float | None  # equal-weighted: the demo portfolio has no position sizes
+    portfolio_return_pct: float | None  # value-weighted over the period (equal-weighted if no quantities)
+    weighting: Literal["value", "equal"]
+    total_value: float | None
+    total_cost: float | None
+    total_pnl: float | None
+    day_pnl: float | None
+    period_pnl: float | None
     benchmark_name: str
     benchmark_return_pct: float | None
     benchmark_spark: list[float]
     up: int
     down: int
     holdings: list[Holding]  # sorted best → worst
+
+
+# ── News (secondary source: context only, never research input) ───────────
+
+
+class NewsItem(BaseModel):
+    title: str
+    source: str
+    url: str
+    published_at: datetime
+
+
+# ── Fundamentals (deterministic, from standardised filings data) ──────────
+
+
+class Point(BaseModel):
+    period: str  # "Mar 2026" (FY), "Sep 2026" (quarter), "TTM"
+    value: float | None
+
+
+class Series(BaseModel):
+    key: str
+    name: str
+    unit: Literal["₹ cr", "%", "days", "x", "₹"]
+    points: list[Point]
+
+
+class Metric(BaseModel):
+    label: str
+    value: str
+    note: str | None = None
+
+
+class Signal(BaseModel):
+    section: Literal["financials", "trajectory", "balance_sheet", "cash_quality", "shareholding"]
+    tone: Literal["positive", "negative", "neutral"]
+    text: str
+
+
+class Fundamentals(BaseModel):
+    ticker: str
+    name: str
+    is_lender: bool
+    view: str  # consolidated | standalone
+    about: str | None
+    source_url: str
+    updated_at: str
+    snapshot: list[Metric]
+    annual: list[Series]
+    quarterly: list[Series]
+    shareholding: list[Series]
+    signals: list[Signal]
+
+
+ResearchReport.model_rebuild()

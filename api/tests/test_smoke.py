@@ -38,7 +38,9 @@ def test_rules_change_thresholds():
 def test_research_works_for_any_ticker():
     r = client.get("/pull/research/TATASTEEL").json()
     assert r["company"]["ticker"] == "TATASTEEL"
-    assert len(r["sections"]) == 8
+    assert len(r["sections"]) == 9
+    # offline: no fundamentals could be fetched, so sections degrade to pending instead of erroring
+    assert r["fundamentals"] is None and all(s["status"] == "pending" for s in r["sections"])
 
 
 def test_classifier():

@@ -84,20 +84,51 @@ def performance(period: PerfPeriod) -> PortfolioPerformance:
     port = companies.portfolio()
     for c in [*port, companies.Company(ticker=BENCHMARK, name="Nifty 50", sector="Index")]:
         ensure_prices(c.ticker)
+    pos = companies.positions()
     holdings: list[Holding] = []
     with store.connect() as con:
         for c in port:
             ret, spark, asof, close = _period_return(con, c.ticker, period)
             day, _, _, _ = _period_return(con, c.ticker, "1D")
-            holdings.append(Holding(ticker=c.ticker, name=c.name, sector=c.sector, last_close=close, as_of=asof,
-                                    day_change_pct=day, return_pct=ret, spark=spark))
+            p = pos.get(c.ticker, {})
+            qty, cost = int(p.get("qty") or 0), p.get("avg_cost")
+            value = qty * close if qty and close else None
+            # ₹ change over the period, holding today's quantity throughout
+            start_px = close / (1 + ret / 100) if close and ret is not None else None
+            day_px = close / (1 + day / 100) if close and day is not None else None
+            holdings.append(Holding(
+                ticker=c.ticker, name=c.name, sector=c.sector, last_close=close, as_of=asof, day_change_pct=day,
+                return_pct=ret, spark=spark, qty=qty, avg_cost=cost, value=value,
+                pnl=(value - qty * cost) if value is not None and cost else None,
+                pnl_pct=round((close / cost - 1) * 100, 2) if close and cost else None,
+                period_pnl=qty * (close - start_px) if qty and start_px else None,
+                day_pnl=qty * (close - day_px) if qty and day_px else None,
+            ))
         bench_ret, bench_spark, bench_asof, bench_close = _period_return(con, BENCHMARK, period)
+
+    total = sum(h.value or 0 for h in holdings) or None
+    for h in holdings:
+        h.weight_pct = round(h.value / total * 100, 2) if total and h.value else None
+    valued = [h for h in holdings if h.value and h.period_pnl is not None]
+    if valued:
+        weighting, start_val = "value", sum(h.value - h.period_pnl for h in valued)  # type: ignore[operator]
+        port_ret = round(sum(h.period_pnl for h in valued) / start_val * 100, 2) if start_val else None  # type: ignore[misc]
+    else:
+        rets = [h.return_pct for h in holdings if h.return_pct is not None]
+        weighting, port_ret = "equal", (round(sum(rets) / len(rets), 2) if rets else None)
+    cost_total = sum(h.qty * h.avg_cost for h in holdings if h.qty and h.avg_cost) or None
     rets = [h.return_pct for h in holdings if h.return_pct is not None]
     holdings.sort(key=lambda h: (h.return_pct is None, -(h.return_pct or 0)))
     return PortfolioPerformance(
         period=period,
         as_of=max((h.as_of for h in holdings if h.as_of), default=None),
-        portfolio_return_pct=round(sum(rets) / len(rets), 2) if rets else None,
+        portfolio_return_pct=port_ret,
+        weighting=weighting,  # type: ignore[arg-type]
+        total_value=total,
+        total_cost=cost_total,
+        total_pnl=(total - cost_total) if total and cost_total else None,
+        day_pnl=sum(h.day_pnl or 0 for h in holdings) if total else None,
+        period_pnl=sum(h.period_pnl or 0 for h in valued) if valued else None,
         benchmark_name="Nifty 50",
         benchmark_return_pct=bench_ret,
         benchmark_spark=bench_spark,
@@ -105,3 +136,10 @@ def performance(period: PerfPeriod) -> PortfolioPerformance:
         down=sum(r < 0 for r in rets),
         holdings=holdings,
     )
+
+
+def position(ticker: str) -> Holding | None:
+    """The investor's holding in one company (1M period figures), or None if not held."""
+    if ticker not in companies.positions():
+        return None
+    return next((h for h in performance("1M").holdings if h.ticker == ticker), None)

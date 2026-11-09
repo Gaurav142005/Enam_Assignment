@@ -4,7 +4,7 @@ import { PageHeader, SectionTitle } from "@/components/PageHeader";
 import { SegmentedParam } from "@/components/Segmented";
 import { Sparkline } from "@/components/Sparkline";
 import { api } from "@/lib/api";
-import { pct, rupees, shortDate, tone } from "@/lib/format";
+import { inr, pct, rupees, shortDate, tone } from "@/lib/format";
 import type { Holding, PerfPeriod, PortfolioPerformance } from "@/lib/types";
 
 const PERIODS: PerfPeriod[] = ["1D", "1W", "1M", "3M", "6M", "1Y"];
@@ -22,17 +22,43 @@ export default async function PortfolioPage({ searchParams }: { searchParams: Pr
 
   return (
     <main>
-      <PageHeader title="Portfolio" sub={`${d.holdings.length} companies · equal-weighted${d.as_of ? ` · close ${shortDate(d.as_of)}` : ""}`} />
-      <div className="px-4">
+      <PageHeader title="Portfolio" sub={`${d.holdings.length} companies${d.as_of ? ` · close ${shortDate(d.as_of)}` : ""}`} />
+
+      {d.total_value !== null && (
+        <section className="card mx-4 p-4" aria-label="Portfolio value">
+          <p className="text-xs text-muted">Current value</p>
+          <p className="mt-1 text-5xl font-semibold tracking-tight">{inr(d.total_value)}</p>
+          <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
+            <div>
+              <p className="text-[11px] text-muted">Last session</p>
+              <p className={`font-semibold ${tone(d.day_pnl)}`}>{inr(d.day_pnl, true)}</p>
+            </div>
+            <div>
+              <p className="text-[11px] text-muted">Since purchase · cost {inr(d.total_cost)}</p>
+              <p className={`font-semibold ${tone(d.total_pnl)}`}>
+                {inr(d.total_pnl, true)}{" "}
+                <span className="font-normal">({pct(d.total_pnl !== null && d.total_cost ? (d.total_pnl / d.total_cost) * 100 : null)})</span>
+              </p>
+            </div>
+          </div>
+        </section>
+      )}
+
+      <div className="mt-4 px-4">
         <Suspense>
           <SegmentedParam param="p" value={period} options={PERIODS} label="Performance period" />
         </Suspense>
       </div>
 
-      <section className="card mx-4 mt-4 p-4" aria-label="Portfolio summary">
-        <p className="text-xs text-muted">Your portfolio, {PERIOD_NAME[period]}</p>
-        <p className={`mt-1 text-5xl font-semibold tracking-tight ${tone(d.portfolio_return_pct)}`}>{pct(d.portfolio_return_pct)}</p>
-        <p className="mt-2 text-sm">
+      <section className="card mx-4 mt-3 p-4" aria-label="Period performance">
+        <p className="text-xs text-muted">
+          Return, {PERIOD_NAME[period]} · {d.weighting === "value" ? "value-weighted" : "equal-weighted"}
+        </p>
+        <p className="mt-1 text-2xl font-semibold tracking-tight">
+          <span className={tone(d.portfolio_return_pct)}>{pct(d.portfolio_return_pct)}</span>
+          {d.period_pnl !== null && <span className={`ml-2 text-base font-medium ${tone(d.period_pnl)}`}>{inr(d.period_pnl, true)}</span>}
+        </p>
+        <p className="mt-1 text-sm">
           {rel !== null && (
             <span className={`font-medium ${tone(rel)}`}>
               {rel >= 0 ? "+" : "−"}
@@ -51,7 +77,7 @@ export default async function PortfolioPage({ searchParams }: { searchParams: Pr
       <SectionTitle>Lagging {d.benchmark_name} · {lagging.length}</SectionTitle>
       <HoldingList items={lagging} period={period} />
       <p className="mx-4 mt-6 text-center text-[11px] text-muted">
-        End-of-day prices from Yahoo Finance. Returns are close-to-close; the portfolio figure is an equal-weighted average.
+        End-of-day prices from Yahoo Finance. Period figures hold today&apos;s quantities constant; P&amp;L is unrealised, before costs and taxes.
       </p>
     </main>
   );
@@ -93,12 +119,16 @@ function HoldingList({ items, period }: { items: Holding[]; period: PerfPeriod }
           <Link href={`/company/${h.ticker}`} className="flex items-center gap-3 px-4 py-3 active:bg-line/40">
             <span className="min-w-0 flex-1">
               <span className="block text-sm font-medium">{h.ticker}</span>
-              <span className="block truncate text-xs text-muted">{h.name}</span>
+              <span className="block truncate text-xs text-muted">
+                {h.weight_pct !== null ? `${h.weight_pct.toFixed(1)}% · ${inr(h.value)}` : h.name}
+              </span>
             </span>
             <Sparkline values={h.spark} label={`${h.ticker} price trend, ${period}`} />
-            <span className="w-[5.5rem] text-right">
+            <span className="w-[5.75rem] text-right">
               <span className={`num block text-sm font-semibold ${tone(h.return_pct)}`}>{pct(h.return_pct)}</span>
-              <span className="num block text-xs text-muted">{rupees(h.last_close)}</span>
+              <span className="num block text-xs text-muted">
+                {h.period_pnl !== null ? inr(h.period_pnl, true) : rupees(h.last_close)}
+              </span>
             </span>
           </Link>
         </li>

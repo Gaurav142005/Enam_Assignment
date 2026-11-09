@@ -3,7 +3,7 @@ import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import data, market, network, portfolio, pull, push
+from app.routers import data, market, network, news, portfolio, pull, push
 
 app = FastAPI(title="FINN API", version="0.1.0")
 
@@ -14,7 +14,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-for r in (push.router, pull.router, network.router, portfolio.router, data.router, market.router):
+for r in (push.router, pull.router, network.router, portfolio.router, data.router, market.router, news.router):
     app.include_router(r)
 
 

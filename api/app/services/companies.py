@@ -14,13 +14,21 @@ DATA = Path(__file__).resolve().parent.parent / "data" / "portfolio.json"
 @lru_cache
 def _load() -> tuple[list[Company], list[Company]]:
     raw = json.loads(DATA.read_text())
-    portfolio = [Company(**c, in_portfolio=True) for c in raw["portfolio"]]
-    watch = [Company(**c) for c in raw["research_watchlist"]]
+    pick = lambda c: {k: c[k] for k in ("ticker", "name", "sector")}  # noqa: E731
+    portfolio = [Company(**pick(c), in_portfolio=True) for c in raw["portfolio"]]
+    watch = [Company(**pick(c)) for c in raw["research_watchlist"]]
     return portfolio, watch
 
 
 def portfolio() -> list[Company]:
     return _load()[0]
+
+
+@lru_cache
+def positions() -> dict[str, dict]:
+    """ticker → {qty, avg_cost, bought}. Separate from Company: holdings are the investor's, not the company's."""
+    raw = json.loads(DATA.read_text())
+    return {c["ticker"]: {k: c.get(k) for k in ("qty", "avg_cost", "bought")} for c in raw["portfolio"] if c.get("qty")}
 
 
 def watchlist() -> list[Company]:

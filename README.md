@@ -38,7 +38,9 @@ api/                        FastAPI backend (Python, uv)
     priority.py taxonomy.py Scoring + announcement categories (from the ENAM glossary)
     graph.py                Network: inferred edges, who-knows-company, second-degree reach, themes, reconnect
     research.py             Pull: section pipeline (primary sources only)
-    market.py               Prices for charts + portfolio returns vs Nifty 50 (on-demand fetch, 6h cache)
+    market.py               Prices for charts + value-weighted portfolio vs Nifty 50 (on-demand fetch, 6h cache)
+    fundamentals.py         Deterministic analysis: snapshot, trajectory, balance sheet, cash quality, shareholding
+    news.py                 Company headlines (Google News RSS, 3h cache)
     filing_people.py        People named in filings → Person records for UI + graph
   app/ingest/               Data pipeline (python -m app.ingest): nse, eod, screener, documents, classify, enrich
   app/llm.py                Model routing (cheap / strong), SQLite-cached, Gemini or OpenAI-compatible
@@ -58,4 +60,6 @@ docs/                       brief PDFs, product + architecture notes
 | Announcements | NSE corporate-announcements API (+ attachment PDFs / SEBI XBRL zips) | Live |
 | EOD prices | Yahoo Finance via yfinance (`.NS`) | Live |
 | Fundamentals | screener.in tables + document links → BSE-hosted ARs / concall transcripts | Live |
+| News | Google News RSS (secondary, context only, never used in research) | Live |
+| Holdings | `api/app/data/portfolio.json` (qty, avg cost, buy date) | Demo |
 | Network | Synthetic profiles (no real people) | Synthetic by design |

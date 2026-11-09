@@ -13,6 +13,24 @@ from app.services.taxonomy import classify as free_classify
 log = logging.getLogger(__name__)
 
 
+def ingest_fundamentals(ticker: str) -> str:
+    """screener.in → companies + financials + document links. Used by the CLI and on demand by the API."""
+    company = screener.fetch_company(ticker)
+    with store.connect() as con:
+        store.upsert(con, "companies", [{"ticker": ticker, "name": company["name"], "isin": None, "about": company["about"],
+                                         "ratios": company["ratios"], "screener_view": company["view"], "updated_at": store.now_iso()}])
+        con.execute("DELETE FROM financials WHERE ticker=?", (ticker,))
+        store.upsert(con, "financials", [{"ticker": ticker, **r} for r in company["financials"]])
+        known = {r["url"] for r in con.execute("SELECT url FROM documents WHERE ticker=?", (ticker,))}
+        store.upsert(con, "documents", [{"url": d["url"], "ticker": ticker, "kind": d["kind"], "period": d["period"],
+                                         "title": d["title"], "sha": None, "pages": None, "fetched_at": None, "xbrl": None}
+                                        for d in company["documents"] if d["url"] not in known])
+    q = [r for r in company["financials"] if r["statement"] == "quarters"]
+    kinds = {k: sum(1 for d in company["documents"] if d["kind"] == k) for k in ("annual_report", "transcript")}
+    return (f"{company['name']} ({company['view']}): {len({r['period'] for r in q})} quarters, "
+            f"{len(company['financials'])} data points, {kinds['annual_report']} annual reports, {kinds['transcript']} transcripts listed")
+
+
 @dataclass
 class Report:
     ticker: str
@@ -42,23 +60,14 @@ def ingest_company(
             rep.errors[name] = f"{type(e).__name__}: {e}"
             say(f"  ✗ {name:<13} {rep.errors[name]}")
 
-    company: dict = {}
-
     def do_screener() -> str:
-        company.update(screener.fetch_company(ticker))
-        with store.connect() as con:
-            store.upsert(con, "companies", [{"ticker": ticker, "name": company["name"], "isin": None, "about": company["about"],
-                                             "ratios": company["ratios"], "screener_view": company["view"], "updated_at": store.now_iso()}])
-            con.execute("DELETE FROM financials WHERE ticker=?", (ticker,))
-            store.upsert(con, "financials", [{"ticker": ticker, **r} for r in company["financials"]])
-            known = {r["url"] for r in con.execute("SELECT url FROM documents WHERE ticker=?", (ticker,))}
-            store.upsert(con, "documents", [{"url": d["url"], "ticker": ticker, "kind": d["kind"], "period": d["period"],
-                                             "title": d["title"], "sha": None, "pages": None, "fetched_at": None}
-                                            for d in company["documents"] if d["url"] not in known])
-        q = [r for r in company["financials"] if r["statement"] == "quarters"]
-        kinds = {k: sum(1 for d in company["documents"] if d["kind"] == k) for k in ("annual_report", "transcript")}
-        return (f"{company['name']} ({company['view']}): {len({r['period'] for r in q})} quarters, "
-                f"{len(company['financials'])} data points, {kinds['annual_report']} annual reports, {kinds['transcript']} transcripts listed")
+        return ingest_fundamentals(ticker)
+
+    def do_news() -> str:
+        from app.services import news
+
+        items = news.refresh(ticker)
+        return f"{len(items)} recent headlines"
 
     def do_eod() -> str:
         rows = eod.fetch_eod(ticker)
@@ -137,6 +146,7 @@ def ingest_company(
     step("fundamentals", do_screener)
     step("prices", do_eod)
     step("filings", do_filings)
+    step("news", do_news)
     if with_documents:
         step("documents", do_documents)
     return rep

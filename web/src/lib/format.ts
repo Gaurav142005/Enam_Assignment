@@ -70,3 +70,29 @@ export function compact(n: number): string {
 export function shortDate(iso: string): string {
   return new Date(`${iso}T00:00:00`).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
 }
+
+/** Indian-style compact rupees: ₹11.78 Cr, ₹14.5 L, ₹8,450. */
+export function inr(n: number | null, signed = false): string {
+  if (n === null) return "—";
+  const sign = n < 0 ? "−" : signed ? "+" : "";
+  const a = Math.abs(n);
+  const body = a >= 1e7 ? `${(a / 1e7).toFixed(2)} Cr` : a >= 1e5 ? `${(a / 1e5).toFixed(1)} L` : a.toLocaleString("en-IN", { maximumFractionDigits: 0 });
+  return `${sign}₹${body}`;
+}
+
+/** Value in a series' unit, for chart readouts. */
+export function unitValue(v: number | null, unit: string): string {
+  if (v === null) return "—";
+  if (unit === "₹ cr") return `₹${v.toLocaleString("en-IN", { maximumFractionDigits: 0 })} cr`;
+  if (unit === "%") return `${v.toFixed(1)}%`;
+  if (unit === "x") return `${v.toFixed(2)}x`;
+  if (unit === "days") return `${v.toFixed(0)} days`;
+  return v.toLocaleString("en-IN");
+}
+
+/** Annual "Mar 2026" → "FY26"; quarterly "Sep 2026" → "Sep 26"; TTM stays. */
+export function periodLabel(p: string, annual = true): string {
+  if (annual && p.startsWith("Mar ") && p.length === 8) return `FY${p.slice(-2)}`;
+  const m = p.match(/^([A-Z][a-z]{2}) (\d{4})$/);
+  return m ? `${m[1]} ${m[2].slice(-2)}` : p;
+}

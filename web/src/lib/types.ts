@@ -124,7 +124,7 @@ export interface AlertRules {
 
 export type SectionKey =
   | "business" | "financials" | "trajectory" | "balance_sheet"
-  | "cash_quality" | "narrative_vs_numbers" | "guidance" | "bull_bear";
+  | "cash_quality" | "narrative_vs_numbers" | "guidance" | "bull_bear" | "shareholding";
 
 export interface Citation {
   doc: string;
@@ -150,6 +150,8 @@ export interface GuidanceCheck {
 
 export interface ResearchReport {
   company: Company;
+  fundamentals: Fundamentals | null;
+  position: Holding | null;
   sections: ResearchSection[];
   guidance_vs_delivery: GuidanceCheck[];
   network: NetworkHint[];
@@ -183,16 +185,76 @@ export interface Holding {
   day_change_pct: number | null;
   return_pct: number | null;
   spark: number[];
+  qty: number;
+  avg_cost: number | null;
+  value: number | null;
+  weight_pct: number | null;
+  pnl: number | null;
+  pnl_pct: number | null;
+  period_pnl: number | null;
+  day_pnl: number | null;
 }
 
 export interface PortfolioPerformance {
   period: PerfPeriod;
   as_of: string | null;
   portfolio_return_pct: number | null;
+  weighting: "value" | "equal";
+  total_value: number | null;
+  total_cost: number | null;
+  total_pnl: number | null;
+  day_pnl: number | null;
+  period_pnl: number | null;
   benchmark_name: string;
   benchmark_return_pct: number | null;
   benchmark_spark: number[];
   up: number;
   down: number;
   holdings: Holding[];
+}
+
+export interface Point {
+  period: string;
+  value: number | null;
+}
+
+export interface Series {
+  key: string;
+  name: string;
+  unit: "₹ cr" | "%" | "days" | "x" | "₹";
+  points: Point[];
+}
+
+export interface Metric {
+  label: string;
+  value: string;
+  note: string | null;
+}
+
+export interface Signal {
+  section: "financials" | "trajectory" | "balance_sheet" | "cash_quality" | "shareholding";
+  tone: "positive" | "negative" | "neutral";
+  text: string;
+}
+
+export interface Fundamentals {
+  ticker: string;
+  name: string;
+  is_lender: boolean;
+  view: string;
+  about: string | null;
+  source_url: string;
+  updated_at: string;
+  snapshot: Metric[];
+  annual: Series[];
+  quarterly: Series[];
+  shareholding: Series[];
+  signals: Signal[];
+}
+
+export interface NewsItem {
+  title: string;
+  source: string;
+  url: string;
+  published_at: string;
 }

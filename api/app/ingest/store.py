@@ -54,6 +54,11 @@ CREATE TABLE IF NOT EXISTS people_mentions (
   effective_date TEXT, background TEXT, source TEXT,
   PRIMARY KEY (announcement_id, name)
 );
+CREATE TABLE IF NOT EXISTS news (
+  id TEXT PRIMARY KEY,      -- hash of normalised title (same story syndicated twice = one row)
+  ticker TEXT, title TEXT, source TEXT, url TEXT, published_at TEXT, fetched_at TEXT
+);
+CREATE INDEX IF NOT EXISTS ix_news_ticker ON news (ticker, published_at);
 CREATE TABLE IF NOT EXISTS llm_cache (
   key TEXT PRIMARY KEY, model TEXT, response TEXT, created_at TEXT
 );
