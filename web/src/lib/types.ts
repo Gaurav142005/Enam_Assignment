@@ -19,15 +19,15 @@ export interface Position {
   company: string;
   ticker: string | null;
   title: string;
-  start: number;
+  start: number | null;
   end: number | null;
 }
 
 export interface Education {
   school: string;
   degree: string;
-  start: number;
-  end: number;
+  start: number | null;
+  end: number | null;
 }
 
 export interface Relationship {
@@ -40,6 +40,7 @@ export interface Person {
   id: string;
   name: string;
   headline: string;
+  bio: string | null;
   positions: Position[];
   education: Education[];
   expertise: string[];

@@ -9,6 +9,7 @@ Degree 1 = someone the investor knows. Degree 2 = reachable through one of them.
 from __future__ import annotations
 
 import json
+import re
 from datetime import date
 from functools import lru_cache
 from pathlib import Path
@@ -35,8 +36,23 @@ def get(person_id: str) -> Person | None:
     return network.get(person_id) or outside.get(person_id)
 
 
-def _years(start: int, end: int | None) -> range:
+def _years(start: int | None, end: int | None) -> range:
+    if start is None:
+        return range(0)
     return range(start, (end or date.today().year) + 1)
+
+
+_SUFFIX = re.compile(r"\b(ltd|limited|pvt|private|inc|llp|india|co|company|corporation|the)\b\.?", re.I)
+
+
+def _norm(name: str) -> str:
+    return " ".join(_SUFFIX.sub(" ", name.lower()).replace("&", " and ").replace(",", " ").split())
+
+
+def _same_org(a: str, b: str) -> bool:
+    """'Havells India Ltd.' == 'Havells India' == 'havells'. Cheap normalisation; good enough for filings."""
+    na, nb = _norm(a), _norm(b)
+    return bool(na) and (na == nb or na.startswith(nb + " ") or nb.startswith(na + " "))
 
 
 def overlaps(a: Person, b: Person) -> list[str]:
@@ -44,13 +60,20 @@ def overlaps(a: Person, b: Person) -> list[str]:
     reasons: list[str] = []
     for pa in a.positions:
         for pb in b.positions:
-            if pa.company == pb.company:
-                shared = set(_years(pa.start, pa.end)) & set(_years(pb.start, pb.end))
+            if _same_org(pa.company, pb.company):
+                ya, yb = _years(pa.start, pa.end), _years(pb.start, pb.end)
+                shared = set(ya) & set(yb)
                 if shared:
                     reasons.append(f"both at {pa.company} {min(shared)}–{max(shared)}")
+                elif not ya or not yb:
+                    reasons.append(f"both worked at {pa.company} (dates unclear)")
     for ea in a.education:
         for eb in b.education:
-            if ea.school == eb.school and set(range(ea.start, ea.end + 1)) & set(range(eb.start, eb.end + 1)):
+            if not _same_org(ea.school, eb.school):
+                continue
+            if None in (ea.start, ea.end, eb.start, eb.end):
+                reasons.append(f"both studied at {ea.school}")
+            elif set(range(ea.start, ea.end + 1)) & set(range(eb.start, eb.end + 1)):  # type: ignore[arg-type]
                 reasons.append(f"{ea.school} classmates ({eb.end})")
     return reasons
 

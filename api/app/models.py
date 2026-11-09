@@ -48,15 +48,15 @@ class Position(BaseModel):
     company: str
     ticker: str | None = None  # set when the employer is a listed company we track
     title: str
-    start: int  # year
-    end: int | None = None  # None = current
+    start: int | None = None  # year; None when the source doesn't say
+    end: int | None = None  # None = current (or unknown when start is None)
 
 
 class Education(BaseModel):
     school: str
-    degree: str
-    start: int
-    end: int
+    degree: str = ""
+    start: int | None = None
+    end: int | None = None
 
 
 class Relationship(BaseModel):
@@ -69,6 +69,7 @@ class Person(BaseModel):
     id: str
     name: str
     headline: str
+    bio: str | None = None  # short profile, e.g. from the filing that announced their appointment
     positions: list[Position] = []
     education: list[Education] = []
     expertise: list[str] = []

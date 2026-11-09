@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 
 from app.models import NetworkHint, Person, ReconnectNudge, ThemeGroup
-from app.services import graph
+from app.services import filing_people, graph
 
 router = APIRouter(prefix="/network", tags=["network"])
 
@@ -13,7 +13,7 @@ def list_people() -> list[Person]:
 
 @router.get("/people/{person_id}", response_model=Person)
 def get_person(person_id: str) -> Person:
-    if not (p := graph.get(person_id)):
+    if not (p := graph.get(person_id) or filing_people.get(person_id)):
         raise HTTPException(404, "person not found")
     return p
 
@@ -21,7 +21,7 @@ def get_person(person_id: str) -> Person:
 @router.get("/people/{person_id}/connections", response_model=list[NetworkHint])
 def person_connections(person_id: str) -> list[NetworkHint]:
     """Second-degree reach / diligence: who I know who has crossed paths with this person."""
-    if not (p := graph.get(person_id)):
+    if not (p := graph.get(person_id) or filing_people.get(person_id)):
         raise HTTPException(404, "person not found")
     return graph.who_knows_person(p)
 

@@ -5,6 +5,7 @@ import { BackLink } from "@/components/BackLink";
 import { NetworkLine } from "@/components/NetworkLine";
 import { SectionTitle } from "@/components/PageHeader";
 import { api, ApiError } from "@/lib/api";
+import { tenure } from "@/lib/format";
 import type { NetworkHint, Person } from "@/lib/types";
 
 /** Person: career path, how you know them / who knows them (diligence + second-degree reach). */
@@ -58,7 +59,12 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
               ) : (
                 pos.company
               )}{" "}
-              · <span className="num">{pos.start}–{pos.end ?? "now"}</span>
+              {pos.start !== null && (
+                <>
+                  {" "}
+                  · <span className="num">{tenure(pos.start, pos.end)}</span>
+                </>
+              )}
             </p>
           </li>
         ))}
@@ -72,7 +78,7 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
               <li key={e.school} className="px-4 py-3 text-[13px]">
                 <p className="font-medium">{e.school}</p>
                 <p className="text-muted">
-                  {e.degree} · <span className="num">{e.start}–{e.end}</span>
+                  {[e.degree, tenure(e.start, e.end, false)].filter(Boolean).join(" · ")}
                 </p>
               </li>
             ))}

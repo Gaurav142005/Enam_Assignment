@@ -45,3 +45,9 @@ export function windowLabel(hours: number): string {
   const d = hours / 24;
   return d === 1 ? "24h" : `${d}d`;
 }
+
+/** "2015–2020", "2019–now", or "" when the source gives no years. */
+export function tenure(start: number | null, end: number | null, open = true): string {
+  if (start === null) return end === null ? "" : String(end);
+  return `${start}–${end ?? (open ? "now" : "")}`;
+}

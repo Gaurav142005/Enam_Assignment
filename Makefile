@@ -1,4 +1,4 @@
-.PHONY: setup api web test check
+.PHONY: setup api web test check ingest ingest-all
 
 setup:
 	cd api && uv sync
@@ -9,6 +9,14 @@ api:
 
 web:
 	cd web && pnpm dev
+
+# make ingest T=POLYCAB   → one company, everything (filings, prices, fundamentals, transcripts, annual report)
+ingest:
+	cd api && uv run python -m app.ingest $(T)
+
+# whole portfolio, no document downloads (~1 min)
+ingest-all:
+	cd api && uv run python -m app.ingest --portfolio --light
 
 test:
 	cd api && uv run pytest -q
