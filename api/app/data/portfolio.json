@@ -1,0 +1,28 @@
+{
+  "portfolio": [
+    { "ticker": "RELIANCE", "name": "Reliance Industries", "sector": "Conglomerate" },
+    { "ticker": "HDFCBANK", "name": "HDFC Bank", "sector": "Private bank" },
+    { "ticker": "INFY", "name": "Infosys", "sector": "IT services" },
+    { "ticker": "BAJFINANCE", "name": "Bajaj Finance", "sector": "Consumer lending" },
+    { "ticker": "CHOLAFIN", "name": "Cholamandalam Investment & Finance", "sector": "Vehicle & rural lending" },
+    { "ticker": "ASIANPAINT", "name": "Asian Paints", "sector": "Consumer" },
+    { "ticker": "TITAN", "name": "Titan Company", "sector": "Consumer discretionary" },
+    { "ticker": "TRENT", "name": "Trent", "sector": "Retail" },
+    { "ticker": "SUNPHARMA", "name": "Sun Pharmaceutical", "sector": "Pharma" },
+    { "ticker": "LT", "name": "Larsen & Toubro", "sector": "Engineering & construction" },
+    { "ticker": "HAL", "name": "Hindustan Aeronautics", "sector": "Defence" },
+    { "ticker": "MARUTI", "name": "Maruti Suzuki", "sector": "Autos" },
+    { "ticker": "KPITTECH", "name": "KPIT Technologies", "sector": "Auto software" },
+    { "ticker": "DIXON", "name": "Dixon Technologies", "sector": "Electronics manufacturing" },
+    { "ticker": "POLYCAB", "name": "Polycab India", "sector": "Cables & wires" },
+    { "ticker": "DEEPAKNTR", "name": "Deepak Nitrite", "sector": "Specialty chemicals" },
+    { "ticker": "PIIND", "name": "PI Industries", "sector": "Agrochemicals" },
+    { "ticker": "ETERNAL", "name": "Eternal (Zomato)", "sector": "Consumer internet" }
+  ],
+  "research_watchlist": [
+    { "ticker": "CGPOWER", "name": "CG Power & Industrial Solutions", "sector": "Electricals & semiconductors" },
+    { "ticker": "AARTIIND", "name": "Aarti Industries", "sector": "Specialty chemicals" },
+    { "ticker": "CREDITACC", "name": "CreditAccess Grameen", "sector": "Rural microfinance" },
+    { "ticker": "PERSISTENT", "name": "Persistent Systems", "sector": "IT services" }
+  ]
+}

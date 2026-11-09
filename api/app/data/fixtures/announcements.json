@@ -1,0 +1,56 @@
+{
+  "_note": "Synthetic announcements so the UI runs end to end before the NSE feed is wired. `hours_ago` is resolved relative to now at load time. Replace with services/announcements.fetch_nse() in the Push phase.",
+  "announcements": [
+    {
+      "id": "fx-polycab-cfo",
+      "ticker": "POLYCAB",
+      "category": "management_change",
+      "title": "Appointment of Mr. Rahul Verma as Chief Financial Officer",
+      "hours_ago": 3,
+      "person_id": "rahul-verma"
+    },
+    {
+      "id": "fx-dixon-q2",
+      "ticker": "DIXON",
+      "category": "results",
+      "title": "Financial results for the quarter ended 30 Sep 2026",
+      "hours_ago": 6,
+      "results": {
+        "period": "Q2 FY27",
+        "rows": [
+          { "metric": "Revenue", "value": 14210, "qoq_pct": 9.4, "yoy_pct": 28.1 },
+          { "metric": "EBITDA", "value": 568, "qoq_pct": 6.2, "yoy_pct": 31.5 },
+          { "metric": "PBT", "value": 402, "qoq_pct": 4.8, "yoy_pct": 26.0 },
+          { "metric": "PAT", "value": 301, "qoq_pct": 3.9, "yoy_pct": 24.7 }
+        ]
+      }
+    },
+    {
+      "id": "fx-deepak-ma",
+      "ticker": "DEEPAKNTR",
+      "category": "M&A",
+      "title": "Acquisition of 100% stake in a fluorochemicals intermediates business",
+      "summary": "All-cash deal; adds a Dahej-adjacent fluorination capability.",
+      "hours_ago": 9
+    },
+    {
+      "id": "fx-chola-rating",
+      "ticker": "CHOLAFIN",
+      "category": "credit_rating",
+      "title": "Credit rating reaffirmed for NCD programme",
+      "summary": "Reaffirmed, outlook unchanged.",
+      "hours_ago": 14
+    },
+    { "id": "fx-infy-div", "ticker": "INFY", "category": "dividend", "title": "Record date for interim dividend", "hours_ago": 11 },
+    { "id": "fx-asian-call", "ticker": "ASIANPAINT", "category": "earnings_call", "title": "Intimation of earnings conference call", "hours_ago": 12 },
+    { "id": "fx-titan-meet", "ticker": "TITAN", "category": "investor_meetings", "title": "Schedule of analyst / institutional investor meetings", "hours_ago": 16 },
+    { "id": "fx-lt-esop", "ticker": "LT", "category": "unclassified", "title": "Allotment of equity shares under ESOP scheme", "hours_ago": 18 },
+    { "id": "fx-hdfc-comp", "ticker": "HDFCBANK", "category": "unclassified", "title": "Compliance certificate under Reg. 74(5) of SEBI (DP) Regulations", "hours_ago": 20 },
+    { "id": "fx-rel-agm", "ticker": "RELIANCE", "category": "postal_ballot", "title": "Notice of postal ballot", "hours_ago": 30 },
+    { "id": "fx-sun-press", "ticker": "SUNPHARMA", "category": "press_release", "title": "Launch of a specialty dermatology product in the US", "hours_ago": 40 }
+  ],
+  "eod": [
+    { "id": "fx-trent-move", "ticker": "TRENT", "kind": "price_move", "change_pct": -6.2, "close": 4812.5, "hours_ago": 17 },
+    { "id": "fx-hal-vol", "ticker": "HAL", "kind": "volume_spike", "volume_multiple": 2.7, "change_pct": 1.8, "close": 4630.0, "hours_ago": 17 }
+  ]
+}

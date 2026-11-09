@@ -1,0 +1,24 @@
+# env
+.env
+.env.local
+*.env
+
+# python
+api/.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# node
+web/node_modules/
+web/.next/
+web/out/
+web/next-env.d.ts
+*.tsbuildinfo
+
+# data caches (documents, eod, sqlite)
+api/cache/
+*.sqlite
+*.db
+
+.DS_Store

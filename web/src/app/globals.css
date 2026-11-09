@@ -1,0 +1,60 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Design tokens. One accent, semantic up/down, warm paper background. RGB triplets so Tailwind alpha works. */
+:root {
+  --bg: 246 245 241;
+  --surface: 255 255 255;
+  --ink: 21 22 26;
+  --muted: 110 110 115;
+  --line: 230 227 220;
+  --accent: 43 89 195;
+  --accent-soft: 232 238 251;
+  --up: 14 138 79;
+  --down: 201 55 44;
+  --warn: 183 121 31;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: 14 15 18;
+    --surface: 23 25 29;
+    --ink: 237 237 239;
+    --muted: 154 154 162;
+    --line: 38 40 46;
+    --accent: 124 156 245;
+    --accent-soft: 30 39 66;
+    --up: 60 203 127;
+    --down: 242 102 90;
+    --warn: 230 170 80;
+    color-scheme: dark;
+  }
+}
+
+html,
+body {
+  background: rgb(var(--bg));
+  color: rgb(var(--ink));
+  -webkit-tap-highlight-color: transparent;
+}
+
+@layer components {
+  .card {
+    @apply rounded-2xl border border-line bg-surface;
+  }
+  .eyebrow {
+    @apply text-[11px] font-medium uppercase tracking-[0.08em] text-muted;
+  }
+  .num {
+    @apply font-mono tabular-nums;
+  }
+}
+
+details > summary {
+  list-style: none;
+}
+details > summary::-webkit-details-marker {
+  display: none;
+}

@@ -1,0 +1,120 @@
+{
+  "_note": "Synthetic profiles for the demo. No real person's data. Names, careers and relationships are invented; employers are real listed companies so the network overlaps the portfolio.",
+  "investor": {
+    "name": "You",
+    "education": [{ "school": "IIT Kanpur", "degree": "B.Tech", "start": 2010, "end": 2014 }],
+    "positions": [{ "company": "ENAM Holdings", "title": "Investment Analyst", "start": 2022 }]
+  },
+  "people": [
+    {
+      "id": "ananya-iyer",
+      "name": "Ananya Iyer",
+      "headline": "CFO, mid-cap industrials · ex-Polycab finance",
+      "positions": [
+        { "company": "Polycab India", "ticker": "POLYCAB", "title": "Deputy CFO", "start": 2017, "end": 2022 },
+        { "company": "Havells India", "title": "Finance Manager", "start": 2011, "end": 2017 }
+      ],
+      "education": [{ "school": "IIM Ahmedabad", "degree": "PGP", "start": 2009, "end": 2011 }],
+      "expertise": ["cables & wires", "working capital", "consumer electricals"],
+      "relationship": { "context": "Met at Polycab analyst day, 2023", "strength": 0.7, "last_contact": "2026-03-14" }
+    },
+    {
+      "id": "rohan-mehta",
+      "name": "Rohan Mehta",
+      "headline": "VP Strategy, Dixon Technologies",
+      "positions": [
+        { "company": "Dixon Technologies", "ticker": "DIXON", "title": "VP Strategy", "start": 2019 },
+        { "company": "Samsung India", "title": "Supply Chain Lead", "start": 2014, "end": 2019 }
+      ],
+      "education": [{ "school": "IIT Kanpur", "degree": "B.Tech", "start": 2010, "end": 2014 }],
+      "expertise": ["electronics manufacturing", "PLI schemes", "semiconductors"],
+      "relationship": { "context": "IIT Kanpur batchmate", "strength": 0.9, "last_contact": "2026-10-02" }
+    },
+    {
+      "id": "kavya-reddy",
+      "name": "Kavya Reddy",
+      "headline": "Chief Risk Officer, CreditAccess Grameen",
+      "positions": [
+        { "company": "CreditAccess Grameen", "ticker": "CREDITACC", "title": "Chief Risk Officer", "start": 2021 },
+        { "company": "Cholamandalam Investment & Finance", "ticker": "CHOLAFIN", "title": "Head, Credit Risk", "start": 2015, "end": 2021 }
+      ],
+      "education": [{ "school": "ISB Hyderabad", "degree": "PGP", "start": 2013, "end": 2014 }],
+      "expertise": ["rural lending", "microfinance", "credit risk"],
+      "relationship": { "context": "Former colleague at a lending-focused fund", "strength": 0.6, "last_contact": "2025-11-20" }
+    },
+    {
+      "id": "vikram-shah",
+      "name": "Vikram Shah",
+      "headline": "Independent consultant · ex-Deepak Nitrite plant head",
+      "positions": [
+        { "company": "Independent", "title": "Process chemistry consultant", "start": 2020 },
+        { "company": "Deepak Nitrite", "ticker": "DEEPAKNTR", "title": "Plant Head, Dahej", "start": 2014, "end": 2020 },
+        { "company": "Aarti Industries", "ticker": "AARTIIND", "title": "Process Engineer", "start": 2008, "end": 2014 }
+      ],
+      "education": [{ "school": "ICT Mumbai", "degree": "B.Chem.Engg", "start": 2004, "end": 2008 }],
+      "expertise": ["specialty chemicals", "plant operations", "capex execution"],
+      "relationship": { "context": "Expert call, 2024", "strength": 0.4, "last_contact": "2024-08-09" }
+    },
+    {
+      "id": "meera-krishnan",
+      "name": "Meera Krishnan",
+      "headline": "Director, EV Software · KPIT Technologies",
+      "positions": [
+        { "company": "KPIT Technologies", "ticker": "KPITTECH", "title": "Director, EV Software", "start": 2020 },
+        { "company": "Maruti Suzuki", "ticker": "MARUTI", "title": "Embedded Systems Engineer", "start": 2014, "end": 2020 }
+      ],
+      "education": [{ "school": "IIT Kanpur", "degree": "B.Tech", "start": 2010, "end": 2014 }],
+      "expertise": ["auto software", "electric vehicles"],
+      "relationship": { "context": "IIT Kanpur batchmate", "strength": 0.8, "last_contact": "2026-06-18" }
+    },
+    {
+      "id": "arjun-nair",
+      "name": "Arjun Nair",
+      "headline": "Head of Digital Lending, Bajaj Finance",
+      "positions": [
+        { "company": "Bajaj Finance", "ticker": "BAJFINANCE", "title": "Head of Digital Lending", "start": 2021 },
+        { "company": "McKinsey & Company", "title": "Engagement Manager", "start": 2015, "end": 2021 }
+      ],
+      "education": [{ "school": "IIM Bangalore", "degree": "PGP", "start": 2013, "end": 2015 }],
+      "expertise": ["consumer lending", "fintech"],
+      "relationship": { "context": "Former colleague (McKinsey summer)", "strength": 0.5, "last_contact": "2026-01-30" }
+    },
+    {
+      "id": "sanjay-gupta",
+      "name": "Sanjay Gupta",
+      "headline": "Retired · former Director, Regulatory Affairs, Sun Pharma",
+      "positions": [
+        { "company": "Sun Pharmaceutical", "ticker": "SUNPHARMA", "title": "Director, Regulatory Affairs", "start": 2006, "end": 2023 }
+      ],
+      "education": [{ "school": "NIPER Mohali", "degree": "M.Pharm", "start": 1998, "end": 2000 }],
+      "expertise": ["pharma", "USFDA regulation"],
+      "relationship": { "context": "Family friend", "strength": 0.75, "last_contact": "2026-09-05" }
+    },
+    {
+      "id": "priya-desai",
+      "name": "Priya Desai",
+      "headline": "Head of Investor Relations, Trent",
+      "positions": [
+        { "company": "Trent", "ticker": "TRENT", "title": "Head of Investor Relations", "start": 2022 },
+        { "company": "Titan Company", "ticker": "TITAN", "title": "Investor Relations Manager", "start": 2017, "end": 2022 }
+      ],
+      "education": [{ "school": "NMIMS Mumbai", "degree": "MBA", "start": 2015, "end": 2017 }],
+      "expertise": ["retail", "consumer"],
+      "relationship": { "context": "Met at a broker conference, 2024", "strength": 0.45, "last_contact": "2025-07-11" }
+    }
+  ],
+  "filing_people": [
+    {
+      "id": "rahul-verma",
+      "name": "Rahul Verma",
+      "headline": "Incoming CFO, Polycab India",
+      "positions": [
+        { "company": "Polycab India", "ticker": "POLYCAB", "title": "Chief Financial Officer", "start": 2026 },
+        { "company": "Havells India", "title": "Group Financial Controller", "start": 2015, "end": 2026 },
+        { "company": "Deloitte", "title": "Audit Manager", "start": 2011, "end": 2015 }
+      ],
+      "education": [{ "school": "IIM Ahmedabad", "degree": "PGP", "start": 2009, "end": 2011 }],
+      "expertise": ["consumer electricals", "financial control"]
+    }
+  ]
+}
