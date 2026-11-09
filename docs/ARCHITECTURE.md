@@ -48,6 +48,8 @@ A `routine` flag demotes business-as-usual items inside material categories (an 
 
 ## Security & privacy (to be written up)
 - The network is per investor and never shared across tenants. Profile data is minimal: role, employer, tenure, school, expertise tags.
+- **Sources of people data, all permissible:** (1) the investor's own LinkedIn data export, uploaded by them; email addresses are dropped on read, and a whole import can be removed in one tap; (2) connections they add by hand; (3) company leadership from public records (Yahoo Finance officers, NSE corporate-governance XBRL, exchange filings). FINN never logs into or scrapes LinkedIn (its terms forbid automated access).
+- Connection data never goes to an LLM. Re-uploading an export is a full sync, so people the investor removes from LinkedIn disappear from FINN too.
 - Retention, consent, access control and an audit log: TBD in the writeup.
 
 ## LLMs & agents (to be written up)

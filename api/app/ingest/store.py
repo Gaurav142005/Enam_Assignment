@@ -59,6 +59,19 @@ CREATE TABLE IF NOT EXISTS news (
   ticker TEXT, title TEXT, source TEXT, url TEXT, published_at TEXT, fetched_at TEXT
 );
 CREATE INDEX IF NOT EXISTS ix_news_ticker ON news (ticker, published_at);
+CREATE TABLE IF NOT EXISTS people (           -- the investor's own connections (imported or added by hand)
+  id TEXT PRIMARY KEY, name TEXT, headline TEXT,
+  positions TEXT, education TEXT, expertise TEXT, relationship TEXT,   -- JSON
+  source TEXT,              -- 'linkedin' | 'manual'
+  linkedin_url TEXT, created_at TEXT, updated_at TEXT
+);
+CREATE TABLE IF NOT EXISTS company_people (   -- management + board of listed companies (public sources)
+  id TEXT PRIMARY KEY, ticker TEXT, name TEXT, name_key TEXT, role TEXT,
+  kind TEXT,                -- 'executive' | 'director' | 'independent'
+  status TEXT,              -- 'current' | 'former'
+  since TEXT, year_born INTEGER, sources TEXT, as_of TEXT, updated_at TEXT
+);
+CREATE INDEX IF NOT EXISTS ix_cp_ticker ON company_people (ticker);
 CREATE TABLE IF NOT EXISTS llm_cache (
   key TEXT PRIMARY KEY, model TEXT, response TEXT, created_at TEXT
 );

@@ -42,6 +42,8 @@ api/                        FastAPI backend (Python, uv)
     fundamentals.py         Deterministic analysis: snapshot, trajectory, balance sheet, cash quality, shareholding
     news.py                 Company headlines (Google News RSS, 3h cache)
     filing_people.py        People named in filings → Person records for UI + graph
+    connections.py          Your connections: LinkedIn export import (sync), add/remove by hand
+    company_people.py       Management + board per company, merged across sources, matched to your network
   app/ingest/               Data pipeline (python -m app.ingest): nse, eod, screener, documents, classify, enrich
   app/llm.py                Model routing (cheap / strong), SQLite-cached, Gemini or OpenAI-compatible
   app/data/                 portfolio.json, network/people.json, fixtures/ (synthetic)
@@ -62,4 +64,8 @@ docs/                       brief PDFs, product + architecture notes
 | Fundamentals | screener.in tables + document links → BSE-hosted ARs / concall transcripts | Live |
 | News | Google News RSS (secondary, context only, never used in research) | Live |
 | Holdings | `api/app/data/portfolio.json` (qty, avg cost, buy date) | Demo |
-| Network | Synthetic profiles (no real people) | Synthetic by design |
+| Network: your connections | Your LinkedIn export (upload in Network → ⤒) + people you add | Live |
+| Network: company leadership | Yahoo Finance officers + NSE governance XBRL + exchange filings | Live |
+| Network: demo people | Synthetic profiles in `data/network/people.json` (`FINN_DEMO_NETWORK=0` to hide) | Demo |
+
+To try the import without your own export, upload `api/app/data/network/sample_linkedin_connections.csv` (made-up people at real companies).

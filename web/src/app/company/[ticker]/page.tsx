@@ -7,14 +7,17 @@ import { PriceChart } from "@/components/PriceChart";
 import { Empty } from "@/components/States";
 import { api } from "@/lib/api";
 import { ago, inr, pct, tone } from "@/lib/format";
-import type { Fundamentals, Holding, NewsItem, ResearchReport, Series, Signal } from "@/lib/types";
+import type { CompanyPerson, Fundamentals, Holding, NewsItem, ResearchReport, Series, Signal } from "@/lib/types";
+import { Avatar } from "@/components/Avatar";
+import Link from "next/link";
 
 /** PULL: one company. Price → your position → who can help → fundamentals (computed) → LLM sections → news (context). */
 export default async function CompanyPage({ params }: { params: Promise<{ ticker: string }> }) {
   const { ticker } = await params;
-  const [r, news] = await Promise.all([
+  const [r, news, leaders] = await Promise.all([
     api<ResearchReport>(`/pull/research/${encodeURIComponent(ticker)}`),
     api<NewsItem[]>(`/news/${encodeURIComponent(ticker)}`).catch(() => [] as NewsItem[]),
+    api<CompanyPerson[]>(`/network/companies/${encodeURIComponent(ticker)}/people`).catch(() => [] as CompanyPerson[]),
   ]);
   const c = r.company;
   const f = r.fundamentals;
@@ -42,6 +45,8 @@ export default async function CompanyPage({ params }: { params: Promise<{ ticker
       ) : (
         <Empty>No one in your network has worked here yet.</Empty>
       )}
+
+      {leaders.length > 0 && <Leadership people={leaders} />}
 
       {f ? <FundamentalsView f={f} /> : <Empty>Fundamentals unavailable for {c.ticker} right now.</Empty>}
 
@@ -210,5 +215,66 @@ function NewsList({ items }: { items: NewsItem[] }) {
         ))}
       </ul>
     </>
+  );
+}
+
+function LeaderRow({ p }: { p: CompanyPerson }) {
+  return (
+    <li>
+      <Link href={p.connection ? `/people/${p.connection.person_id}` : `/people/${p.id}`} className="flex items-center gap-3 px-4 py-2.5 active:bg-line/40">
+        <Avatar name={p.name} size={30} />
+        <span className="min-w-0 flex-1 text-[13px] leading-snug">
+          <span className="flex items-center gap-1.5 font-medium">
+            <span className={p.status === "former" ? "text-muted line-through decoration-1" : ""}>{p.name}</span>
+            {p.connection && <span className="rounded-full bg-accent px-1.5 py-px text-[10px] font-medium text-bg">You know them</span>}
+          </span>
+          <span className="block truncate text-muted">
+            {p.status === "former" ? "Former · " : ""}
+            {p.role}
+          </span>
+          {p.paths[0] && <span className="block truncate text-[11px] text-accent">via {p.paths[0].name}: {p.paths[0].reason}</span>}
+        </span>
+      </Link>
+    </li>
+  );
+}
+
+function Leadership({ people }: { people: CompanyPerson[] }) {
+  const current = people.filter((p) => p.status === "current");
+  const former = people.filter((p) => p.status === "former");
+  const exec = current.filter((p) => p.kind === "executive");
+  const board = current.filter((p) => p.kind !== "executive");
+  const known = people.filter((p) => p.connection).length;
+  const asOf = people.find((p) => p.as_of)?.as_of;
+  return (
+    <section id="leadership" className="scroll-mt-4">
+      <SectionTitle right={known ? <span className="text-xs font-medium text-accent">{known} you know</span> : undefined}>Leadership</SectionTitle>
+      <ul className="card mx-4 divide-y divide-line">
+        {exec.slice(0, 8).map((p) => (
+          <LeaderRow key={p.id} p={p} />
+        ))}
+        {(exec.length > 8 || board.length > 0 || former.length > 0) && (
+          <li>
+            <details className="group">
+              <summary className="cursor-pointer px-4 py-2.5 text-xs font-medium text-accent">
+                <span className="group-open:hidden">
+                  Show {exec.length > 8 ? `${exec.length - 8} more executives, ` : ""}
+                  {board.length} board members{former.length ? `, ${former.length} former` : ""}
+                </span>
+                <span className="hidden group-open:inline">Show less</span>
+              </summary>
+              <ul className="divide-y divide-line border-t border-line">
+                {[...exec.slice(8), ...board, ...former].map((p) => (
+                  <LeaderRow key={p.id} p={p} />
+                ))}
+              </ul>
+            </details>
+          </li>
+        )}
+      </ul>
+      <p className="mx-4 mt-2 text-[11px] text-muted">
+        Management from Yahoo Finance; board from the NSE corporate-governance filing{asOf ? ` (${asOf})` : ""}; changes since from exchange filings.
+      </p>
+    </section>
   );
 }

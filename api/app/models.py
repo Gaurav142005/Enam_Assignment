@@ -75,6 +75,8 @@ class Person(BaseModel):
     expertise: list[str] = []
     relationship: Relationship | None = None  # None = not in the investor's network (e.g. a person in a filing)
     synthetic: bool = True
+    source: Literal["synthetic", "linkedin", "manual", "company", "filing"] = "synthetic"
+    linkedin_url: str | None = None
 
 
 class NetworkHint(BaseModel):
@@ -313,3 +315,60 @@ class Fundamentals(BaseModel):
 
 
 ResearchReport.model_rebuild()
+
+
+
+# ── Connections & company people ──────────────────────────────────────────
+
+
+class PersonIn(BaseModel):
+    """A connection added by hand."""
+
+    name: str = Field(min_length=2, max_length=120)
+    current_title: str | None = None
+    current_company: str | None = None
+    past_roles: list[Position] = []
+    education: list[Education] = []
+    context: str | None = None  # how you know them
+    strength: float = Field(0.6, ge=0, le=1)
+    last_contact: date | None = None
+    expertise: list[str] = []
+    linkedin_url: str | None = None
+
+
+class CompanyLink(BaseModel):
+    ticker: str
+    name: str
+    count: int
+    in_portfolio: bool
+
+
+class ImportResult(BaseModel):
+    total: int
+    added: int
+    updated: int
+    removed: int
+    linked: list[CompanyLink]  # listed employers we recognised, most connections first
+    at_portfolio: int  # connections who work / worked at a portfolio company
+
+
+class CompanyPerson(BaseModel):
+    id: str
+    ticker: str
+    name: str
+    role: str
+    kind: Literal["executive", "director", "independent"]
+    status: Literal["current", "former"]
+    since: str | None = None
+    year_born: int | None = None
+    sources: list[str]
+    as_of: str | None = None
+    connection: NetworkHint | None = None  # they ARE in your network
+    paths: list[NetworkHint] = []  # who in your network can reach them
+
+
+class CompanyPeopleSummary(BaseModel):
+    ticker: str
+    name: str
+    people: int
+    connections: int  # your connections who work / worked there

@@ -2,11 +2,20 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Avatar } from "@/components/Avatar";
 import { BackLink } from "@/components/BackLink";
+import { RemoveConnection } from "@/components/RemoveConnection";
 import { NetworkLine } from "@/components/NetworkLine";
 import { SectionTitle } from "@/components/PageHeader";
 import { api, ApiError } from "@/lib/api";
 import { tenure } from "@/lib/format";
 import type { NetworkHint, Person } from "@/lib/types";
+
+const SOURCE: Record<Person["source"], string> = {
+  synthetic: "Demo profile",
+  linkedin: "From your LinkedIn export",
+  manual: "Added by you",
+  company: "From company & exchange records",
+  filing: "From an exchange filing",
+};
 
 /** Person: career path, how you know them / who knows them (diligence + second-degree reach). */
 export default async function PersonPage({ params }: { params: Promise<{ id: string }> }) {
@@ -31,6 +40,15 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
         <h1 className="mt-3 text-xl font-semibold">{p.name}</h1>
         <p className="mt-0.5 text-sm text-muted">{p.headline}</p>
         {p.relationship && <p className="mt-2 text-xs text-muted">{p.relationship.context}</p>}
+        {p.bio && <p className="mt-2 max-w-xs text-xs text-muted">{p.bio}</p>}
+        <p className="mt-2 flex items-center gap-3 text-[11px] uppercase tracking-wide text-muted">
+          {SOURCE[p.source]}
+          {p.linkedin_url && (
+            <a href={p.linkedin_url} target="_blank" rel="noopener noreferrer" className="normal-case tracking-normal text-accent">
+              LinkedIn profile ↗
+            </a>
+          )}
+        </p>
       </header>
 
       {!inNetwork && (
@@ -97,6 +115,11 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
             ))}
           </div>
         </>
+      )}
+      {(p.source === "manual" || p.source === "linkedin") && (
+        <div className="mt-8 text-center">
+          <RemoveConnection id={p.id} name={p.name} />
+        </div>
       )}
     </main>
   );

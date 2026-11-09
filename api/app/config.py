@@ -10,6 +10,9 @@ CACHE_DIR = Path(os.getenv("FINN_CACHE_DIR", API_ROOT / "cache"))
 DB_PATH = Path(os.getenv("FINN_DB", CACHE_DIR / "finn.db"))
 FILES_DIR = CACHE_DIR / "files"
 
+# Demo network (synthetic people in data/network/people.json). Set FINN_DEMO_NETWORK=0 once real connections are imported.
+DEMO_NETWORK = os.getenv("FINN_DEMO_NETWORK", "1") != "0"
+
 # LLM — any free tier works. Gemini by default; any OpenAI-compatible endpoint (Groq, OpenRouter, Ollama) also works.
 LLM_PROVIDER = os.getenv("FINN_LLM_PROVIDER", "gemini")  # "gemini" | "openai"
 LLM_API_KEY = os.getenv("FINN_LLM_API_KEY") or os.getenv("GEMINI_API_KEY") or ""
@@ -35,3 +38,4 @@ LLM_API_KEY = os.getenv("FINN_LLM_API_KEY") or os.getenv("GEMINI_API_KEY") or LL
 LLM_BASE_URL = os.getenv("FINN_LLM_BASE_URL", LLM_BASE_URL)
 CHEAP_MODEL = os.getenv("FINN_CHEAP_MODEL", CHEAP_MODEL)
 STRONG_MODEL = os.getenv("FINN_STRONG_MODEL", STRONG_MODEL)
+DEMO_NETWORK = os.getenv("FINN_DEMO_NETWORK", "1") != "0"

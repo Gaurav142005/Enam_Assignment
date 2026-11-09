@@ -63,6 +63,12 @@ def ingest_company(
     def do_screener() -> str:
         return ingest_fundamentals(ticker)
 
+    def do_people() -> str:
+        from app.services import company_people
+
+        n = company_people.refresh(ticker)
+        return f"{n} management & board members"
+
     def do_news() -> str:
         from app.services import news
 
@@ -147,6 +153,7 @@ def ingest_company(
     step("prices", do_eod)
     step("filings", do_filings)
     step("news", do_news)
+    step("people", do_people)
     if with_documents:
         step("documents", do_documents)
     return rep

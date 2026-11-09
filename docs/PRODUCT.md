@@ -50,6 +50,9 @@ Deadline: **15 Nov 2026**.
 ### Network
 - [x] Edges are inferred from profiles (overlapping tenure at the same employer, overlapping years at the same school)
 - [x] Who should I call (by company) · second-degree reach (by person) · expertise map · reconnect nudges
+- [x] Import the investor's own LinkedIn export (CSV or zip); re-upload syncs; employers resolved to NSE tickers
+- [x] Add / remove connections by hand (career + education feed overlap detection)
+- [x] Leadership of every portfolio company (management + board), marked where the investor already knows them
 - [ ] Ask the network in natural language ("who knows rural lending in the South?")
 - [ ] Supplier / customer / competitor reach (beyond "worked at the same company")
 - [ ] Link strength explained (tenure overlap length, recency, relationship strength)

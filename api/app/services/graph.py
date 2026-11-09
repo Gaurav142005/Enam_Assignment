@@ -14,26 +14,53 @@ from datetime import date
 from functools import lru_cache
 from pathlib import Path
 
+from app import config
 from app.models import NetworkHint, Person, ReconnectNudge, ThemeGroup
 
 DATA = Path(__file__).resolve().parent.parent / "data" / "network" / "people.json"
 
 
 @lru_cache
-def _load() -> tuple[dict[str, Person], dict[str, Person]]:
+def _demo() -> tuple[dict[str, Person], dict[str, Person]]:
     raw = json.loads(DATA.read_text())
     network = {p["id"]: Person.model_validate(p) for p in raw["people"]}
     outside = {p["id"]: Person.model_validate(p) for p in raw.get("filing_people", [])}
     return network, outside
 
 
+_cache: dict[str, Person] | None = None
+
+
+def invalidate() -> None:
+    """Call after any write to the investor's connections."""
+    global _cache
+    _cache = None
+
+
+def _network() -> dict[str, Person]:
+    global _cache
+    if _cache is None:
+        from app.services import connections  # local import: connections → graph → connections
+
+        merged = dict(_demo()[0]) if config.DEMO_NETWORK else {}
+        merged.update({p.id: p for p in connections.load_all()})
+        _cache = merged
+    return _cache
+
+
 def people() -> list[Person]:
-    return list(_load()[0].values())
+    """Everyone in the investor's network (demo + imported + added by hand)."""
+    return list(_network().values())
 
 
 def get(person_id: str) -> Person | None:
-    network, outside = _load()
-    return network.get(person_id) or outside.get(person_id)
+    if p := _network().get(person_id) or _demo()[1].get(person_id):
+        return p
+    if person_id.startswith("c-"):
+        from app.services import company_people
+
+        return company_people.as_person(person_id)
+    return None
 
 
 def _years(start: int | None, end: int | None) -> range:
@@ -97,8 +124,9 @@ def who_knows_company(ticker: str, limit: int = 3) -> list[NetworkHint]:
     for p in people():
         for pos in p.positions:
             if pos.ticker == ticker:
-                when = f"{pos.start}–{pos.end or 'now'}"
-                hints.append(_hint(p, f"{pos.title} at {pos.company}, {when}"))
+                when = f", {pos.start}–{pos.end or 'now'}" if pos.start else ""
+                role = f"{pos.title} at {pos.company}" if pos.title else f"Works at {pos.company}"
+                hints.append(_hint(p, f"{role}{when}"))
                 break
     hints.sort(key=lambda h: h.strength, reverse=True)
     return hints[:limit]

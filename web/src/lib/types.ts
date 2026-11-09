@@ -46,6 +46,8 @@ export interface Person {
   expertise: string[];
   relationship: Relationship | null;
   synthetic: boolean;
+  source: "synthetic" | "linkedin" | "manual" | "company" | "filing";
+  linkedin_url: string | null;
 }
 
 export interface NetworkHint {
@@ -257,4 +259,55 @@ export interface NewsItem {
   source: string;
   url: string;
   published_at: string;
+}
+
+export interface PersonIn {
+  name: string;
+  current_title?: string;
+  current_company?: string;
+  past_roles: Position[];
+  education: Education[];
+  context?: string;
+  strength: number;
+  last_contact?: string | null;
+  expertise: string[];
+  linkedin_url?: string;
+}
+
+export interface CompanyLink {
+  ticker: string;
+  name: string;
+  count: number;
+  in_portfolio: boolean;
+}
+
+export interface ImportResult {
+  total: number;
+  added: number;
+  updated: number;
+  removed: number;
+  linked: CompanyLink[];
+  at_portfolio: number;
+}
+
+export interface CompanyPerson {
+  id: string;
+  ticker: string;
+  name: string;
+  role: string;
+  kind: "executive" | "director" | "independent";
+  status: "current" | "former";
+  since: string | null;
+  year_born: number | null;
+  sources: string[];
+  as_of: string | null;
+  connection: NetworkHint | null;
+  paths: NetworkHint[];
+}
+
+export interface CompanyPeopleSummary {
+  ticker: string;
+  name: string;
+  people: number;
+  connections: number;
 }
