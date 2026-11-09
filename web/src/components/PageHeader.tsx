@@ -1,9 +1,10 @@
-export function PageHeader({ title, sub, right, compact }: { title: string; sub?: React.ReactNode; right?: React.ReactNode; compact?: boolean }) {
+export function PageHeader({ title, sub, right, compact, eyebrow }: { title: string; sub?: React.ReactNode; right?: React.ReactNode; compact?: boolean; eyebrow?: string }) {
   const top = compact ? "pt-1" : "pt-[calc(env(safe-area-inset-top)+1rem)]";
   return (
     <header className={`sticky top-0 z-10 bg-bg/90 px-4 pb-3 ${top} backdrop-blur-md`}>
       <div className="flex items-end justify-between gap-3">
         <div>
+          {eyebrow && <p className="eyebrow mb-0.5">{eyebrow}</p>}
           <h1 className="text-[26px] font-semibold leading-tight tracking-tight">{title}</h1>
           {sub && <p className="mt-0.5 text-sm text-muted">{sub}</p>}
         </div>

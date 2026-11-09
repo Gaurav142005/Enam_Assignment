@@ -1,4 +1,4 @@
-import { ArrowUpRight, Minus, TrendingDown, TrendingUp } from "lucide-react";
+import { ArrowUpRight, ChevronDown, Minus, TrendingDown, TrendingUp } from "lucide-react";
 import { BackLink } from "@/components/BackLink";
 import { ColumnChart, LineChart } from "@/components/charts";
 import { NetworkLine } from "@/components/NetworkLine";
@@ -53,7 +53,7 @@ export default async function CompanyPage({ params }: { params: Promise<{ ticker
       {pending.length > 0 && (
         <>
           <SectionTitle>From transcripts &amp; annual reports</SectionTitle>
-          <ul className="card mx-4 divide-y divide-line">
+          <ul className="card mx-4 divide-y divide-line opacity-80">
             {pending.map((s) => (
               <li key={s.key} className="px-4 py-3">
                 <p className="text-sm font-medium">{s.title}</p>
@@ -114,12 +114,25 @@ function Signals({ items }: { items: Signal[] }) {
   );
 }
 
-function Block({ title, children }: { title: string; children: React.ReactNode }) {
+/** A research section that can be folded away. Closed, it still says the one thing that matters (its lead signal). */
+function Block({ title, teaser, open = false, children }: { title: string; teaser?: Signal; open?: boolean; children: React.ReactNode }) {
+  const t = teaser ? TONE_ICON[teaser.tone] : null;
   return (
-    <section className="card mx-4 mt-3 space-y-4 p-4">
-      <h3 className="text-[15px] font-semibold">{title}</h3>
-      {children}
-    </section>
+    <details open={open} className="card group mx-4 mt-3">
+      <summary className="flex cursor-pointer items-start gap-3 p-4">
+        <span className="min-w-0 flex-1">
+          <span className="block text-[15px] font-semibold">{title}</span>
+          {teaser && t && (
+            <span className="mt-1 flex gap-1.5 text-xs leading-snug text-muted group-open:hidden">
+              <t.Icon size={14} className={`mt-px shrink-0 ${t.cls}`} aria-label={t.label} />
+              <span className="line-clamp-2">{teaser.text}</span>
+            </span>
+          )}
+        </span>
+        <ChevronDown size={18} className="mt-0.5 shrink-0 text-muted transition-transform group-open:rotate-180" />
+      </summary>
+      <div className="space-y-4 px-4 pb-4">{children}</div>
+    </details>
   );
 }
 
@@ -144,19 +157,19 @@ function FundamentalsView({ f }: { f: Fundamentals }) {
       </dl>
 
       {f.about && (
-        <Block title="Business">
+        <Block title="Business" teaser={{ section: "financials", tone: "neutral", text: f.about.split(". ")[0] }}>
           <p className="text-[13px] leading-relaxed text-muted">{f.about}</p>
         </Block>
       )}
 
-      <Block title="Trajectory">
+      <Block title="Trajectory" teaser={sig("trajectory")[0]} open>
         <Signals items={sig("trajectory")} />
         <ColumnChart series={pick(fyOnly(a("revenue")), fyOnly(a("pat")))} label="Annual revenue and net profit" />
         {!f.is_lender && <LineChart series={pick(fyOnly(a("margin")))} label="EBITDA margin by year" />}
         <ColumnChart series={pick(q("revenue"), q("pat"))} annual={false} label="Quarterly revenue and net profit" />
       </Block>
 
-      <Block title="Balance sheet">
+      <Block title="Balance sheet" teaser={sig("balance_sheet")[0]}>
         <Signals items={sig("balance_sheet")} />
         {f.is_lender ? (
           <>
@@ -172,14 +185,14 @@ function FundamentalsView({ f }: { f: Fundamentals }) {
       </Block>
 
       {!f.is_lender && (
-        <Block title="Cash quality">
+        <Block title="Cash quality" teaser={sig("cash_quality")[0]}>
           <Signals items={sig("cash_quality")} />
           <ColumnChart series={pick(last(a("pat")), last(a("Cash from Operating Activity")))} label="Net profit and cash from operations by year" />
         </Block>
       )}
 
       {f.shareholding.length > 0 && (
-        <Block title="Shareholding">
+        <Block title="Shareholding" teaser={sig("shareholding")[0]}>
           <Signals items={sig("shareholding")} />
           <LineChart series={f.shareholding} annual={false} label="Shareholding by holder type, quarterly" />
         </Block>
@@ -200,21 +213,43 @@ function NewsList({ items }: { items: NewsItem[] }) {
     <>
       <SectionTitle right={<span className="text-[11px] text-muted">secondary · not used in research</span>}>In the news</SectionTitle>
       <ul className="card mx-4 divide-y divide-line">
-        {items.slice(0, 8).map((n) => (
-          <li key={n.url}>
-            <a href={n.url} target="_blank" rel="noopener noreferrer" className="flex gap-3 px-4 py-3 active:bg-line/40">
-              <span className="min-w-0 flex-1">
-                <span className="block text-[13px] leading-snug">{n.title}</span>
-                <span className="mt-0.5 block text-[11px] text-muted">
-                  {n.source} · {ago(n.published_at)} ago
-                </span>
-              </span>
-              <ArrowUpRight size={14} className="mt-0.5 shrink-0 text-muted" />
-            </a>
-          </li>
+        {items.slice(0, 3).map((n) => (
+          <NewsRow key={n.url} n={n} />
         ))}
+        {items.length > 3 && (
+          <li>
+            <details className="group">
+              <summary className="flex cursor-pointer items-center justify-between px-4 py-2.5 text-xs font-medium text-accent">
+                <span className="group-open:hidden">{Math.min(items.length, 10) - 3} more headlines</span>
+                <span className="hidden group-open:inline">Show fewer</span>
+                <ChevronDown size={16} className="transition-transform group-open:rotate-180" />
+              </summary>
+              <ul className="divide-y divide-line border-t border-line">
+                {items.slice(3, 10).map((n) => (
+                  <NewsRow key={n.url} n={n} />
+                ))}
+              </ul>
+            </details>
+          </li>
+        )}
       </ul>
     </>
+  );
+}
+
+function NewsRow({ n }: { n: NewsItem }) {
+  return (
+    <li>
+      <a href={n.url} target="_blank" rel="noopener noreferrer" className="flex gap-3 px-4 py-3 active:bg-line/40">
+        <span className="min-w-0 flex-1">
+          <span className="block text-[13px] leading-snug">{n.title}</span>
+          <span className="mt-0.5 block text-[11px] text-muted">
+            {n.source} · {ago(n.published_at)} ago
+          </span>
+        </span>
+        <ArrowUpRight size={14} className="mt-0.5 shrink-0 text-muted" />
+      </a>
+    </li>
   );
 }
 

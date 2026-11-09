@@ -5,5 +5,17 @@
   "display": "standalone",
   "background_color": "#F6F5F1",
   "theme_color": "#F6F5F1",
-  "icons": [{ "src": "/favicon.ico", "sizes": "48x48", "type": "image/x-icon" }]
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "/apple-icon",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ],
+  "description": "Your portfolio, filtered — and who in your network can explain it."
 }

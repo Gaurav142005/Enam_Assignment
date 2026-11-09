@@ -22,9 +22,11 @@ export function TabBar() {
             <li key={href}>
               <Link
                 href={href}
-                className={`flex h-16 w-[4.5rem] flex-col items-center justify-center gap-1 text-[11px] font-medium ${active ? "text-ink" : "text-muted"}`}
+                className={`flex h-16 w-[4.5rem] flex-col items-center justify-center gap-0.5 text-[11px] font-medium ${active ? "text-ink" : "text-muted"}`}
               >
-                <Icon size={21} strokeWidth={active ? 2.2 : 1.7} />
+                <span className={`flex h-7 w-12 items-center justify-center rounded-full transition-colors ${active ? "bg-ink/[0.07]" : ""}`}>
+                  <Icon size={20} strokeWidth={active ? 2.2 : 1.7} />
+                </span>
                 {label}
               </Link>
             </li>

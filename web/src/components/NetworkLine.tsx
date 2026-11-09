@@ -18,7 +18,21 @@ export function NetworkLine({ hint, lead = "Ask" }: { hint: NetworkHint; lead?: 
         {hint.degree === 2 && hint.via && <span className="text-muted"> via {hint.via}</span>}
         <span className="block truncate text-muted">{hint.reason}</span>
       </span>
+      <Strength value={hint.strength} />
       <ChevronRight size={16} className="shrink-0 text-muted" />
     </Link>
+  );
+}
+
+/** How warm the link is: three bars, labelled for screen readers (never colour alone). */
+export function Strength({ value }: { value: number }) {
+  const level = value >= 0.7 ? 3 : value >= 0.45 ? 2 : 1;
+  const label = ["", "Weak", "Medium", "Strong"][level];
+  return (
+    <span className="flex shrink-0 items-end gap-0.5" role="img" aria-label={`${label} connection`} title={`${label} connection`}>
+      {[1, 2, 3].map((b) => (
+        <span key={b} className={`w-1 rounded-full ${b <= level ? "bg-accent" : "bg-line"}`} style={{ height: 4 + b * 3 }} />
+      ))}
+    </span>
   );
 }

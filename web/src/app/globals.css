@@ -54,6 +54,7 @@ body {
 @layer components {
   .card {
     @apply rounded-2xl border border-line bg-surface;
+    box-shadow: 0 1px 2px rgb(var(--ink) / 0.04), 0 4px 12px -6px rgb(var(--ink) / 0.06);
   }
   .eyebrow {
     @apply text-[11px] font-medium uppercase tracking-[0.08em] text-muted;
@@ -67,5 +68,12 @@ details > summary {
   list-style: none;
 }
 details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
   display: none;
 }

@@ -1,13 +1,26 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { SlidersHorizontal } from "lucide-react";
+import { ArrowUpRight, ChevronDown, SlidersHorizontal } from "lucide-react";
 import { PageHeader, SectionTitle } from "@/components/PageHeader";
-import { MoveRow, PushCard } from "@/components/PushCard";
+import { CATEGORY_ICON, MoveTile, PushCard } from "@/components/PushCard";
 import { DemoNote, Empty } from "@/components/States";
+import { SwipeDeck } from "@/components/SwipeDeck";
 import { WindowPicker } from "@/components/WindowPicker";
 import { api } from "@/lib/api";
 import { ago, CATEGORY_LABEL, windowLabel } from "@/lib/format";
 import type { Digest } from "@/lib/types";
+
+function today(): string {
+  return new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", timeZone: "Asia/Kolkata" });
+}
+
+/** One sentence that names what matters, so the investor knows before swiping. */
+function lede(d: Digest, hours: number): string {
+  if (!d.attention.length) return `Nothing material in the last ${windowLabel(hours)}.`;
+  const names = [...new Set(d.attention.map((i) => i.ticker))];
+  const head = names.slice(0, 3).join(", ");
+  return `${d.attention.length} to look at: ${head}${names.length > 3 ? ` and ${names.length - 3} more` : ""}.`;
+}
 
 /** PUSH — the Brief. What changed across my portfolio, ranked; routine collapsed; network woven in. */
 export default async function BriefPage({ searchParams }: { searchParams: Promise<{ h?: string }> }) {
@@ -18,8 +31,9 @@ export default async function BriefPage({ searchParams }: { searchParams: Promis
   return (
     <main>
       <PageHeader
+        eyebrow={today()}
         title="Brief"
-        sub={`${d.attention.length} need you · ${d.moves.length} unusual moves · ${routineCount} routine`}
+        sub={lede(d, hours)}
         right={
           <Link href="/settings" aria-label="Alert settings" className="mb-1 rounded-full p-2 text-muted active:bg-line/50">
             <SlidersHorizontal size={20} />
@@ -34,23 +48,21 @@ export default async function BriefPage({ searchParams }: { searchParams: Promis
 
       <SectionTitle>Needs your attention</SectionTitle>
       {d.attention.length ? (
-        <div className="space-y-3 px-4">
+        <SwipeDeck label="Items that need your attention">
           {d.attention.map((i) => (
             <PushCard key={i.id} item={i} />
           ))}
-        </div>
+        </SwipeDeck>
       ) : (
-        <Empty>Nothing material in the last {windowLabel(hours)}.</Empty>
+        <Empty>Nothing material in the last {windowLabel(hours)}. Widen the window to look further back.</Empty>
       )}
 
       {d.moves.length > 0 && (
         <>
-          <SectionTitle right={<Link href="/settings" className="text-xs text-accent">Thresholds</Link>}>
-            Unusual moves
-          </SectionTitle>
-          <div className="card mx-4 divide-y divide-line">
+          <SectionTitle right={<Link href="/settings" className="text-xs text-accent">Thresholds</Link>}>Unusual moves</SectionTitle>
+          <div className="grid grid-cols-2 gap-3 px-4">
             {d.moves.map((m) => (
-              <MoveRow key={m.id} item={m} />
+              <MoveTile key={m.id} item={m} />
             ))}
           </div>
         </>
@@ -58,29 +70,42 @@ export default async function BriefPage({ searchParams }: { searchParams: Promis
 
       {d.routine.length > 0 && (
         <>
-          <SectionTitle>Routine</SectionTitle>
+          <SectionTitle right={<span className="num text-xs text-muted">{routineCount}</span>}>Routine, collapsed</SectionTitle>
           <div className="card mx-4 divide-y divide-line">
-            {d.routine.map((g) => (
-              <details key={g.category} className="group">
-                <summary className="flex cursor-pointer items-center justify-between px-4 py-3 text-sm">
-                  <span>{CATEGORY_LABEL[g.category]}</span>
-                  <span className="num text-muted group-open:text-ink">{g.count}</span>
-                </summary>
-                <ul className="space-y-2 px-4 pb-3">
-                  {g.items.map((i) => (
-                    <li key={i.id} className="flex gap-2 text-[13px]">
-                      <span className="w-20 shrink-0 font-medium">{i.ticker}</span>
-                      <span className="flex-1 text-muted">{i.title}</span>
-                      <span className="num text-xs text-muted">{ago(i.at)}</span>
-                    </li>
-                  ))}
-                </ul>
-              </details>
-            ))}
+            {d.routine.map((g) => {
+              const Icon = CATEGORY_ICON[g.category];
+              return (
+                <details key={g.category} className="group">
+                  <summary className="flex cursor-pointer items-center gap-3 px-4 py-3 text-sm">
+                    <Icon size={16} className="text-muted" aria-hidden />
+                    <span className="flex-1">{CATEGORY_LABEL[g.category]}</span>
+                    <span className="num text-muted">{g.count}</span>
+                    <ChevronDown size={16} className="text-muted transition-transform group-open:rotate-180" />
+                  </summary>
+                  <ul className="space-y-2.5 px-4 pb-3 pl-11">
+                    {g.items.map((i) => (
+                      <li key={i.id} className="flex gap-2 text-[13px]">
+                        <Link href={`/company/${i.ticker}`} className="w-20 shrink-0 font-medium">
+                          {i.ticker}
+                        </Link>
+                        <span className="min-w-0 flex-1 text-muted">{i.title}</span>
+                        {i.source_url ? (
+                          <a href={i.source_url} target="_blank" rel="noopener noreferrer" aria-label="Open filing" className="shrink-0 text-muted">
+                            <ArrowUpRight size={14} />
+                          </a>
+                        ) : (
+                          <span className="num shrink-0 text-xs text-muted">{ago(i.at)}</span>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </details>
+              );
+            })}
           </div>
         </>
       )}
-      <DemoNote />
+      {d.attention.some((i) => i.synthetic) && <DemoNote />}
     </main>
   );
 }

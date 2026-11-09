@@ -14,8 +14,8 @@ const FILTERS = [
 ] as const;
 
 /** NETWORK: queried directly. (It also surfaces inside Brief and Ask.) */
-export default async function NetworkPage({ searchParams }: { searchParams: Promise<{ src?: string }> }) {
-  const src = (await searchParams).src ?? "all";
+export default async function NetworkPage({ searchParams }: { searchParams: Promise<{ src?: string; theme?: string }> }) {
+  const { src = "all", theme } = await searchParams;
   const [nudges, themes, people, companies] = await Promise.all([
     api<ReconnectNudge[]>("/network/reconnect"),
     api<ThemeGroup[]>("/network/themes"),
@@ -29,7 +29,8 @@ export default async function NetworkPage({ searchParams }: { searchParams: Prom
     const t = p.positions.find((pos) => pos.ticker && portfolio.has(pos.ticker))?.ticker;
     if (t) atPortfolio.set(t, [...(atPortfolio.get(t) ?? []), p]);
   }
-  const shown = src === "all" ? people : people.filter((p) => p.source === src);
+  const bySource = src === "all" ? people : people.filter((p) => p.source === src);
+  const shown = theme ? bySource.filter((p) => p.expertise.includes(theme)) : bySource;
 
   return (
     <main>
@@ -124,17 +125,29 @@ export default async function NetworkPage({ searchParams }: { searchParams: Prom
         <>
           <SectionTitle>Expertise map</SectionTitle>
           <div className="flex flex-wrap gap-2 px-4">
-            {themes.map((t) => (
-              <span key={t.theme} className="card flex items-center gap-1.5 px-3 py-1.5 text-[13px]">
-                {t.theme}
-                <span className="num text-xs text-muted">{t.people.length}</span>
-              </span>
-            ))}
+            {themes.map((t) => {
+              const on = theme === t.theme;
+              return (
+                <Link
+                  key={t.theme}
+                  href={on ? "/network" : `/network?theme=${encodeURIComponent(t.theme)}#everyone`}
+                  scroll={false}
+                  aria-pressed={on}
+                  className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[13px] ${on ? "border-ink bg-ink text-bg" : "border-line bg-surface"}`}
+                >
+                  {t.theme}
+                  <span className={`num text-xs ${on ? "text-bg/70" : "text-muted"}`}>{t.people.length}</span>
+                </Link>
+              );
+            })}
           </div>
         </>
       )}
 
-      <SectionTitle>Everyone</SectionTitle>
+      <div id="everyone" className="scroll-mt-4" />
+      <SectionTitle right={theme ? <Link href="/network" className="text-xs text-accent">Clear “{theme}”</Link> : undefined}>
+        {theme ? `Go-to for ${theme}` : "Everyone"}
+      </SectionTitle>
       <div className="mb-2 flex gap-1.5 px-4">
         {FILTERS.map(([k, label]) => (
           <Link

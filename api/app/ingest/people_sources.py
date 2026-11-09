@@ -24,8 +24,12 @@ from app.ingest import http
 _HONORIFIC = re.compile(r"^(mr|ms|mrs|dr|shri|smt|prof|capt|cdr|col|lt|gen)\.?\s+", re.I)
 
 
-_DEGREE = re.compile(r"(b\.?\s?tech|m\.?\s?tech|b\.?\s?e|b\.?\s?com|m\.?\s?com|mba|pgdm|pgdbm|ca|fca|aca|acs|fcs|cs|cfa|"
-                     r"llb|ll\.?b|ph\.?\s?d|b\.?\s?sc|m\.?\s?sc|cma|icwa|aicwa|b\.?\s?a|m\.?\s?a)\.?", re.I)
+_DEGREES = {"btech", "mtech", "be", "bcom", "mcom", "mba", "pgdm", "pgdbm", "ca", "fca", "aca", "acs", "fcs", "cs", "cfa", "llb", "llm",
+            "phd", "bsc", "msc", "cma", "icwa", "aicwa", "ba", "ma", "bba", "cpa", "frm", "acma", "fcma", "pgp"}
+
+
+def _is_degree(tok: str) -> bool:
+    return re.sub(r"[^a-z]", "", tok.lower()) in _DEGREES
 
 
 def clean_name(name: str) -> str:
@@ -34,7 +38,7 @@ def clean_name(name: str) -> str:
     while _HONORIFIC.match(n):
         n = _HONORIFIC.sub("", n)
     toks = n.split(",")[0].split()
-    while len(toks) > 2 and _DEGREE.fullmatch(toks[-1]):
+    while len(toks) > 2 and _is_degree(toks[-1]):
         toks.pop()
     return " ".join(toks).strip(" .,")
 
@@ -143,6 +147,16 @@ def nse_companies() -> dict[str, str]:
 ALIASES = {"zomato": "ETERNAL", "l and t": "LT", "lnt": "LT", "l t": "LT", "tcs": "TCS", "hul": "HINDUNILVR", "sbi": "SBIN",
            "m and m": "M&M", "mahindra and mahindra": "M&M", "icici": "ICICIBANK", "kotak": "KOTAKBANK", "kpit": "KPITTECH",
            "hal": "HAL", "chola": "CHOLAFIN", "cholamandalam": "CHOLAFIN", "sun pharma": "SUNPHARMA", "pi": "PIIND"}
+
+
+@lru_cache
+def nse_listing() -> list[tuple[str, str]]:
+    """(symbol, company name) for every NSE equity — powers 'research any listed company' search."""
+    nse_companies()  # ensures the CSV is cached on disk
+    path = config.CACHE_DIR / "EQUITY_L.csv"
+    if not path.exists():
+        return []
+    return [(r["SYMBOL"], r["NAME OF COMPANY"]) for r in csv.DictReader(io.StringIO(path.read_text())) if r.get("SYMBOL")]
 
 
 def resolve_ticker(company: str, extra: dict[str, str] | None = None) -> str | None:

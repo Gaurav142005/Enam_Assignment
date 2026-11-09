@@ -15,8 +15,9 @@ Deadline: **15 Nov 2026**.
 
 | Tab | Layer | Job |
 |---|---|---|
-| **Brief** `/` | Push | Time-windowed digest (4h/24h/3d/7d) → *Needs your attention* · *Unusual moves* · *Routine* (collapsed). Thresholds via ⚙ → `/settings`. |
-| **Ask** `/ask` → `/company/[ticker]` | Pull | Search any NSE ticker → research view. *Promised vs delivered* leads; *Who can help* sits on top. |
+| **Brief** `/` | Push | Dated lede naming what matters → *Needs your attention* as a swipeable card deck (each card: title, one key line, best person to ask; details fold away) · *Unusual moves* tiles · *Routine* collapsed by type. Thresholds via ⚙ → `/settings`. |
+| **Portfolio** `/portfolio` | — | Value, P&L, value-weighted returns vs Nifty 50, leaders/laggards with sparklines. |
+| **Ask** `/ask` → `/company/[ticker]` | Pull | Search any of ~2,600 NSE companies → company page: position, price chart, who can help, leadership, then collapsible research sections that show their lead finding when closed. |
 | **Network** `/network` → `/people/[id]` | Network | Reconnect nudges · expertise map · people. A person page shows their career and, for outsiders (e.g. a new CFO), who you know who knows them. |
 
 ## Core features (scope for the prototype)
