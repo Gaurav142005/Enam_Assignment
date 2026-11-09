@@ -155,3 +155,44 @@ export interface ResearchReport {
   network: NetworkHint[];
   generated_at: string;
 }
+
+export type PerfPeriod = "1D" | "1W" | "1M" | "3M" | "6M" | "1Y";
+export type PriceRange = "1M" | "3M" | "6M" | "1Y" | "3Y" | "5Y";
+
+export interface Bar {
+  time: string;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+}
+
+export interface PriceHistory {
+  ticker: string;
+  range: string;
+  bars: Bar[];
+}
+
+export interface Holding {
+  ticker: string;
+  name: string;
+  sector: string;
+  last_close: number | null;
+  as_of: string | null;
+  day_change_pct: number | null;
+  return_pct: number | null;
+  spark: number[];
+}
+
+export interface PortfolioPerformance {
+  period: PerfPeriod;
+  as_of: string | null;
+  portfolio_return_pct: number | null;
+  benchmark_name: string;
+  benchmark_return_pct: number | null;
+  benchmark_spark: number[];
+  up: number;
+  down: number;
+  holdings: Holding[];
+}

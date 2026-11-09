@@ -198,3 +198,46 @@ class ResearchReport(BaseModel):
     guidance_vs_delivery: list[GuidanceCheck] = []
     network: list[NetworkHint] = []
     generated_at: datetime
+
+
+# ── Market ────────────────────────────────────────────────────────────────
+
+PerfPeriod = Literal["1D", "1W", "1M", "3M", "6M", "1Y"]
+
+
+class Bar(BaseModel):
+    time: str  # YYYY-MM-DD (session date)
+    open: float
+    high: float
+    low: float
+    close: float
+    volume: int
+
+
+class PriceHistory(BaseModel):
+    ticker: str
+    range: str
+    bars: list[Bar]
+
+
+class Holding(BaseModel):
+    ticker: str
+    name: str
+    sector: str
+    last_close: float | None
+    as_of: str | None
+    day_change_pct: float | None
+    return_pct: float | None  # over the selected period
+    spark: list[float]
+
+
+class PortfolioPerformance(BaseModel):
+    period: PerfPeriod
+    as_of: str | None
+    portfolio_return_pct: float | None  # equal-weighted: the demo portfolio has no position sizes
+    benchmark_name: str
+    benchmark_return_pct: float | None
+    benchmark_spark: list[float]
+    up: int
+    down: int
+    holdings: list[Holding]  # sorted best → worst

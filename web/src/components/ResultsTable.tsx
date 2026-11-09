@@ -2,7 +2,7 @@ import { crore, pct } from "@/lib/format";
 import type { ResultsCut } from "@/lib/types";
 
 function Delta({ v }: { v: number | null }) {
-  const tone = v === null ? "text-muted" : v >= 0 ? "text-up" : "text-down";
+  const tone = v === null ? "text-muted" : v >= 0 ? "text-up-ink" : "text-down-ink";
   return <td className={`num py-1.5 text-right ${tone}`}>{pct(v)}</td>;
 }
 

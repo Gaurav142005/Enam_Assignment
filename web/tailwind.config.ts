@@ -16,6 +16,8 @@ export default {
         "accent-soft": v("accent-soft"),
         up: v("up"),
         down: v("down"),
+        "up-ink": v("up-ink"),
+        "down-ink": v("down-ink"),
         warn: v("warn"),
       },
       fontFamily: {

@@ -51,3 +51,22 @@ export function tenure(start: number | null, end: number | null, open = true): s
   if (start === null) return end === null ? "" : String(end);
   return `${start}–${end ?? (open ? "now" : "")}`;
 }
+
+export function rupees(n: number | null, digits = 2): string {
+  if (n === null) return "—";
+  return `₹${n.toLocaleString("en-IN", { minimumFractionDigits: digits, maximumFractionDigits: digits })}`;
+}
+
+/** Text tone for a signed change: darker ink steps, never the mark color. */
+export function tone(n: number | null): string {
+  if (n === null || n === 0) return "text-muted";
+  return n > 0 ? "text-up-ink" : "text-down-ink";
+}
+
+export function compact(n: number): string {
+  return n.toLocaleString("en-IN", { notation: "compact", maximumFractionDigits: 1 });
+}
+
+export function shortDate(iso: string): string {
+  return new Date(`${iso}T00:00:00`).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+}

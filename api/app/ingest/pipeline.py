@@ -66,6 +66,7 @@ def ingest_company(
             raise http.FetchError("no price history (is the ticker listed on NSE?)")
         with store.connect() as con:
             store.upsert(con, "eod", rows)
+            store.upsert(con, "eod_meta", [{"ticker": ticker, "fetched_at": store.now_iso(), "period": "5y"}])
         last = rows[-1]
         return f"{len(rows)} sessions, last {last['date']} close ₹{last['close']:,.2f} vol {last['volume']:,}"
 

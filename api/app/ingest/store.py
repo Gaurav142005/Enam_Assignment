@@ -24,6 +24,9 @@ CREATE TABLE IF NOT EXISTS eod (
   ticker TEXT, date TEXT, open REAL, high REAL, low REAL, close REAL, volume INTEGER,
   PRIMARY KEY (ticker, date)
 );
+CREATE TABLE IF NOT EXISTS eod_meta (
+  ticker TEXT PRIMARY KEY, fetched_at TEXT, period TEXT
+);
 CREATE TABLE IF NOT EXISTS announcements (
   id TEXT PRIMARY KEY,      -- NSE seq_id
   ticker TEXT, filed_at TEXT, nse_desc TEXT, text TEXT, attachment_url TEXT,

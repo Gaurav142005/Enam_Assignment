@@ -33,9 +33,17 @@ def main() -> int:
         return 1
 
     llm_on = not a.no_llm and llm.available()
+    if llm_on and not llm.probe():
+        print(f"LLM: unusable ({llm._disabled}) — continuing rules-only")
+        llm_on = False
     print(f"DB: {config.DB_PATH}")
     print(f"LLM: {f'{config.LLM_PROVIDER} ({config.CHEAP_MODEL} / {config.STRONG_MODEL})' if llm_on else 'off — rules only'}")
     failed = 0
+    if a.portfolio:
+        from app.services import market
+
+        market.ensure_prices("NIFTY50", force=True)
+        print("\n▶ NIFTY50 benchmark refreshed")
     for t in dict.fromkeys(tickers):
         rep = ingest_company(t, days=a.days, with_documents=not a.light, use_llm=llm_on)
         failed += bool(rep.errors)

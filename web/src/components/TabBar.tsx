@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Inbox, Search, Waypoints } from "lucide-react";
+import { BriefcaseBusiness, Inbox, Search, Waypoints } from "lucide-react";
 
 const TABS = [
   { href: "/", label: "Brief", icon: Inbox, match: (p: string) => p === "/" || p.startsWith("/settings") },
+  { href: "/portfolio", label: "Portfolio", icon: BriefcaseBusiness, match: (p: string) => p.startsWith("/portfolio") },
   { href: "/ask", label: "Ask", icon: Search, match: (p: string) => p.startsWith("/ask") || p.startsWith("/company") },
   { href: "/network", label: "Network", icon: Waypoints, match: (p: string) => p.startsWith("/network") || p.startsWith("/people") },
 ];
@@ -21,7 +22,7 @@ export function TabBar() {
             <li key={href}>
               <Link
                 href={href}
-                className={`flex h-16 w-20 flex-col items-center justify-center gap-1 text-[11px] font-medium ${active ? "text-ink" : "text-muted"}`}
+                className={`flex h-16 w-[4.5rem] flex-col items-center justify-center gap-1 text-[11px] font-medium ${active ? "text-ink" : "text-muted"}`}
               >
                 <Icon size={21} strokeWidth={active ? 2.2 : 1.7} />
                 {label}

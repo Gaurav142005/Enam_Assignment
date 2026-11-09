@@ -14,8 +14,8 @@ FILES_DIR = CACHE_DIR / "files"
 LLM_PROVIDER = os.getenv("FINN_LLM_PROVIDER", "gemini")  # "gemini" | "openai"
 LLM_API_KEY = os.getenv("FINN_LLM_API_KEY") or os.getenv("GEMINI_API_KEY") or ""
 LLM_BASE_URL = os.getenv("FINN_LLM_BASE_URL", "")  # only for provider=openai, e.g. https://api.groq.com/openai/v1
-CHEAP_MODEL = os.getenv("FINN_CHEAP_MODEL", "gemini-2.5-flash-lite")
-STRONG_MODEL = os.getenv("FINN_STRONG_MODEL", "gemini-2.5-flash")
+CHEAP_MODEL = os.getenv("FINN_CHEAP_MODEL", "gemini-3.5-flash-lite")
+STRONG_MODEL = os.getenv("FINN_STRONG_MODEL", "gemini-3.8-flash")
 
 
 def _load_dotenv() -> None:

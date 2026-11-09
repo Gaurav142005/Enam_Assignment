@@ -1,6 +1,7 @@
 import { ChevronDown } from "lucide-react";
 import { BackLink } from "@/components/BackLink";
 import { NetworkLine } from "@/components/NetworkLine";
+import { PriceChart } from "@/components/PriceChart";
 import { PageHeader, SectionTitle } from "@/components/PageHeader";
 import { Empty } from "@/components/States";
 import { api } from "@/lib/api";
@@ -18,6 +19,8 @@ export default async function CompanyPage({ params }: { params: Promise<{ ticker
         <BackLink />
       </div>
       <PageHeader compact title={c.ticker} sub={`${c.name}${c.sector !== "—" ? ` · ${c.sector}` : ""}${c.in_portfolio ? " · In portfolio" : ""}`} />
+
+      <PriceChart ticker={c.ticker} />
 
       <SectionTitle>Who can help</SectionTitle>
       {r.network.length ? (

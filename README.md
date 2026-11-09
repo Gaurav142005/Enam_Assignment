@@ -5,6 +5,7 @@ A mobile-first investing companion built for the ENAM Holdings Founding AI Engin
 - **Push:** what changed across my portfolio, ranked, with routine filings collapsed.
 - **Pull:** on-demand research on any NSE company, grounded only in its own filings.
 - **Network:** who in my network can help me understand it, woven into both of the above.
+- **Portfolio:** period returns vs Nifty 50, leaders and laggards; daily candle charts (1M–5Y) for any NSE ticker.
 
 Product decisions: [docs/PRODUCT.md](docs/PRODUCT.md) · Architecture: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · Brief: [docs/brief/](docs/brief/)
 
@@ -37,13 +38,14 @@ api/                        FastAPI backend (Python, uv)
     priority.py taxonomy.py Scoring + announcement categories (from the ENAM glossary)
     graph.py                Network: inferred edges, who-knows-company, second-degree reach, themes, reconnect
     research.py             Pull: section pipeline (primary sources only)
+    market.py               Prices for charts + portfolio returns vs Nifty 50 (on-demand fetch, 6h cache)
     filing_people.py        People named in filings → Person records for UI + graph
   app/ingest/               Data pipeline (python -m app.ingest): nse, eod, screener, documents, classify, enrich
   app/llm.py                Model routing (cheap / strong), SQLite-cached, Gemini or OpenAI-compatible
   app/data/                 portfolio.json, network/people.json, fixtures/ (synthetic)
   tests/
 web/                        Next.js 15 App Router, Tailwind, mobile-first
-  src/app/                  /  (Brief)  /ask  /company/[ticker]  /network  /people/[id]  /settings
+  src/app/                  /  (Brief)  /portfolio  /ask  /company/[ticker]  /network  /people/[id]  /settings
   src/components/           PushCard, ResultsTable, PersonBrief, NetworkLine, …
   src/lib/                  api client, types, formatters
 docs/                       brief PDFs, product + architecture notes

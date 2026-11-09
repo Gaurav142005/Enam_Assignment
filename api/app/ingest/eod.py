@@ -13,8 +13,16 @@ IST = timezone(timedelta(hours=5, minutes=30))
 MARKET_CLOSE = time(15, 45)  # small buffer after the 15:30 close
 
 
-def fetch_eod(ticker: str, period: str = "1y") -> list[dict]:
-    h = yf.Ticker(f"{ticker}.NS").history(period=period, interval="1d", auto_adjust=False)
+# Benchmarks live in the same table under a friendly key.
+BENCHMARKS = {"NIFTY50": "^NSEI"}
+
+
+def yahoo_symbol(ticker: str) -> str:
+    return BENCHMARKS.get(ticker, f"{ticker}.NS")
+
+
+def fetch_eod(ticker: str, period: str = "5y") -> list[dict]:
+    h = yf.Ticker(yahoo_symbol(ticker)).history(period=period, interval="1d", auto_adjust=False)
     now = datetime.now(IST)
     rows = []
     for ts, r in h.iterrows():
