@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+import threading
 from contextlib import contextmanager
 from datetime import datetime, timezone
 from typing import Any, Iterator
@@ -72,6 +73,10 @@ CREATE TABLE IF NOT EXISTS company_people (   -- management + board of listed co
   since TEXT, year_born INTEGER, sources TEXT, as_of TEXT, updated_at TEXT
 );
 CREATE INDEX IF NOT EXISTS ix_cp_ticker ON company_people (ticker);
+CREATE TABLE IF NOT EXISTS research_jobs (
+  id TEXT PRIMARY KEY, ticker TEXT, status TEXT, steps TEXT, result TEXT, error TEXT, started_at TEXT, finished_at TEXT
+);
+CREATE INDEX IF NOT EXISTS ix_rj_ticker ON research_jobs (ticker, finished_at);
 CREATE TABLE IF NOT EXISTS llm_cache (
   key TEXT PRIMARY KEY, model TEXT, response TEXT, created_at TEXT
 );
@@ -85,17 +90,35 @@ def now_iso() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
 
+_ready: set[str] = set()  # DB paths whose schema is already in place (per process)
+_ready_lock = threading.Lock()
+
+
+def _ensure_schema(con: sqlite3.Connection, path: str) -> None:
+    """Create tables once per process, not on every connection: DDL takes a write lock, and with a background
+    research job saving progress while the page polls, per-connection DDL serialised everything."""
+    with _ready_lock:
+        if path in _ready:
+            return
+        con.execute("PRAGMA journal_mode=WAL")  # readers never block the writer (and vice versa)
+        con.executescript(SCHEMA)
+        for ddl in _MIGRATIONS:
+            try:
+                con.execute(ddl)
+            except sqlite3.OperationalError:
+                pass  # already applied
+        con.commit()
+        _ready.add(path)
+
+
 @contextmanager
 def connect() -> Iterator[sqlite3.Connection]:
     config.DB_PATH.parent.mkdir(parents=True, exist_ok=True)
-    con = sqlite3.connect(config.DB_PATH)
+    path = str(config.DB_PATH)
+    con = sqlite3.connect(path, timeout=30)
     con.row_factory = sqlite3.Row
-    con.executescript(SCHEMA)
-    for ddl in _MIGRATIONS:
-        try:
-            con.execute(ddl)
-        except sqlite3.OperationalError:
-            pass  # already applied
+    con.execute("PRAGMA busy_timeout=30000")
+    _ensure_schema(con, path)
     try:
         yield con
         con.commit()

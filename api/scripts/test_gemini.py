@@ -17,7 +17,7 @@ from pathlib import Path
 import httpx
 
 BASE = "https://generativelanguage.googleapis.com/v1beta"
-DEFAULT_MODELS = ["gemini-3.5-flash-lite", "gemini-3.8-flash", "gemini-2.5-flash-lite"]
+DEFAULT_MODELS = ["gemini-3.5-flash-lite", "gemini-3.7-flash", "gemini-3.8-flash", "gemini-2.5-flash"]
 
 
 def load_key() -> tuple[str, str]:
@@ -77,8 +77,12 @@ def main() -> int:
         if m not in available:
             print(f"  · {m:24} not available to this key")
             continue
-        r = httpx.post(f"{BASE}/models/{m}:generateContent", params={"key": key}, timeout=60,
-                       json={"contents": [{"parts": [{"text": "Reply with exactly: ok"}]}], "generationConfig": {"maxOutputTokens": 5}})
+        try:
+            r = httpx.post(f"{BASE}/models/{m}:generateContent", params={"key": key}, timeout=45,
+                           json={"contents": [{"parts": [{"text": "Reply with exactly: ok"}]}]})
+        except httpx.TimeoutException:
+            print(f"  ✗ {m:24} no answer in 45 s (overloaded or slow right now; FINN falls back to the next model)")
+            continue
         if r.status_code == 200:
             text = "".join(p.get("text", "") for p in r.json()["candidates"][0]["content"].get("parts", []))
             print(f"  ✓ {m:24} works → {text.strip()!r}")

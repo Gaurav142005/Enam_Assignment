@@ -28,7 +28,7 @@ def _years(s: str | None) -> tuple[int | None, int | None]:
 def to_person(row: sqlite3.Row, company_name: str) -> Person:
     bg = json.loads(row["background"] or "{}")
     verb = {"appointed": "Incoming", "resigned": "Outgoing", "retired": "Retiring", "ceased": "Outgoing", "demise": "Late"}.get(row["change"] or "", "")
-    role = row["role"] or "Management change"
+    role = row["role"] or "Management change"  # headline only; titles drop this placeholder
     positions = [Position(company=company_name, ticker=row["ticker"], title=role, start=_years(row["effective_date"])[0])]
     for r in bg.get("previous_roles") or []:
         if r.get("company"):

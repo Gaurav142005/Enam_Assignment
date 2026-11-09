@@ -44,3 +44,31 @@ def get(url: str, *, params: dict | None = None, referer: str | None = None, acc
                 break
         time.sleep(1.5 * (attempt + 1))
     raise FetchError(f"{url}: {err}")
+
+
+def get_bytes(url: str, *, referer: str | None = None, accept: str = "*/*", max_bytes: int = 12_000_000, deadline: float = 25.0) -> bytes:
+    """Download with a hard size cap and a wall-clock deadline. One slow or huge file must not stall a whole run."""
+    host = urlparse(url).netloc
+    gap = _MIN_GAP.get(host, 0) - (time.monotonic() - _last.get(host, 0))
+    if gap > 0:
+        time.sleep(gap)
+    _last[host] = time.monotonic()
+    headers = {"Accept": accept, **({"Referer": referer} if referer else {})}
+    start = time.monotonic()
+    try:
+        with _client.stream("GET", url, headers=headers, timeout=httpx.Timeout(min(deadline, 20), connect=10)) as r:
+            if r.status_code != 200:
+                raise FetchError(f"{url}: HTTP {r.status_code}")
+            size = int(r.headers.get("content-length") or 0)
+            if size > max_bytes:
+                raise FetchError(f"{url}: {size / 1e6:.0f} MB is over the {max_bytes / 1e6:.0f} MB limit")
+            buf = bytearray()
+            for chunk in r.iter_bytes():
+                buf.extend(chunk)
+                if len(buf) > max_bytes:
+                    raise FetchError(f"{url}: over the {max_bytes / 1e6:.0f} MB limit")
+                if time.monotonic() - start > deadline:
+                    raise FetchError(f"{url}: download took over {deadline:.0f}s")
+            return bytes(buf)
+    except httpx.TransportError as e:
+        raise FetchError(f"{url}: {e}") from e

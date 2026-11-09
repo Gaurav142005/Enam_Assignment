@@ -311,3 +311,104 @@ export interface CompanyPeopleSummary {
   people: number;
   connections: number;
 }
+
+export interface Cite {
+  doc: string;
+  page: number | null;
+}
+
+export interface SourceDoc {
+  id: string;
+  kind: "transcript" | "presentation" | "annual_report" | "filing";
+  title: string;
+  period: string | null;
+  url: string;
+  pages: number;
+  used_pages: number;
+}
+
+export interface Movement {
+  date: string;
+  kind: "financial" | "event" | "people" | "ownership" | "market";
+  title: string;
+  detail: string | null;
+  tone: "positive" | "negative" | "neutral";
+  category: Category | null;
+  reaction_pct: number | null;
+  cites: Cite[];
+}
+
+export interface CitedPoint {
+  text: string;
+  cites: Cite[];
+}
+
+export interface GuidanceItem {
+  metric: string;
+  value: string;
+  horizon: string | null;
+  cites: Cite[];
+}
+
+export interface PromiseCheck {
+  quarter: string;
+  promised: string;
+  delivered: string;
+  verdict: "beat" | "met" | "missed" | "unclear";
+  cites: Cite[];
+}
+
+export interface Theme {
+  title: string;
+  detail: string;
+  cites: Cite[];
+}
+
+export interface Question {
+  question: string;
+  why: string | null;
+  ask: NetworkHint | null;
+}
+
+export interface DeepResearch {
+  ticker: string;
+  name: string;
+  generated_at: string;
+  sources: SourceDoc[];
+  movements: Movement[];
+  summary: string | null;
+  promised_vs_delivered: PromiseCheck[];
+  guidance: GuidanceItem[];
+  themes: Theme[];
+  risks: Theme[];
+  bull: CitedPoint[];
+  bear: CitedPoint[];
+  questions: Question[];
+  network: NetworkHint[];
+  stats: {
+    seconds: number;
+    documents: number;
+    pages_read: number;
+    llm: { calls: number; cached: number; tokens_in: number; tokens_out: number; models?: Record<string, number> };
+    llm_available: boolean;
+  };
+  notes: string[];
+}
+
+export interface ResearchStep {
+  key: string;
+  label: string;
+  status: "pending" | "running" | "done" | "skipped" | "error";
+  detail: string | null;
+}
+
+export interface ResearchJob {
+  id: string;
+  ticker: string;
+  status: "queued" | "running" | "done" | "error";
+  steps: ResearchStep[];
+  started_at: string;
+  finished_at: string | null;
+  error: string | null;
+  result: DeepResearch | null;
+}

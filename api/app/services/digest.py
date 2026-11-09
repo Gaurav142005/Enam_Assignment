@@ -67,8 +67,13 @@ def _people_title(people: list) -> str | None:
         return None
     p = people[0]
     role = p.positions[0].title if p.positions else ""
-    verb = {"Incoming": "appointed", "Outgoing": "steps down as", "Retiring": "retires as", "Late": "passed away —"}.get(p.headline.split()[0], "")
-    title = f"{p.name} {verb} {role}".strip() if verb else f"{p.name}: {role}"
+    role = "" if role.lower() in ("", "management change") else role
+    first = p.headline.split()[0] if p.headline else ""
+    if role:
+        verb = {"Incoming": "appointed", "Outgoing": "steps down as", "Retiring": "retires as", "Late": "passed away —"}.get(first, "")
+        title = f"{p.name} {verb} {role}".strip() if verb else f"{p.name}: {role}"
+    else:
+        title = f"{p.name} {({'Incoming': 'appointed', 'Outgoing': 'steps down', 'Retiring': 'retires', 'Late': 'passed away'}).get(first, '(management change)')}"
     if len(people) > 1:
         title += f" (+{len(people) - 1} more)"
     return title

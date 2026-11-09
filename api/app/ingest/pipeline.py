@@ -46,6 +46,7 @@ def ingest_company(
     n_transcripts: int = 4,
     n_annual_reports: int = 1,
     pdf_days: int = 30,
+    mgmt_pdf_days: int = 180,
     use_llm: bool = True,
     say: Callable[[str], None] = print,
 ) -> Report:
@@ -88,6 +89,7 @@ def ingest_company(
     def do_filings() -> str:
         rows = nse.fetch_announcements(ticker, date.today() - timedelta(days=days))
         cutoff = (date.today() - timedelta(days=pdf_days)).isoformat()
+        mgmt_cutoff = (date.today() - timedelta(days=mgmt_pdf_days)).isoformat()
         pdf_text: dict[str, str] = {}
         xbrl: dict[str, str] = {}
         with store.connect() as con:
@@ -95,7 +97,7 @@ def ingest_company(
             for r in rows:
                 pre = free_classify(r["text"], r["nse_desc"])
                 # Management changes: always (the person's profile is only in the PDF). Unknowns: recent ones only.
-                wanted = pre == "management_change" or (pre is None and r["filed_at"][:10] >= cutoff)
+                wanted = (pre == "management_change" and r["filed_at"][:10] >= mgmt_cutoff) or (pre is None and r["filed_at"][:10] >= cutoff)
                 if r["attachment_url"] and wanted:
                     try:
                         documents.ingest(con, r["attachment_url"], ticker=ticker, kind="filing", period=r["filed_at"][:10],

@@ -1,7 +1,7 @@
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, HTTPException, Query
 
-from app.models import Company, ResearchReport
-from app.services import companies, research
+from app.models import Company, ResearchJob, ResearchReport
+from app.services import companies, deep_research, research
 
 router = APIRouter(prefix="/pull", tags=["pull"])
 
@@ -14,3 +14,23 @@ def search(q: str = Query("", max_length=40)) -> list[Company]:
 @router.get("/research/{ticker}", response_model=ResearchReport)
 def get_research(ticker: str) -> ResearchReport:
     return research.build(ticker)
+
+
+@router.post("/deep/{ticker}", response_model=ResearchJob)
+def start_deep_research(ticker: str, refresh: bool = False) -> ResearchJob:
+    """Starts (or returns a fresh cached) deep-research run. Poll /pull/deep/jobs/{id}."""
+    return deep_research.start(ticker, refresh=refresh)
+
+
+@router.get("/deep/jobs/{job_id}", response_model=ResearchJob)
+def deep_research_job(job_id: str) -> ResearchJob:
+    if not (job := deep_research.get_job(job_id)):
+        raise HTTPException(404, "job not found")
+    return job
+
+
+@router.get("/deep/{ticker}/latest", response_model=ResearchJob)
+def latest_deep_research(ticker: str) -> ResearchJob:
+    if not (job := deep_research.latest(ticker.upper())):
+        raise HTTPException(404, "no research yet")
+    return job

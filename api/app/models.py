@@ -372,3 +372,110 @@ class CompanyPeopleSummary(BaseModel):
     name: str
     people: int
     connections: int  # your connections who work / worked there
+
+
+# ── Deep research (Pull, on demand, 30–60 s) ──────────────────────────────
+
+
+class Cite(BaseModel):
+    doc: str  # short id of a SourceDoc, e.g. "T1"
+    page: int | None = None
+
+
+class SourceDoc(BaseModel):
+    id: str  # T1..T4 transcripts, P1..P2 presentations, A1 annual report, F1.. filings
+    kind: Literal["transcript", "presentation", "annual_report", "filing"]
+    title: str
+    period: str | None = None
+    url: str
+    pages: int = 0
+    used_pages: int = 0  # pages actually sent to a model (annual reports are pre-filtered)
+
+
+class Movement(BaseModel):
+    date: str  # YYYY-MM-DD (or quarter end)
+    kind: Literal["financial", "event", "people", "ownership", "market"]
+    title: str
+    detail: str | None = None
+    tone: Literal["positive", "negative", "neutral"] = "neutral"
+    category: Category | None = None
+    reaction_pct: float | None = None  # stock move on the session the market first saw it
+    cites: list[Cite] = []
+    source_id: str | None = None  # announcement id, for events
+
+
+class Point_(BaseModel):
+    text: str
+    cites: list[Cite] = []
+
+
+class GuidanceItem(BaseModel):
+    metric: str
+    value: str
+    horizon: str | None = None
+    cites: list[Cite] = []
+
+
+class PromiseCheck(BaseModel):
+    quarter: str
+    promised: str
+    delivered: str
+    verdict: Literal["beat", "met", "missed", "unclear"]
+    cites: list[Cite] = []
+
+
+class Theme(BaseModel):
+    title: str
+    detail: str
+    cites: list[Cite] = []
+
+
+class Question(BaseModel):
+    question: str
+    why: str | None = None
+    ask: NetworkHint | None = None  # who in your network could answer it
+
+
+class ResearchStats(BaseModel):
+    seconds: float
+    documents: int
+    pages_read: int
+    llm: dict  # Usage.as_dict()
+    llm_available: bool
+
+
+class DeepResearch(BaseModel):
+    ticker: str
+    name: str
+    generated_at: datetime
+    sources: list[SourceDoc]
+    movements: list[Movement]  # newest first
+    summary: str | None = None
+    promised_vs_delivered: list[PromiseCheck] = []
+    guidance: list[GuidanceItem] = []
+    themes: list[Theme] = []
+    risks: list[Theme] = []
+    bull: list[Point_] = []
+    bear: list[Point_] = []
+    questions: list[Question] = []
+    network: list[NetworkHint] = []
+    stats: ResearchStats
+    notes: list[str] = []  # what couldn't be done and why
+
+
+class ResearchStep(BaseModel):
+    key: str
+    label: str
+    status: Literal["pending", "running", "done", "skipped", "error"] = "pending"
+    detail: str | None = None
+
+
+class ResearchJob(BaseModel):
+    id: str
+    ticker: str
+    status: Literal["queued", "running", "done", "error"]
+    steps: list[ResearchStep]
+    started_at: datetime
+    finished_at: datetime | None = None
+    error: str | None = None
+    result: DeepResearch | None = None

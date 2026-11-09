@@ -43,10 +43,11 @@ Deadline: **15 Nov 2026**.
 ### Pull
 - [x] Works for **any** NSE ticker (no hard-wiring to the demo set)
 - [x] Section scaffold, with "Who can help" woven in
-- [ ] **Promised vs delivered** across the last 4 quarters (the headline feature)
+- [x] **Deep research** (30–60 s job): 12-month movement timeline with market reactions, promised vs delivered, guidance, themes, risks, bull/bear, questions routed to your network; every claim page-cited
+- [x] **Promised vs delivered** across the last 4 quarters (the headline feature)
 - [x] Business, financial snapshot, trajectory, balance sheet, cash quality, shareholding: deterministic, from statements
-- [ ] Guidance, bull vs bear (LLM over transcripts)
-- [ ] Every claim cites a primary-source page (AR / concall transcript only)
+- [x] Guidance, bull vs bear (LLM over transcripts)
+- [x] Every claim cites a primary-source page (AR / concall transcript only)
 
 ### Network
 - [x] Edges are inferred from profiles (overlapping tenure at the same employer, overlapping years at the same school)

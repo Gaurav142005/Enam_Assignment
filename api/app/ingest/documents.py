@@ -16,10 +16,16 @@ from app.ingest import http, store
 _REFERER = {"nsearchives.nseindia.com": "https://www.nseindia.com/", "www.bseindia.com": "https://www.bseindia.com/"}
 
 
-def _download(url: str) -> tuple[str, bytes, str | None]:
+# Filing attachments only need their first pages; transcripts and annual reports are the real reading.
+LIMITS = {"filing": (12_000_000, 25.0), "default": (60_000_000, 90.0)}
+
+
+def _download(url: str, kind: str = "default") -> tuple[str, bytes, str | None]:
     """→ (sha, pdf bytes, xbrl xml). NSE ships some filings as a zip of PDF + SEBI XBRL; unpack those."""
-    r = http.get(url, referer=_REFERER.get(urlparse(url).netloc), accept="application/pdf,application/zip,*/*")
-    body, xbrl = r.content, None
+    max_bytes, deadline = LIMITS.get(kind, LIMITS["default"])
+    body = http.get_bytes(url, referer=_REFERER.get(urlparse(url).netloc), accept="application/pdf,application/zip,*/*",
+                          max_bytes=max_bytes, deadline=deadline)
+    xbrl = None
     if not body:
         raise http.FetchError(f"{url}: empty response")
     if body[:2] == b"PK":
@@ -32,7 +38,7 @@ def _download(url: str) -> tuple[str, bytes, str | None]:
         if xbrl:
             body = b""
         else:
-            raise http.FetchError(f"{url}: not a PDF ({r.headers.get('content-type')})")
+            raise http.FetchError(f"{url}: not a PDF")
     sha = hashlib.sha256(body or (xbrl or "").encode()).hexdigest()
     if body:
         config.FILES_DIR.mkdir(parents=True, exist_ok=True)
@@ -46,7 +52,7 @@ def ingest(con: sqlite3.Connection, url: str, *, ticker: str, kind: str, period:
     row = con.execute("SELECT pages FROM documents WHERE url=? AND pages IS NOT NULL", (url,)).fetchone()
     if row:
         return row["pages"]
-    sha, data, xbrl = _download(url)
+    sha, data, xbrl = _download(url, kind)
     pages: list[dict] = []
     if data:
         with pymupdf.open(stream=data, filetype="pdf") as pdf:

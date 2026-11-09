@@ -1,4 +1,4 @@
-import { ArrowUpRight, ChevronDown, Minus, TrendingDown, TrendingUp } from "lucide-react";
+import { ArrowUpRight, ChevronDown, ChevronRight, Minus, Sparkles, TrendingDown, TrendingUp } from "lucide-react";
 import { BackLink } from "@/components/BackLink";
 import { ColumnChart, LineChart } from "@/components/charts";
 import { NetworkLine } from "@/components/NetworkLine";
@@ -7,17 +7,18 @@ import { PriceChart } from "@/components/PriceChart";
 import { Empty } from "@/components/States";
 import { api } from "@/lib/api";
 import { ago, inr, pct, tone } from "@/lib/format";
-import type { CompanyPerson, Fundamentals, Holding, NewsItem, ResearchReport, Series, Signal } from "@/lib/types";
+import type { CompanyPerson, ResearchJob, Fundamentals, Holding, NewsItem, ResearchReport, Series, Signal } from "@/lib/types";
 import { Avatar } from "@/components/Avatar";
 import Link from "next/link";
 
 /** PULL: one company. Price → your position → who can help → fundamentals (computed) → LLM sections → news (context). */
 export default async function CompanyPage({ params }: { params: Promise<{ ticker: string }> }) {
   const { ticker } = await params;
-  const [r, news, leaders] = await Promise.all([
+  const [r, news, leaders, deep] = await Promise.all([
     api<ResearchReport>(`/pull/research/${encodeURIComponent(ticker)}`),
     api<NewsItem[]>(`/news/${encodeURIComponent(ticker)}`).catch(() => [] as NewsItem[]),
     api<CompanyPerson[]>(`/network/companies/${encodeURIComponent(ticker)}/people`).catch(() => [] as CompanyPerson[]),
+    api<ResearchJob>(`/pull/deep/${encodeURIComponent(ticker)}/latest`).catch(() => null),
   ]);
   const c = r.company;
   const f = r.fundamentals;
@@ -29,6 +30,21 @@ export default async function CompanyPage({ params }: { params: Promise<{ ticker
         <BackLink />
       </div>
       <PageHeader compact title={c.ticker} sub={`${f?.name ?? c.name}${c.sector !== "—" ? ` · ${c.sector}` : ""}`} />
+
+      <Link href={`/company/${c.ticker}/research`} className="card mx-4 mb-3 flex items-center gap-3 p-4 active:opacity-70">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent">
+          <Sparkles size={18} />
+        </span>
+        <span className="min-w-0 flex-1 text-[13px] leading-snug">
+          <span className="block font-semibold">{deep?.finished_at ? "Open deep research" : "Run deep research"}</span>
+          <span className="block text-muted">
+            {deep?.finished_at
+              ? `Generated ${ago(deep.finished_at)} ago · ${deep.result?.movements.length ?? 0} movements · ${deep.result?.sources.length ?? 0} sources`
+              : "Reads transcripts, decks, the annual report and a year of filings. About a minute."}
+          </span>
+        </span>
+        <ChevronRight size={16} className="text-muted" />
+      </Link>
 
       {r.position && <PositionCard h={r.position} />}
       <div className={r.position ? "mt-3" : ""}>

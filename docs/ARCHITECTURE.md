@@ -52,7 +52,24 @@ A `routine` flag demotes business-as-usual items inside material categories (an 
 - Connection data never goes to an LLM. Re-uploading an export is a full sync, so people the investor removes from LinkedIn disappear from FINN too.
 - Retention, consent, access control and an audit log: TBD in the writeup.
 
-## LLMs & agents (to be written up)
+## LLMs & agents
+
+**Deep research** (`services/deep_research.py`, Pull → "Run deep research") is the one agentic workflow: it plans a fixed
+read of a company's primary sources, calls tools (exchange APIs, PDF readers, the model), and assembles a cited report.
+
+| Stage | What | Model calls | Typical time |
+|---|---|---|---|
+| collect | 12 months of filings, prices, fundamentals, leadership | 0 | 5–10 s |
+| documents | last 4 transcripts, 2 decks, latest annual report (only the ~30 most relevant AR pages are kept) | 0 | 1–10 s |
+| movements | financial inflections, events + next-session market reaction, people, ownership, unexplained moves | 0 | <1 s |
+| extract | one cheap call per document + one for filings, page-cited JSON | ~8 (Flash-Lite) | 10–45 s (budgeted) |
+| synthesize | promised vs delivered, guidance, themes, risks, bull/bear, questions → routed to people in the network | 1 (Flash, falls back) | 5–40 s |
+
+Measured: ~90k input / ~8k output tokens for a first run (≈ $0.01–0.02 at paid Flash-Lite/Flash prices; ~9 requests against
+free-tier daily quotas of hundreds to ~1,000). Every call is cached by input hash, so a re-run with no new documents makes
+0 calls and a new quarter re-reads only the new transcript plus one synthesis call. Overloaded models (503 / timeouts) are
+skipped for 10 minutes and the next model in the chain answers; each stage has a wall-clock budget, so a slow provider
+degrades the report (noted at the bottom) instead of blocking it.
 - `app/llm.py` is the single routing point. A **cheap** model handles bulk extraction and classification fallback. A **strong** model handles promised-vs-delivered, bull/bear and network explanations.
 - Results are cached by (model, prompt, input hash), so each document is processed only once.
 
