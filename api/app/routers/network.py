@@ -95,7 +95,7 @@ def remove_linkedin_import() -> dict[str, int]:
 
 @router.get("/company/{ticker}", response_model=list[NetworkHint])
 def company_contacts(ticker: str) -> list[NetworkHint]:
-    return graph.who_knows_company(ticker.upper(), limit=10)
+    return graph.who_knows_company(ticker.upper(), limit=10, wide=True)
 
 
 @router.get("/companies", response_model=list[CompanyPeopleSummary])

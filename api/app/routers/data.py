@@ -9,6 +9,14 @@ from app.ingest import store
 router = APIRouter(prefix="/data", tags=["data"])
 
 
+@router.get("/llm/usage")
+def llm_usage() -> dict:
+    """Model calls and tokens spent today, per model."""
+    from app import config, llm
+
+    return {"available": llm.available(), "cheap_model": config.CHEAP_MODEL, "strong_model": config.STRONG_MODEL, "today": llm.usage_today()}
+
+
 @router.get("/{ticker}")
 def company_data(ticker: str) -> dict:
     t = ticker.upper()

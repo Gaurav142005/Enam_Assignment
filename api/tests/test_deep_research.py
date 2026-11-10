@@ -20,3 +20,14 @@ def test_annual_report_page_selection_prefers_narrative():
     picked = [no for no, _ in _select_ar_pages(pages, n=2)]
     assert picked == [2, 4]
     assert _marked([(7, "hello   world")], 100) == "\n[p.7] hello world"
+
+
+def test_citation_formats_are_normalised():
+    from app.services.deep_research import _cites
+
+    valid = {"T1", "A1", "F10"}
+    got = lambda raw: [(c.doc, c.page) for c in _cites(raw, valid)]
+    assert got([{"doc": "T1", "page": 4}, {"doc": "X9", "page": 1}]) == [("T1", 4)]
+    assert got(["F10", "A1", "20"]) == [("F10", None), ("A1", 20)]
+    assert got(["T1 p.7", "A1, page 211"]) == [("T1", 7), ("A1", 211)]
+    assert got(None) == [] and got("T1") == []

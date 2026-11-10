@@ -16,7 +16,7 @@ export function NetworkLine({ hint, lead = "Ask" }: { hint: NetworkHint; lead?: 
         {hint.relation === "peer" && <span className="ml-1.5 rounded-full bg-line px-1.5 py-px text-[10px] text-muted">competitor</span>}
         {hint.relation === "expert" && <span className="ml-1.5 rounded-full bg-line px-1.5 py-px text-[10px] text-muted">sector expert</span>}
         {hint.degree === 2 && hint.via && <span className="text-muted"> via {hint.via}</span>}
-        <span className="block text-muted line-clamp-2">{hint.reason}</span>
+        <span className="text-muted line-clamp-2">{hint.reason}</span>
       </span>
       <Strength value={hint.strength} />
       <ChevronRight size={16} className="shrink-0 text-muted" />

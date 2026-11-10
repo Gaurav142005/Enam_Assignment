@@ -56,6 +56,18 @@ A `routine` flag demotes business-as-usual items inside material categories (an 
 
 ## LLMs & agents
 
+**Where a model is used, and where it deliberately isn't**
+
+| Step | Model | Why |
+|---|---|---|
+| Classify filings | None for ~85% (exchange label + rules); Flash-Lite, batched, for the rest | Bulk, cheap, cacheable |
+| Say what a vague filing is about | Flash-Lite, one batched call per company per refresh | The exchange line is often just "Updates" |
+| Who joined / left, with their profile | SEBI XBRL when present (no model); else Flash-Lite over the filing PDF | Structured beats generated |
+| Results headline numbers, fundamentals signals, movements | None | Arithmetic; a model adds only risk |
+| Ask a company a question (`services/qa.py`) | Lexical retrieval (no embeddings), then one Flash-Lite call over ~8 pages | ~5k tokens per answer; cites pages; says when the documents don't answer |
+| Deep research synthesis | One Flash call over extracted facts, not raw documents | Reasoning only where it's needed |
+| Network: who to call, paths, direct questions, dossier | None | Small structured graph; explainable; no personal data leaves the box |
+
 **Deep research** (`services/deep_research.py`, Pull → "Run deep research") is the one agentic workflow: it plans a fixed
 read of a company's primary sources, calls tools (exchange APIs, PDF readers, the model), and assembles a cited report.
 

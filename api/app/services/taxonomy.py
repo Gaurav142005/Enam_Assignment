@@ -149,7 +149,7 @@ _RULES: list[tuple[Category, str]] = [
 
 # Filings in a material category that are business-as-usual (e.g. an NBFC's weekly NCD allotment).
 _ROUTINE_WITHIN: list[tuple[Category, str]] = [
-    ("results", r"is scheduled|will be held|to consider and approve|intimation of board meeting"),
+    ("results", r"is scheduled|will be held|to consider and approve|intimation of board meeting|results (?:issued|announced|declared|published) by"),
     ("fund_raise", r"non[- ]convertible|debenture|commercial paper|\bncd"),
     ("management_change", r"senior management personnel|\bsmp\b|company secretary|compliance officer"),
 ]

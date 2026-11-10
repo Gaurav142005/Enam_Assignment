@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronRight, FileUp, Search, UserPlus } from "lucide-react";
+import { ChevronDown, ChevronRight, FileUp, Search, UserPlus } from "lucide-react";
 import { Avatar } from "@/components/Avatar";
 import { PageHeader, SectionTitle } from "@/components/PageHeader";
 import { api } from "@/lib/api";
@@ -99,6 +99,23 @@ export default async function NetworkPage({ searchParams }: { searchParams: Prom
         </Link>
       )}
 
+      {nudges.length > 0 && (
+        <>
+          <SectionTitle>Good reason to reconnect</SectionTitle>
+          <div className="card mx-4 divide-y divide-line">
+            {nudges.map((n) => (
+              <Link key={n.person.id} href={`/people/${n.person.id}`} className="flex items-center gap-3 px-4 py-3 active:bg-line/40">
+                <Avatar name={n.person.name} />
+                <span className="min-w-0 text-[13px] leading-snug">
+                  <span className="block font-medium">{n.person.name}</span>
+                  <span className="block text-muted">{n.reason}</span>
+                </span>
+              </Link>
+            ))}
+          </div>
+        </>
+      )}
+
       {atPortfolio.size > 0 && (
         <>
           <SectionTitle>Your people at portfolio companies</SectionTitle>
@@ -123,7 +140,15 @@ export default async function NetworkPage({ searchParams }: { searchParams: Prom
       )}
 
       <SectionTitle>Leadership at your companies</SectionTitle>
-      <ul className="card mx-4 divide-y divide-line">
+      <details className="card group mx-4">
+        <summary className="flex cursor-pointer items-center justify-between px-4 py-3 text-sm">
+          <span>
+            {companies.reduce((n, c) => n + c.people, 0)} leaders across {companies.length} companies
+            <span className="block text-xs text-muted">You have a way in at {companies.filter((c) => c.connections > 0).length} of them</span>
+          </span>
+          <ChevronDown size={16} className="text-muted transition-transform group-open:rotate-180" />
+        </summary>
+      <ul className="divide-y divide-line border-t border-line">
         {companies.map((c) => (
           <li key={c.ticker}>
             <Link href={`/company/${c.ticker}#leadership`} className="flex items-center gap-3 px-4 py-2.5 active:bg-line/40">
@@ -142,23 +167,7 @@ export default async function NetworkPage({ searchParams }: { searchParams: Prom
           </li>
         ))}
       </ul>
-
-      {nudges.length > 0 && (
-        <>
-          <SectionTitle>Good reason to reconnect</SectionTitle>
-          <div className="card mx-4 divide-y divide-line">
-            {nudges.map((n) => (
-              <Link key={n.person.id} href={`/people/${n.person.id}`} className="flex items-center gap-3 px-4 py-3 active:bg-line/40">
-                <Avatar name={n.person.name} />
-                <span className="min-w-0 text-[13px] leading-snug">
-                  <span className="block font-medium">{n.person.name}</span>
-                  <span className="block text-muted">{n.reason}</span>
-                </span>
-              </Link>
-            ))}
-          </div>
-        </>
-      )}
+      </details>
 
       {themes.length > 0 && (
         <>

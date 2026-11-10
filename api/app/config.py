@@ -14,8 +14,8 @@ FILES_DIR = CACHE_DIR / "files"
 DEMO_NETWORK = os.getenv("FINN_DEMO_NETWORK", "1") != "0"
 AUTO_REFRESH_MIN = float(os.getenv("FINN_AUTO_REFRESH_MIN", "15"))
 # Tried in order when a model times out or is overloaded (Gemini returns 503 under load).
-CHEAP_FALLBACKS = [m for m in os.getenv("FINN_CHEAP_FALLBACKS", "gemini-2.5-flash-lite,gemini-2.5-flash").split(",") if m]
-STRONG_FALLBACKS = [m for m in os.getenv("FINN_STRONG_FALLBACKS", "gemini-3.7-flash,gemini-3.5-flash-lite").split(",") if m]
+CHEAP_FALLBACKS = [m for m in os.getenv("FINN_CHEAP_FALLBACKS", "gemini-3.1-flash-lite").split(",") if m]
+STRONG_FALLBACKS = [m for m in os.getenv("FINN_STRONG_FALLBACKS", "gemini-3.6-flash,gemini-3-flash-preview,gemini-3.5-flash-lite").split(",") if m]
 # Per-model budget. A model that hasn't answered by then is overloaded; the next one in the chain gets the job.
 CHEAP_TIMEOUT = float(os.getenv("FINN_CHEAP_TIMEOUT", "30"))
 STRONG_TIMEOUT = float(os.getenv("FINN_STRONG_TIMEOUT", "40"))
@@ -27,7 +27,7 @@ LLM_PROVIDER = os.getenv("FINN_LLM_PROVIDER", "gemini")  # "gemini" | "openai"
 LLM_API_KEY = os.getenv("FINN_LLM_API_KEY") or os.getenv("GEMINI_API_KEY") or ""
 LLM_BASE_URL = os.getenv("FINN_LLM_BASE_URL", "")  # only for provider=openai, e.g. https://api.groq.com/openai/v1
 CHEAP_MODEL = os.getenv("FINN_CHEAP_MODEL", "gemini-3.5-flash-lite")
-STRONG_MODEL = os.getenv("FINN_STRONG_MODEL", "gemini-2.5-flash")
+STRONG_MODEL = os.getenv("FINN_STRONG_MODEL", "gemini-3.5-flash")
 
 
 def _load_dotenv() -> None:

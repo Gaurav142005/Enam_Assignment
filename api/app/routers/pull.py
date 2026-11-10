@@ -16,6 +16,11 @@ def get_research(ticker: str) -> ResearchReport:
     return research.build(ticker)
 
 
+@router.get("/deep")
+def recent_deep_research() -> list[dict]:
+    return deep_research.recent()
+
+
 @router.post("/deep/{ticker}", response_model=ResearchJob)
 def start_deep_research(ticker: str, refresh: bool = False) -> ResearchJob:
     """Starts (or returns a fresh cached) deep-research run. Poll /pull/deep/jobs/{id}."""

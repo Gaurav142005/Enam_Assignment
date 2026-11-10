@@ -97,6 +97,19 @@ def latest(ticker: str) -> ResearchJob | None:
     return _load(row) if row else None
 
 
+def recent(limit: int = 8) -> list[dict]:
+    """Latest finished report per company, newest first (for the Ask tab)."""
+    with store.connect() as con:
+        rows = con.execute("SELECT ticker, MAX(finished_at) AS finished_at, result FROM research_jobs WHERE status='done' GROUP BY ticker "
+                           "ORDER BY finished_at DESC LIMIT ?", (limit,)).fetchall()
+    out = []
+    for r in rows:
+        res = json.loads(r["result"] or "{}")
+        out.append({"ticker": r["ticker"], "name": res.get("name") or r["ticker"], "finished_at": r["finished_at"],
+                    "summary": res.get("summary"), "movements": len(res.get("movements", []))})
+    return out
+
+
 def start(ticker: str, refresh: bool = False) -> ResearchJob:
     t = ticker.upper().removesuffix(".NS")
     if not refresh and (done := latest(t)) and done.finished_at and datetime.now(timezone.utc) - done.finished_at < FRESH_FOR:
@@ -435,10 +448,23 @@ def _extract(sources: list[SourceDoc], texts: dict[str, str], filings: list[dict
 
 
 def _cites(raw, valid: set[str]) -> list[Cite]:
-    out = []
-    for c in raw or []:
+    """Models format citations loosely. Accept {"doc","page"} objects, "T1 p.4" strings, and flat ["T1", "4", "A1", "20"] lists."""
+    out: list[Cite] = []
+
+    def page(v) -> int | None:
+        m = re.search(r"\d+", str(v)) if v is not None else None
+        return int(m.group(0)) if m else None
+
+    for c in raw if isinstance(raw, list) else []:
         if isinstance(c, dict) and c.get("doc") in valid:
-            out.append(Cite(doc=c["doc"], page=c.get("page") if isinstance(c.get("page"), int) else None))
+            out.append(Cite(doc=c["doc"], page=page(c.get("page"))))
+        elif isinstance(c, (str, int)):
+            tok = str(c).strip()
+            m = re.match(r"^([A-Z]\d+)\b[\s,:;-]*(?:p(?:age)?\.?\s*)?(\d+)?$", tok)
+            if m and m.group(1) in valid:
+                out.append(Cite(doc=m.group(1), page=int(m.group(2)) if m.group(2) else None))
+            elif out and out[-1].page is None and re.fullmatch(r"(?:p(?:age)?\.?\s*)?\d+", tok):
+                out[-1] = Cite(doc=out[-1].doc, page=page(tok))  # a bare page number belongs to the doc before it
     return out
 
 

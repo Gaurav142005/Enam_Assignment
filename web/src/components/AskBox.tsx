@@ -60,7 +60,7 @@ export function AskBox({ ticker }: { ticker: string }) {
           ))}
         </div>
       )}
-      {busy && <p className="mt-3 text-xs text-muted">Reading the transcripts and presentations…</p>}
+      {busy && <p className="mt-3 text-xs text-muted">Reading the transcripts and presentations… the first question on a company takes longer.</p>}
       {error && <p className="mt-3 text-sm text-down-ink">{error}</p>}
 
       {a && !busy && (

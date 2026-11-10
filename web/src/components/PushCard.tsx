@@ -46,8 +46,8 @@ function KeyLine({ item }: { item: PushItem }) {
       </p>
     );
   }
-  if (item.person) return <p className="text-[13px] text-muted">{item.person.bio ?? item.person.headline}</p>;
-  if (item.summary) return <p className="text-[13px] text-muted">{item.summary}</p>;
+  if (item.person) return <p className="text-[13px] text-muted line-clamp-3">{item.person.bio ?? item.person.headline}</p>;
+  if (item.summary) return <p className="text-[13px] text-muted line-clamp-3">{item.summary}</p>;
   return null;
 }
 
@@ -86,11 +86,11 @@ export function PushCard({ item }: { item: PushItem }) {
         </header>
 
         <div className="space-y-1">
-          <h3 className="text-base font-semibold leading-snug">{title}</h3>
+          <h3 className="text-base font-semibold leading-snug line-clamp-3">{title}</h3>
           <KeyLine item={item} />
         </div>
 
-        {lead && <NetworkLine hint={lead} lead={item.person ? "Reach via" : "Ask"} />}
+        {lead && <NetworkLine hint={lead} lead={lead.relation === "overlap" ? "Reach via" : "Ask"} />}
       </div>
 
       {hasDetails && (
@@ -107,7 +107,7 @@ export function PushCard({ item }: { item: PushItem }) {
               <div className="space-y-1.5">
                 <p className="eyebrow">Also in your network</p>
                 {more.map((h) => (
-                  <NetworkLine key={h.person_id} hint={h} lead={item.person ? "Reach via" : "Ask"} />
+                  <NetworkLine key={h.person_id} hint={h} lead={h.relation === "overlap" ? "Reach via" : "Ask"} />
                 ))}
               </div>
             )}

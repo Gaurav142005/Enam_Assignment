@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Callable
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from datetime import date, timedelta
 
@@ -12,6 +13,11 @@ from app.services.taxonomy import classify as free_classify
 
 log = logging.getLogger(__name__)
 SUMMARY_CATEGORIES = {"M&A", "capex", "fund_raise", "litigation", "credit_rating", "press_release", "pledging", "insider_trading", "unclassified"}
+
+
+def _worth_a_model(r: dict, text: str, cutoff: str) -> bool:
+    """The incoming person's profile is what the investor wants, and only recent ones reach the Brief. Leavers: XBRL / regex."""
+    return r["filed_at"][:10] >= cutoff and "appoint" in f"{r['text']} {text[:3000]}".lower()
 
 
 def ingest_fundamentals(ticker: str) -> str:
@@ -131,8 +137,12 @@ def ingest_company(
 
             con.commit()
             # Model reads first (no lock held), database writes after.
-            extracted = {r["id"]: enrich.people_from_filing(r, pdf_text[r["id"]], xbrl=xbrl.get(r["id"]), use_llm=use_llm)
-                         for r in rows if r["category"] == "management_change" and r["id"] in pdf_text}
+            people_cutoff = (date.today() - timedelta(days=60)).isoformat()
+            mgmt = [r for r in rows if r["category"] == "management_change" and r["id"] in pdf_text]
+            with ThreadPoolExecutor(max_workers=4) as pool:  # one filing per call; a handful at a time keeps free tiers happy
+                extracted = dict(zip((r["id"] for r in mgmt),
+                                     pool.map(lambda r: enrich.people_from_filing(r, pdf_text[r["id"]], xbrl=xbrl.get(r["id"]),
+                                                                                  use_llm=use_llm and _worth_a_model(r, pdf_text[r["id"]], people_cutoff)), mgmt)))
             n_people = n_results = 0
             for r in rows:
                 extra: dict = {}

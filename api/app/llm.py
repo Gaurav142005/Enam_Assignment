@@ -47,6 +47,10 @@ class LLMError(RuntimeError):
     pass
 
 
+class QuotaExhausted(LLMError):
+    """The model's daily allowance is spent: retrying is pointless until it resets."""
+
+
 _disabled: str | None = None  # circuit breaker: set when the provider says this key can never succeed
 
 
@@ -80,9 +84,24 @@ COOLDOWN_S = 600
 _cool_until: dict[str, float] = {}
 
 
-def _cool(model: str) -> None:
-    _cool_until[model] = time.monotonic() + COOLDOWN_S
-    log.warning("LLM model %s is overloaded; skipping it for %ds", model, COOLDOWN_S)
+def _cool(model: str, seconds: float = COOLDOWN_S, why: str = "overloaded") -> None:
+    _cool_until[model] = time.monotonic() + seconds
+    log.warning("LLM model %s is %s; skipping it for %.0f min", model, why, seconds / 60)
+
+
+def _record(model: str, t_in: int, t_out: int) -> None:
+    """Daily spend per model, so the cost of every feature is visible (Settings shows it)."""
+    try:
+        with store.connect() as con:
+            con.execute("INSERT INTO llm_usage VALUES (date('now'), ?, 1, ?, ?) ON CONFLICT(day, model) DO UPDATE SET "
+                        "calls = calls + 1, tokens_in = tokens_in + excluded.tokens_in, tokens_out = tokens_out + excluded.tokens_out", (model, t_in, t_out))
+    except sqlite3.OperationalError:
+        pass
+
+
+def usage_today() -> list[dict]:
+    with store.connect() as con:
+        return [dict(r) for r in con.execute("SELECT model, calls, tokens_in, tokens_out FROM llm_usage WHERE day = date('now') ORDER BY calls DESC")]
 
 
 def _model(tier: Tier) -> str:
@@ -99,6 +118,8 @@ def _gemini(model: str, system: str, prompt: str, timeout: float = 60) -> tuple[
     r = httpx.post(url, params={"key": config.LLM_API_KEY}, json=body, timeout=timeout)
     if r.status_code == 429 and '"quota_limit_value": "0"' in r.text:
         _trip("Gemini quota for this key's project is 0 — create a free key at https://aistudio.google.com/apikey")
+    if r.status_code == 429 and "PerDay" in r.text:
+        raise QuotaExhausted(f"gemini 429: daily free-tier quota used up for {model}")
     if r.status_code in (401, 403):
         _trip(f"Gemini rejected the key ({r.status_code})")
     if r.status_code != 200:
@@ -154,6 +175,7 @@ def json_call(tier: Tier, system: str, prompt: str, *, tries: int = 3, usage: Us
                 budget = config.CHEAP_TIMEOUT if tier == "cheap" else config.STRONG_TIMEOUT
                 out = _with_deadline(call, m, system, prompt, timeout=budget, seconds=budget)
                 raw, t_in, t_out = out if isinstance(out, tuple) else (out, 0, 0)
+                _record(m, t_in, t_out)
                 if usage:
                     usage.calls += 1
                     usage.by_tier[tier] += 1
@@ -167,6 +189,10 @@ def json_call(tier: Tier, system: str, prompt: str, *, tries: int = 3, usage: Us
                 last = e
                 _cool(m)
                 break  # a model that's hanging won't recover in seconds: move down the chain
+            except QuotaExhausted as e:
+                last = e
+                _cool(m, 6 * 3600, "out of daily quota")
+                break
             except (LLMError, json.JSONDecodeError, httpx.TransportError, KeyError) as e:
                 last = e
                 msg = str(e)

@@ -147,8 +147,9 @@ def _hint(p: Person, reason: str, degree: int = 1, via: str | None = None, relat
     )
 
 
-def who_knows_company(ticker: str, limit: int = 3, wide: bool = True) -> list[NetworkHint]:
-    """Who should I call? Insiders first (worked there), then people at competitors, then go-to experts for the sector."""
+def who_knows_company(ticker: str, limit: int = 3, wide: bool | None = None) -> list[NetworkHint]:
+    """Who should I call? Insiders (worked there). With no insider, widen to competitors, then sector experts.
+    wide=True always widens (direct questions); wide=False never does (a route to a specific person must be an insider)."""
     from app.services import companies
 
     insiders: list[NetworkHint] = []
@@ -162,7 +163,7 @@ def who_knows_company(ticker: str, limit: int = 3, wide: bool = True) -> list[Ne
                 seen.add(p.id)
                 break
     insiders.sort(key=lambda h: h.strength, reverse=True)
-    if not wide or len(insiders) >= limit:
+    if wide is False or (wide is None and insiders) or len(insiders) >= limit:
         return insiders[:limit]
 
     group = companies.group_of(ticker)

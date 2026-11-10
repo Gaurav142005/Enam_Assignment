@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // A first question about a company fetches its transcripts before answering; allow for that through the /api proxy.
+  experimental: { proxyTimeout: 120_000 },
   async rewrites() {
     return [{ source: "/api/:path*", destination: `${process.env.API_URL ?? "http://localhost:8000"}/:path*` }];
   },

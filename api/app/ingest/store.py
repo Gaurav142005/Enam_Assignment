@@ -84,6 +84,9 @@ CREATE TABLE IF NOT EXISTS settings (
 CREATE TABLE IF NOT EXISTS contact_log (     -- when the investor last spoke to someone (any source of person)
   person_id TEXT PRIMARY KEY, last_contact TEXT, note TEXT, updated_at TEXT
 );
+CREATE TABLE IF NOT EXISTS llm_usage (       -- per day, per model: what FINN actually spent
+  day TEXT, model TEXT, calls INTEGER, tokens_in INTEGER, tokens_out INTEGER, PRIMARY KEY (day, model)
+);
 CREATE TABLE IF NOT EXISTS llm_cache (
   key TEXT PRIMARY KEY, model TEXT, response TEXT, created_at TEXT
 );

@@ -23,7 +23,6 @@ export default async function CompanyPage({ params }: { params: Promise<{ ticker
   ]);
   const c = r.company;
   const f = r.fundamentals;
-  const pending = r.sections.filter((s) => s.status === "pending" && ["narrative_vs_numbers", "guidance", "bull_bear"].includes(s.key));
 
   return (
     <main>
@@ -32,7 +31,7 @@ export default async function CompanyPage({ params }: { params: Promise<{ ticker
       </div>
       <PageHeader compact title={c.ticker} sub={`${f?.name ?? c.name}${c.sector !== "—" ? ` · ${c.sector}` : ""}`} />
 
-      <Link href={`/company/${c.ticker}/research`} className="card mx-4 mb-3 flex items-center gap-3 p-4 active:opacity-70">
+      <Link href={`/company/${c.ticker}/research`} className="card mx-4 mb-3 flex items-start gap-3 p-4 active:opacity-70">
         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent">
           <Sparkles size={18} />
         </span>
@@ -43,6 +42,7 @@ export default async function CompanyPage({ params }: { params: Promise<{ ticker
               ? `Generated ${ago(deep.finished_at)} ago · ${deep.result?.movements.length ?? 0} movements · ${deep.result?.sources.length ?? 0} sources`
               : "Reads transcripts, decks, the annual report and a year of filings. About a minute."}
           </span>
+          {deep?.result?.summary && <span className="mt-1.5 text-ink/80 line-clamp-3">{deep.result.summary}</span>}
         </span>
         <ChevronRight size={16} className="text-muted" />
       </Link>
@@ -70,20 +70,6 @@ export default async function CompanyPage({ params }: { params: Promise<{ ticker
       {leaders.length > 0 && <Leadership people={leaders} />}
 
       {f ? <FundamentalsView f={f} /> : <Empty>Fundamentals unavailable for {c.ticker} right now.</Empty>}
-
-      {pending.length > 0 && (
-        <>
-          <SectionTitle>From transcripts &amp; annual reports</SectionTitle>
-          <ul className="card mx-4 divide-y divide-line opacity-80">
-            {pending.map((s) => (
-              <li key={s.key} className="px-4 py-3">
-                <p className="text-sm font-medium">{s.title}</p>
-                <p className="mt-0.5 text-xs text-muted">{s.body ?? "Coming next."}</p>
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
 
       {news.length > 0 && <NewsList items={news} />}
     </main>

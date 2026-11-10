@@ -25,10 +25,13 @@ NETWORK_CATEGORIES = {"M&A", "capex", "litigation", "results", "fund_raise", "pl
 
 def _network_for(category: str | None, ticker: str, people: list) -> list:
     if people:
-        hints = [h for p in people for h in graph.who_knows_person(p)]
+        seen: set[str] = set()
+        hints = [h for p in people for h in graph.who_knows_person(p) if not (h.person_id in seen or seen.add(h.person_id))]
         if hints:
             return hints[:3]
-    if category in NETWORK_CATEGORIES or (category == "management_change"):
+    if category == "management_change":
+        return graph.who_knows_company(ticker, wide=False)  # a route to a person must be someone who was there
+    if category in NETWORK_CATEGORIES:
         return graph.who_knows_company(ticker)
     return []
 

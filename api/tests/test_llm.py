@@ -60,3 +60,24 @@ def test_overloaded_model_falls_back_and_cools_down(monkeypatch):
     assert L.json_call("strong", "s", "p2", usage=u) == {"ok": True}
     assert seen == ["big", "small", "small"]  # second call skipped the cooling model
     assert u.models == {"small": 2}
+
+
+def test_spent_daily_quota_is_not_retried(monkeypatch):
+    from app import llm as L
+
+    monkeypatch.setattr(config, "LLM_API_KEY", "test")
+    monkeypatch.setattr(config, "CHEAP_MODEL", "a")
+    monkeypatch.setattr(config, "CHEAP_FALLBACKS", ["b"])
+    monkeypatch.setattr(L, "_cool_until", {})
+    seen = []
+
+    def fake(model, system, prompt, **k):
+        seen.append(model)
+        if model == "a":
+            raise L.QuotaExhausted("daily quota")
+        return '{"ok": 1}', 5, 1
+
+    monkeypatch.setattr(L, "_gemini", fake)
+    assert L.json_call("cheap", "s", "q1") == {"ok": 1}
+    assert seen == ["a", "b"]  # one attempt on the exhausted model, no back-off loop
+    assert L.usage_today()[0]["model"] == "b" and L.usage_today()[0]["calls"] == 1
