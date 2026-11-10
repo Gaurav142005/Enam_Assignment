@@ -113,12 +113,29 @@ export interface RoutineGroup {
   items: PushItem[];
 }
 
+export interface Upcoming {
+  id: string;
+  date: string;
+  end_date: string | null;
+  time: string | null;
+  ticker: string;
+  company_name: string;
+  kind: "results" | "earnings_call" | "investor_meetings" | "agm" | "dividend" | "board_meeting" | "corporate_action";
+  title: string;
+  detail: string | null;
+  source: string;
+  url: string | null;
+  in_portfolio: boolean;
+  ask: NetworkHint | null;
+}
+
 export interface Digest {
   window_hours: number;
   generated_at: string;
   attention: PushItem[];
   moves: PushItem[];
   routine: RoutineGroup[];
+  upcoming: Upcoming[];
   new_count: number;
   last_seen_at: string | null;
   refreshed_at: string | null;

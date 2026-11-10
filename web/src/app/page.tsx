@@ -4,6 +4,7 @@ import { ArrowUpRight, ChevronDown, SlidersHorizontal } from "lucide-react";
 import { PageHeader, SectionTitle } from "@/components/PageHeader";
 import { BriefStatus } from "@/components/BriefStatus";
 import { CATEGORY_ICON, MoveRow, PushCard } from "@/components/PushCard";
+import { ComingUp } from "@/components/ComingUp";
 import { Glance } from "@/components/Glance";
 import { DemoNote, Empty } from "@/components/States";
 import { SwipeDeck } from "@/components/SwipeDeck";
@@ -105,6 +106,13 @@ export default async function BriefPage({ searchParams }: { searchParams: Promis
         </>
       ) : (
         <Empty>Nothing material in the last {windowLabel(hours)}. Widen the window to look further back.</Empty>
+      )}
+
+      {d.upcoming.length > 0 && (
+        <>
+          <SectionTitle right={<span className="text-xs text-muted">next 2 weeks</span>}>Coming up</SectionTitle>
+          <ComingUp items={d.upcoming} />
+        </>
       )}
 
       {d.moves.length > 0 && (

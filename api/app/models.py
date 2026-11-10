@@ -147,12 +147,29 @@ class RoutineGroup(BaseModel):
     items: list[PushItem]
 
 
+class Upcoming(BaseModel):
+    id: str
+    date: str
+    end_date: str | None = None
+    time: str | None = None  # "16:00" IST when the notice gives one
+    ticker: str
+    company_name: str
+    kind: Literal["results", "earnings_call", "investor_meetings", "agm", "dividend", "board_meeting", "corporate_action"]
+    title: str
+    detail: str | None = None
+    source: str
+    url: str | None = None
+    in_portfolio: bool = True
+    ask: NetworkHint | None = None  # results coming: who to talk to beforehand
+
+
 class Digest(BaseModel):
     window_hours: int
     generated_at: datetime
     attention: list[PushItem]  # ranked: what earns the investor's time
     moves: list[PushItem]  # EOD price/volume triggers
     routine: list[RoutineGroup]  # collapsed by default
+    upcoming: list[Upcoming] = []
     new_count: int = 0
     last_seen_at: datetime | None = None
     refreshed_at: datetime | None = None

@@ -90,6 +90,11 @@ CREATE TABLE IF NOT EXISTS llm_usage (       -- per day, per model: what FINN ac
 CREATE TABLE IF NOT EXISTS holdings (          -- the investor's portfolio (seeded from data/portfolio.json on first use)
   ticker TEXT PRIMARY KEY, name TEXT, sector TEXT, qty INTEGER, avg_cost REAL, bought TEXT, added_at TEXT
 );
+CREATE TABLE IF NOT EXISTS events (            -- upcoming: results dates, earnings calls, record dates, meetings
+  id TEXT PRIMARY KEY, ticker TEXT, date TEXT, end_date TEXT, time TEXT, kind TEXT, title TEXT, detail TEXT,
+  source TEXT, url TEXT, updated_at TEXT
+);
+CREATE INDEX IF NOT EXISTS ix_events_date ON events (date);
 CREATE TABLE IF NOT EXISTS llm_cache (
   key TEXT PRIMARY KEY, model TEXT, response TEXT, created_at TEXT
 );

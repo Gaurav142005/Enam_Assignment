@@ -37,6 +37,12 @@ def refresh_portfolio() -> None:
             rep = ingest_company(t, days=30, with_documents=False, use_llm=use_llm, only={"prices", "filings"}, say=lambda m: None)
             _status["done"] += 1
             _status["errors"] += bool(rep.errors)
+        try:
+            from app.ingest import events
+
+            events.refresh({c.ticker for c in [*companies.portfolio(), *companies.watchlist()]})
+        except Exception:
+            log.exception("events refresh failed")
         state.put("refreshed_at", store.now_iso())
     except Exception:  # a failed refresh must never take the API down
         log.exception("portfolio refresh failed")

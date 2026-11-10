@@ -13,8 +13,8 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from app import state
-from app.ingest import eod, store
-from app.models import AlertRules, Category, Digest, PushItem, ResultsCut, RoutineGroup
+from app.ingest import eod, events, store
+from app.models import AlertRules, Category, Digest, PushItem, ResultsCut, RoutineGroup, Upcoming
 from app.services import companies, filing_people, graph
 from app.services.priority import bucket, move_score, score
 from app.services.taxonomy import BASE_WEIGHT, LABEL
@@ -183,6 +183,20 @@ def _move_context(con, ticker: str, close_at: datetime) -> tuple[str | None, str
     return "No filing or headline that session", None
 
 
+def _upcoming(days: int = 14) -> list[Upcoming]:
+    """What's coming for holdings (and the research list), soonest first. Results get a person to talk to beforehand."""
+    names = companies.known()
+    port = {c.ticker for c in companies.portfolio()}
+    with store.connect() as con:
+        rows = events.upcoming(con, set(names), days)
+    out = []
+    for r in rows:
+        ask = next(iter(graph.who_knows_company(r["ticker"], limit=1, wide=False)), None) if r["kind"] in ("results", "earnings_call") else None
+        out.append(Upcoming(**{k: r[k] for k in ("id", "date", "end_date", "time", "ticker", "kind", "title", "detail", "source", "url")},
+                            company_name=names[r["ticker"]].name, in_portfolio=r["ticker"] in port, ask=ask))
+    return sorted(out, key=lambda u: (u.date, not u.in_portfolio, u.time or ""))
+
+
 # ── fixtures (fresh clone, nothing ingested) ───────────────────────────────
 
 
@@ -254,6 +268,7 @@ def build(window_hours: int, rules: AlertRules) -> Digest:
         attention=attention,
         moves=moves,
         routine=[RoutineGroup(category=c, count=len(v), items=v) for c, v in sorted(groups.items(), key=lambda kv: LABEL[kv[0]])],  # type: ignore[arg-type]
+        upcoming=_upcoming() if live else [],
         new_count=sum(i.is_new for i in attention) + sum(m.is_new for m in moves),
         last_seen_at=seen,
         refreshed_at=state.get("refreshed_at") if live else None,

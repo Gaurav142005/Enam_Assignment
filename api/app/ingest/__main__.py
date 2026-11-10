@@ -49,8 +49,10 @@ def main() -> int:
         failed += bool(rep.errors)
     if a.portfolio and failed < len(set(tickers)):
         from app import state
-        from app.ingest import store
+        from app.ingest import events, store
 
+        n = events.refresh({c.ticker for c in [*companies.portfolio(), *companies.watchlist()]})
+        print(f"▶ {n} upcoming events")
         state.put("refreshed_at", store.now_iso())
     print(f"\nDone: {len(set(tickers)) - failed} ok, {failed} with errors.")
     return 1 if failed else 0
