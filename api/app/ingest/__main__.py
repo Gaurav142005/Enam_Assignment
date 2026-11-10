@@ -47,6 +47,11 @@ def main() -> int:
     for t in dict.fromkeys(tickers):
         rep = ingest_company(t, days=a.days, with_documents=not a.light, use_llm=llm_on)
         failed += bool(rep.errors)
+    if a.portfolio and failed < len(set(tickers)):
+        from app import state
+        from app.ingest import store
+
+        state.put("refreshed_at", store.now_iso())
     print(f"\nDone: {len(set(tickers)) - failed} ok, {failed} with errors.")
     return 1 if failed else 0
 

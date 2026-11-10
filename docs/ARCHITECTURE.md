@@ -46,11 +46,13 @@ A `routine` flag demotes business-as-usual items inside material categories (an 
 - *Management change* → people, best source first: **SEBI XBRL** (exact name, designation, change type, date, reason) → **LLM** over the PDF (which by SEBI rule carries the appointee's brief profile) → regex fallback.
 - *Entity resolution* (filing person ↔ network): employer and school names are normalised (`Havells India Ltd.` = `Havells`), then matched on overlapping tenure or study years.
 
-## Security & privacy (to be written up)
-- The network is per investor and never shared across tenants. Profile data is minimal: role, employer, tenure, school, expertise tags.
-- **Sources of people data, all permissible:** (1) the investor's own LinkedIn data export, uploaded by them; email addresses are dropped on read, and a whole import can be removed in one tap; (2) connections they add by hand; (3) company leadership from public records (Yahoo Finance officers, NSE corporate-governance XBRL, exchange filings). FINN never logs into or scrapes LinkedIn (its terms forbid automated access).
-- Connection data never goes to an LLM. Re-uploading an export is a full sync, so people the investor removes from LinkedIn disappear from FINN too.
-- Retention, consent, access control and an audit log: TBD in the writeup.
+## Security & privacy
+
+- **What is stored about people:** name, role, employer, tenure, school, expertise tags, how the investor knows them, and when they last spoke. No emails, phone numbers or message content. Email addresses in a LinkedIn export are dropped on read.
+- **Where it comes from, all permissible:** (1) the investor's own LinkedIn data export, uploaded by them; (2) connections they add by hand; (3) company leadership from public records (Yahoo Finance officers, NSE corporate-governance XBRL, exchange filings). FINN never logs into or scrapes LinkedIn; its terms forbid automated access. The demo network is synthetic.
+- **Where it goes:** one SQLite file in this deployment. Connection data is never sent to a model: network questions, who-to-call and second-degree paths are computed deterministically. The only personal text a model sees is the public filing that announces an appointment.
+- **Retention and control:** re-uploading an export is a full sync (people removed on LinkedIn disappear here); an import can be removed in one tap; any connection can be deleted from its page. Company-leadership records refresh weekly and carry their sources.
+- **In a real deployment:** per-investor tenancy (row-level `owner_id`, never shared across users, including within a firm unless explicitly shared), SSO, encryption at rest, an audit log of who viewed which profile, a consent note on import, and a retention window for people the investor no longer lists.
 
 ## LLMs & agents
 
@@ -73,5 +75,11 @@ degrades the report (noted at the bottom) instead of blocking it.
 - `app/llm.py` is the single routing point. A **cheap** model handles bulk extraction and classification fallback. A **strong** model handles promised-vs-delivered, bull/bear and network explanations.
 - Results are cached by (model, prompt, input hash), so each document is processed only once.
 
-## Cloud (to be written up)
-- web → Vercel. api → Render / Fly (Python). SQLite → Postgres when it outgrows a single file. Scheduled fetches → cron on the API host.
+## Cloud
+
+| Piece | Where | Why |
+|---|---|---|
+| Web (Next.js) + API (FastAPI) | One container (Railway) with a persistent disk | SQLite and the PDF cache need a disk; background jobs (deep research, auto-refresh) need a long-lived process, which serverless functions don't give |
+| Store | SQLite (WAL) → Postgres when multi-user | One investor, ~12 MB; zero ops |
+| Scheduled work | In-process timer (`services/watch.py`, 15 min) | Re-pulls filings + prices for the portfolio; "Checked 4m ago" on the Brief |
+| Models | Gemini free tier via one routing module | Flash-Lite for bulk, Flash for synthesis; fallback chain + cooldown when a model is overloaded |

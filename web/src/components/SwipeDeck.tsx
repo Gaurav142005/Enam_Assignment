@@ -48,7 +48,7 @@ export function SwipeDeck({ children, label }: { children: React.ReactNode; labe
           if (e.key === "ArrowRight") go(index + 1);
           if (e.key === "ArrowLeft") go(index - 1);
         }}
-        className="no-scrollbar flex snap-x snap-mandatory items-start gap-3 overflow-x-auto scroll-smooth px-4 pb-1 outline-none"
+        className="no-scrollbar flex snap-x snap-mandatory items-stretch gap-3 overflow-x-auto scroll-smooth px-4 pb-1 outline-none"
       >
         {slides.map((s, i) => (
           <div key={i} role="group" aria-roledescription="slide" aria-label={`${i + 1} of ${n}`} className="w-[88%] shrink-0 snap-center">

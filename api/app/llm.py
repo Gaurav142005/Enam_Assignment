@@ -12,6 +12,7 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
+import sqlite3
 import time
 from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import TimeoutError as FutureTimeout
@@ -178,8 +179,11 @@ def json_call(tier: Tier, system: str, prompt: str, *, tries: int = 3, usage: Us
     if not done:
         raise LLMError(f"{type(last).__name__}: {last}")
 
-    with store.connect() as con:
-        store.upsert(con, "llm_cache", [{"key": key, "model": model, "response": json.dumps(parsed), "created_at": store.now_iso()}])
+    try:
+        with store.connect() as con:
+            store.upsert(con, "llm_cache", [{"key": key, "model": model, "response": json.dumps(parsed), "created_at": store.now_iso()}])
+    except sqlite3.OperationalError:  # a busy database must not cost us an answer we already have
+        log.warning("llm cache write skipped (database busy)")
     return parsed
 
 

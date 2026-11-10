@@ -41,9 +41,9 @@ export function initials(name: string): string {
 }
 
 export function windowLabel(hours: number): string {
-  if (hours < 24) return `${hours}h`;
+  if (hours < 24) return `${hours} hours`;
   const d = hours / 24;
-  return d === 1 ? "24h" : `${d}d`;
+  return d === 1 ? "24 hours" : `${d} days`;
 }
 
 /** "2015–2020", "2019–now", or "" when the source gives no years. */

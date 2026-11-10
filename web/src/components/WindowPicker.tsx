@@ -7,6 +7,7 @@ const OPTIONS = [
   { h: 24, label: "24h" },
   { h: 72, label: "3d" },
   { h: 168, label: "7d" },
+  { h: 720, label: "30d" },
 ];
 
 export function WindowPicker({ value }: { value: number }) {

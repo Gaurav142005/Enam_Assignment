@@ -5,7 +5,7 @@ import { SegmentedParam } from "@/components/Segmented";
 import { Sparkline } from "@/components/Sparkline";
 import { api } from "@/lib/api";
 import { inr, pct, rupees, shortDate, tone } from "@/lib/format";
-import type { Holding, PerfPeriod, PortfolioPerformance } from "@/lib/types";
+import type { Digest, Holding, PerfPeriod, PortfolioPerformance } from "@/lib/types";
 
 const PERIODS: PerfPeriod[] = ["1D", "1W", "1M", "3M", "6M", "1Y"];
 const PERIOD_NAME: Record<PerfPeriod, string> = { "1D": "today", "1W": "this week", "1M": "past month", "3M": "past 3 months", "6M": "past 6 months", "1Y": "past year" };
@@ -14,7 +14,13 @@ const PERIOD_NAME: Record<PerfPeriod, string> = { "1D": "today", "1W": "this wee
 export default async function PortfolioPage({ searchParams }: { searchParams: Promise<{ p?: string }> }) {
   const raw = (await searchParams).p as PerfPeriod;
   const period: PerfPeriod = PERIODS.includes(raw) ? raw : "1M";
-  const d = await api<PortfolioPerformance>(`/market/portfolio?period=${period}`);
+  const [d, brief] = await Promise.all([
+    api<PortfolioPerformance>(`/market/portfolio?period=${period}`),
+    api<Digest>("/push/digest?hours=168").catch(() => null),
+  ]);
+  // The weave: which holdings have something material in this week's Brief.
+  const flagged = new Map<string, string>();
+  for (const i of brief?.attention ?? []) if (i.priority !== "normal" && !flagged.has(i.ticker)) flagged.set(i.ticker, i.results ? `${i.results.period} results` : i.title);
   const bench = d.benchmark_return_pct;
   const rel = d.portfolio_return_pct !== null && bench !== null ? d.portfolio_return_pct - bench : null;
   const beating = d.holdings.filter((h) => h.return_pct !== null && bench !== null && h.return_pct >= bench);
@@ -73,10 +79,11 @@ export default async function PortfolioPage({ searchParams }: { searchParams: Pr
       </section>
 
       <SectionTitle right={<span className="text-xs text-muted">{PERIOD_NAME[period]}</span>}>Beating {d.benchmark_name} · {beating.length}</SectionTitle>
-      <HoldingList items={beating} period={period} />
+      <HoldingList items={beating} period={period} flagged={flagged} />
       <SectionTitle>Lagging {d.benchmark_name} · {lagging.length}</SectionTitle>
-      <HoldingList items={lagging} period={period} />
+      <HoldingList items={lagging} period={period} flagged={flagged} />
       <p className="mx-4 mt-6 text-center text-[11px] text-muted">
+        <span className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-accent align-middle" /> has something material in this week&apos;s Brief.
         End-of-day prices from Yahoo Finance. Period figures hold today&apos;s quantities constant; P&amp;L is unrealised, before costs and taxes.
       </p>
     </main>
@@ -110,7 +117,7 @@ function Breadth({ up, down, total }: { up: number; down: number; total: number 
   );
 }
 
-function HoldingList({ items, period }: { items: Holding[]; period: PerfPeriod }) {
+function HoldingList({ items, period, flagged }: { items: Holding[]; period: PerfPeriod; flagged: Map<string, string> }) {
   if (!items.length) return <p className="px-4 text-sm text-muted">None.</p>;
   return (
     <ul className="card mx-4 divide-y divide-line">
@@ -118,7 +125,10 @@ function HoldingList({ items, period }: { items: Holding[]; period: PerfPeriod }
         <li key={h.ticker}>
           <Link href={`/company/${h.ticker}`} className="flex items-center gap-3 px-4 py-3 active:bg-line/40">
             <span className="min-w-0 flex-1">
-              <span className="block text-sm font-medium">{h.ticker}</span>
+              <span className="flex items-center gap-1.5 text-sm font-medium">
+                {h.ticker}
+                {flagged.has(h.ticker) && <span className="h-1.5 w-1.5 rounded-full bg-accent" role="img" aria-label={`In this week's Brief: ${flagged.get(h.ticker)}`} title={flagged.get(h.ticker)} />}
+              </span>
               <span className="block truncate text-xs text-muted">
                 {h.weight_pct !== null ? `${h.weight_pct.toFixed(1)}% · ${inr(h.value)}` : h.name}
               </span>

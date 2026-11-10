@@ -89,6 +89,7 @@ class NetworkHint(BaseModel):
     degree: Literal[1, 2]
     via: str | None = None  # intermediary's name when degree == 2
     strength: float = Field(ge=0, le=1)
+    relation: Literal["insider", "peer", "expert", "overlap"] = "insider"  # why they can help
 
 
 class ReconnectNudge(BaseModel):
@@ -135,6 +136,9 @@ class PushItem(BaseModel):
     person: Person | None = None  # management change → who the incoming person is
     network: list[NetworkHint] = []
     synthetic: bool = False
+    is_new: bool = False  # filed since the investor last opened the Brief
+    context: str | None = None  # moves: the likely reason (a filing or headline from the same session)
+    context_url: str | None = None
 
 
 class RoutineGroup(BaseModel):
@@ -149,6 +153,10 @@ class Digest(BaseModel):
     attention: list[PushItem]  # ranked: what earns the investor's time
     moves: list[PushItem]  # EOD price/volume triggers
     routine: list[RoutineGroup]  # collapsed by default
+    new_count: int = 0
+    last_seen_at: datetime | None = None
+    refreshed_at: datetime | None = None
+    live: bool = False  # False = synthetic fixtures (nothing ingested yet)
 
 
 class AlertRules(BaseModel):
@@ -197,8 +205,8 @@ class GuidanceCheck(BaseModel):
 
 class ResearchReport(BaseModel):
     company: Company
-    fundamentals: "Fundamentals | None" = None
-    position: "Holding | None" = None  # the investor's own holding, if any
+    fundamentals: Fundamentals | None = None
+    position: Holding | None = None  # the investor's own holding, if any
     sections: list[ResearchSection]
     guidance_vs_delivery: list[GuidanceCheck] = []
     network: list[NetworkHint] = []
@@ -479,3 +487,59 @@ class ResearchJob(BaseModel):
     finished_at: datetime | None = None
     error: str | None = None
     result: DeepResearch | None = None
+
+
+# ── Ask a company a question (Pull, ~5 s, grounded in its documents) ──────
+
+
+class AskIn(BaseModel):
+    question: str = Field(min_length=3, max_length=300)
+
+
+class Passage(BaseModel):
+    doc: str
+    page: int
+    text: str
+
+
+class Answer(BaseModel):
+    ticker: str
+    question: str
+    answer: str | None  # None when no model is available: passages only
+    points: list[Point_] = []
+    found: bool = True  # False = the documents don't say
+    passages: list[Passage] = []  # what was retrieved (shown when there is no model, and as evidence)
+    sources: list[SourceDoc] = []
+    ask: NetworkHint | None = None  # someone in the network who could add colour
+    llm: dict = {}
+
+
+# ── Network: direct questions, contact log, diligence ─────────────────────
+
+
+class NetworkAnswer(BaseModel):
+    query: str
+    understood: str  # how FINN read the question, in plain words
+    results: list[NetworkHint]
+    companies: list[Company] = []
+
+
+class ContactIn(BaseModel):
+    on: date | None = None  # default: today
+    note: str | None = Field(None, max_length=300)
+
+
+class FilingRef(BaseModel):
+    date: str
+    title: str
+    url: str | None = None
+
+
+class Dossier(BaseModel):
+    """Before you meet someone: who they are, who knows them, what the record says, what to ask."""
+
+    person: Person
+    shared_with_you: list[str] = []  # what the investor personally has in common with them
+    paths: list[NetworkHint] = []
+    in_filings: list[FilingRef] = []
+    ask_about: list[str] = []

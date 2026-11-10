@@ -1,4 +1,5 @@
 import { ArrowUpRight, ChevronDown, ChevronRight, Minus, Sparkles, TrendingDown, TrendingUp } from "lucide-react";
+import { AskBox } from "@/components/AskBox";
 import { BackLink } from "@/components/BackLink";
 import { ColumnChart, LineChart } from "@/components/charts";
 import { NetworkLine } from "@/components/NetworkLine";
@@ -45,6 +46,10 @@ export default async function CompanyPage({ params }: { params: Promise<{ ticker
         </span>
         <ChevronRight size={16} className="text-muted" />
       </Link>
+
+      <div className="mb-3">
+        <AskBox ticker={c.ticker} />
+      </div>
 
       {r.position && <PositionCard h={r.position} />}
       <div className={r.position ? "mt-3" : ""}>

@@ -22,4 +22,5 @@ test:
 	cd api && uv run pytest -q
 
 check: test
+	cd api && uvx ruff check app tests
 	cd web && pnpm tsc --noEmit && pnpm lint

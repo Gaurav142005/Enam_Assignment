@@ -1,11 +1,13 @@
 import Link from "next/link";
-import { ChevronRight, FileUp, UserPlus } from "lucide-react";
+import { ChevronRight, FileUp, Search, UserPlus } from "lucide-react";
 import { Avatar } from "@/components/Avatar";
 import { PageHeader, SectionTitle } from "@/components/PageHeader";
 import { api } from "@/lib/api";
-import type { CompanyPeopleSummary, Person, ReconnectNudge, ThemeGroup } from "@/lib/types";
+import { NetworkLine } from "@/components/NetworkLine";
+import type { CompanyPeopleSummary, NetworkAnswer, Person, ReconnectNudge, ThemeGroup } from "@/lib/types";
 
 const SOURCE_LABEL: Record<Person["source"], string> = { linkedin: "LinkedIn", manual: "Added", synthetic: "Demo", company: "", filing: "" };
+const ASKS = ["Who knows rural lending?", "Anyone at Dixon?", "Specialty chemicals", "Finance people at Polycab", "IIT Kanpur"];
 const FILTERS = [
   ["all", "All"],
   ["linkedin", "LinkedIn"],
@@ -14,8 +16,9 @@ const FILTERS = [
 ] as const;
 
 /** NETWORK: queried directly. (It also surfaces inside Brief and Ask.) */
-export default async function NetworkPage({ searchParams }: { searchParams: Promise<{ src?: string; theme?: string }> }) {
-  const { src = "all", theme } = await searchParams;
+export default async function NetworkPage({ searchParams }: { searchParams: Promise<{ src?: string; theme?: string; q?: string }> }) {
+  const { src = "all", theme, q } = await searchParams;
+  const answer = q ? await api<NetworkAnswer>(`/network/ask?q=${encodeURIComponent(q)}`) : null;
   const [nudges, themes, people, companies] = await Promise.all([
     api<ReconnectNudge[]>("/network/reconnect"),
     api<ThemeGroup[]>("/network/themes"),
@@ -48,6 +51,42 @@ export default async function NetworkPage({ searchParams }: { searchParams: Prom
           </div>
         }
       />
+
+      <form action="/network" className="px-4">
+        <label className="card flex items-center gap-2 px-3 py-2.5 focus-within:border-accent">
+          <Search size={18} className="shrink-0 text-muted" />
+          <input name="q" defaultValue={q ?? ""} placeholder="Who knows…  rural lending · Dixon · a CFO" autoComplete="off" aria-label="Ask your network" className="w-full bg-transparent text-[15px] outline-none placeholder:text-muted" />
+        </label>
+      </form>
+      {!answer && (
+        <div className="no-scrollbar mt-2 flex gap-2 overflow-x-auto px-4">
+          {ASKS.map((x) => (
+            <Link key={x} href={`/network?q=${encodeURIComponent(x)}`} className="shrink-0 rounded-full border border-line bg-surface px-3 py-1.5 text-xs text-muted">
+              {x}
+            </Link>
+          ))}
+        </div>
+      )}
+      {answer && (
+        <section className="mt-3" aria-live="polite">
+          <div className="mb-2 flex items-baseline justify-between gap-3 px-4">
+            <p className="text-xs text-muted">{answer.understood}</p>
+            <Link href="/network" className="shrink-0 text-xs text-accent">
+              Clear
+            </Link>
+          </div>
+          {answer.results.length ? (
+            <div className="space-y-1.5 px-4">
+              {answer.results.map((h) => (
+                <NetworkLine key={h.person_id} hint={h} lead="" />
+              ))}
+            </div>
+          ) : (
+            <p className="px-4 text-sm text-muted">No one yet. Try a company, a sector, a role or a school.</p>
+          )}
+        </section>
+      )}
+      <div className="h-4" />
 
       {!imported && (
         <Link href="/network/import" className="card mx-4 flex items-center gap-3 p-4 active:opacity-70">

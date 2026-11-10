@@ -25,8 +25,21 @@ from app import config, llm
 from app.ingest import documents as docs_mod
 from app.ingest import store
 from app.ingest.pipeline import ingest_company
-from app.models import (Cite, NetworkHint, DeepResearch, GuidanceItem, Movement, Point_, PromiseCheck, Question, ResearchJob, ResearchStats,
-                        ResearchStep, SourceDoc, Theme)
+from app.models import (
+    Cite,
+    DeepResearch,
+    GuidanceItem,
+    Movement,
+    NetworkHint,
+    Point_,
+    PromiseCheck,
+    Question,
+    ResearchJob,
+    ResearchStats,
+    ResearchStep,
+    SourceDoc,
+    Theme,
+)
 from app.services import companies, filing_people, fundamentals, graph
 from app.services.digest import _people_title, headline
 
@@ -238,7 +251,7 @@ def movements(ticker: str) -> list[Movement]:
             allq.setdefault(r["line"], {})[r["period"]] = r["value"]
         rev_all = allq.get("Sales") or allq.get("Revenue") or rev
         pat_all = allq.get("Net Profit") or pat
-        for i, p in enumerate(periods[-4:]):
+        for p in periods[-4:]:
             idx = periods.index(p)
             prev_p = periods[idx - 1] if idx else None
             for label, series in (("Revenue", rev_all), ("Net profit", pat_all)):
@@ -429,7 +442,7 @@ def _cites(raw, valid: set[str]) -> list[Cite]:
     return out
 
 
-def _expert_for(question: str, net: list) -> "NetworkHint | None":
+def _expert_for(question: str, net: list) -> NetworkHint | None:
     """Route a question to a go-to person: their expertise phrase, or any of its key words, appears in it."""
     ql = question.lower()
     best = None

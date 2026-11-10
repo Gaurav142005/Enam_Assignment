@@ -77,3 +77,33 @@ def search(q: str, limit: int = 10) -> list[Company]:
     if not out and re.fullmatch(r"[A-Za-z0-9&-]{2,20}", q):
         out = [Company(ticker=q.upper(), name=f"Research {q.upper()} on NSE", sector="—")]
     return out
+
+
+# Coarse peer groups from the sector labels: enough to answer "who do I know at a competitor?"
+_GROUPS: dict[str, tuple[str, ...]] = {
+    "lending": ("lending", "bank", "finance", "microfinance", "nbfc"),
+    "chemicals": ("chemical", "agrochem"),
+    "IT services": ("it services", "software"),
+    "consumer": ("consumer", "retail", "paint", "jewel"),
+    "electricals & electronics": ("cables", "electric", "electronics", "semiconductor"),
+    "autos": ("auto",),
+    "pharma": ("pharma",),
+    "industrials": ("engineering", "defence", "construction", "conglomerate"),
+}
+
+
+def group_of(ticker: str) -> str | None:
+    c = known().get(ticker)
+    if not c:
+        return None
+    low = c.sector.lower()
+    return next((g for g, keys in _GROUPS.items() if any(k in low for k in keys)), None)
+
+
+def peers(ticker: str) -> list[Company]:
+    g = group_of(ticker)
+    return [c for c in known().values() if g and c.ticker != ticker and group_of(c.ticker) == g]
+
+
+def group_keywords(group: str) -> tuple[str, ...]:
+    return _GROUPS.get(group, ())

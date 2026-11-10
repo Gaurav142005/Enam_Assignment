@@ -15,6 +15,7 @@ from functools import lru_cache
 from pathlib import Path
 
 from app import config
+from app.ingest import store
 from app.models import NetworkHint, Person, ReconnectNudge, ThemeGroup
 
 DATA = Path(__file__).resolve().parent.parent / "data" / "network" / "people.json"
@@ -44,8 +45,22 @@ def _network() -> dict[str, Person]:
 
         merged = dict(_demo()[0]) if config.DEMO_NETWORK else {}
         merged.update({p.id: p for p in connections.load_all()})
+        # Conversations the investor logged in FINN override whatever the profile source said.
+        with store.connect() as con:
+            log_ = {r["person_id"]: r["last_contact"] for r in con.execute("SELECT person_id, last_contact FROM contact_log")}
+        for pid, when in log_.items():
+            p = merged.get(pid)
+            if p and p.relationship:
+                merged[pid] = p.model_copy(update={"relationship": p.relationship.model_copy(update={"last_contact": date.fromisoformat(when)})})
         _cache = merged
     return _cache
+
+
+@lru_cache
+def investor() -> Person:
+    """The investor's own profile (schools, employers): lets FINN notice what they personally share with someone."""
+    raw = json.loads(DATA.read_text())["investor"]
+    return Person(id="me", name="You", headline="", positions=raw.get("positions", []), education=raw.get("education", []))
 
 
 def people() -> list[Person]:
@@ -72,8 +87,15 @@ def _years(start: int | None, end: int | None) -> range:
 _SUFFIX = re.compile(r"\b(ltd|limited|pvt|private|inc|llp|india|co|company|corporation|the)\b\.?", re.I)
 
 
+_SCHOOL = [(r"indian institutes? of technology", "iit"), (r"indian institutes? of management", "iim"), (r"indian school of business", "isb"),
+           (r"\bbombay\b", "mumbai"), (r"\bmadras\b", "chennai"), (r"\bbengaluru\b", "bangalore")]
+
+
 def _norm(name: str) -> str:
-    return " ".join(_SUFFIX.sub(" ", name.lower()).replace("&", " and ").replace(",", " ").split())
+    low = name.lower()
+    for pat, short in _SCHOOL:  # "Indian Institute of Technology, Kanpur" == "IIT Kanpur"
+        low = re.sub(pat, short, low)
+    return " ".join(_SUFFIX.sub(" ", low).replace("&", " and ").replace(",", " ").split())
 
 
 def _same_org(a: str, b: str) -> bool:
@@ -99,13 +121,19 @@ def overlaps(a: Person, b: Person) -> list[str]:
             if not _same_org(ea.school, eb.school):
                 continue
             if None in (ea.start, ea.end, eb.start, eb.end):
-                reasons.append(f"both studied at {ea.school}")
+                reasons.append(f"fellow {min(ea.school, eb.school, key=len)} alumni")
             elif set(range(ea.start, ea.end + 1)) & set(range(eb.start, eb.end + 1)):  # type: ignore[arg-type]
                 reasons.append(f"{ea.school} classmates ({eb.end})")
     return reasons
 
 
-def _hint(p: Person, reason: str, degree: int = 1, via: str | None = None) -> NetworkHint:
+def log_contact(person_id: str, on: date, note: str | None = None) -> None:
+    with store.connect() as con:
+        con.execute("INSERT OR REPLACE INTO contact_log VALUES (?,?,?,?)", (person_id, on.isoformat(), note, store.now_iso()))
+    invalidate()
+
+
+def _hint(p: Person, reason: str, degree: int = 1, via: str | None = None, relation: str = "insider") -> NetworkHint:
     strength = p.relationship.strength if p.relationship else 0.3
     return NetworkHint(
         person_id=p.id,
@@ -115,26 +143,59 @@ def _hint(p: Person, reason: str, degree: int = 1, via: str | None = None) -> Ne
         degree=degree,  # type: ignore[arg-type]
         via=via,
         strength=strength if degree == 1 else round(strength * 0.6, 2),
+        relation=relation,  # type: ignore[arg-type]
     )
 
 
-def who_knows_company(ticker: str, limit: int = 3) -> list[NetworkHint]:
-    """Who should I call? — people who have worked at the company."""
-    hints: list[NetworkHint] = []
+def who_knows_company(ticker: str, limit: int = 3, wide: bool = True) -> list[NetworkHint]:
+    """Who should I call? Insiders first (worked there), then people at competitors, then go-to experts for the sector."""
+    from app.services import companies
+
+    insiders: list[NetworkHint] = []
+    seen: set[str] = set()
     for p in people():
         for pos in p.positions:
             if pos.ticker == ticker:
                 when = f", {pos.start}–{pos.end or 'now'}" if pos.start else ""
                 role = f"{pos.title} at {pos.company}" if pos.title else f"Works at {pos.company}"
-                hints.append(_hint(p, f"{role}{when}"))
+                insiders.append(_hint(p, f"{role}{when}"))
+                seen.add(p.id)
                 break
-    hints.sort(key=lambda h: h.strength, reverse=True)
-    return hints[:limit]
+    insiders.sort(key=lambda h: h.strength, reverse=True)
+    if not wide or len(insiders) >= limit:
+        return insiders[:limit]
+
+    group = companies.group_of(ticker)
+    peer_names = {c.ticker: c.name for c in companies.peers(ticker)}
+    wider: list[NetworkHint] = []
+    for p in people():
+        if p.id in seen:
+            continue
+        pos = next((x for x in p.positions if x.ticker in peer_names), None)
+        if pos:
+            wider.append(_hint(p, f"{pos.title or 'Works'} at {pos.company}, a peer in {group}", relation="peer"))
+            seen.add(p.id)
+            continue
+        if group:
+            tag = next((e for e in p.expertise if any(k in e.lower() for k in companies.group_keywords(group))), None)
+            if tag:
+                h = _hint(p, f"Go-to for {tag}", relation="expert")
+                wider.append(h.model_copy(update={"strength": round(h.strength * 0.8, 2)}))
+                seen.add(p.id)
+    wider.sort(key=lambda h: (h.relation != "peer", -h.strength))
+    return (insiders + wider)[:limit]
 
 
 def who_knows_person(target: Person, limit: int = 3) -> list[NetworkHint]:
     """Second-degree reach — who in my network has crossed paths with this person."""
-    hints = [_hint(p, "; ".join(r)) for p in people() if p.id != target.id and (r := overlaps(p, target))]
+    hints = []
+    for p in people():
+        if p.id == target.id or not (r := overlaps(p, target)):
+            continue
+        h = _hint(p, "; ".join(r), relation="overlap")
+        if all(x.startswith("fellow ") for x in r):  # same school, years unknown: a warm opener, not proof they've met
+            h = h.model_copy(update={"strength": round(h.strength * 0.6, 2)})
+        hints.append(h)
     hints.sort(key=lambda h: h.strength, reverse=True)
     return hints[:limit]
 
@@ -148,19 +209,25 @@ def themes() -> list[ThemeGroup]:
     return [ThemeGroup(theme=t, people=sorted(h, key=lambda x: -x.strength)) for t, h in sorted(groups.items())]
 
 
-def reconnect(active_tickers: set[str], today: date | None = None) -> list[ReconnectNudge]:
-    """Keep the network warm: people gone quiet whose (former) employer just had news."""
+def reconnect(news: dict[str, str], today: date | None = None) -> list[ReconnectNudge]:
+    """Keep the network warm: people gone quiet whose (former) employer just had news. `news`: ticker → what happened."""
     today = today or date.today()
     nudges: list[ReconnectNudge] = []
     for p in people():
         last = p.relationship.last_contact if p.relationship else None
         days = (today - last).days if last else None
-        hit = next((pos for pos in p.positions if pos.ticker in active_tickers), None)
+        hit = next((pos for pos in p.positions if pos.ticker in news), None)
         if hit and (days is None or days > 90):
-            tie = "current employer" if hit.end is None else "former employer"
-            since = f"last spoke {days} days ago" if days is not None else "no contact logged"
-            nudges.append(
-                ReconnectNudge(person=p, reason=f"News at {hit.company} ({tie}) — {since}", days_since_contact=days)
-            )
-    nudges.sort(key=lambda n: -(n.days_since_contact or 0))
+            tie = "where they work" if hit.end is None else "their former employer"
+            since = f"You last spoke {_ago(days)}" if days is not None else "No conversation logged"
+            nudges.append(ReconnectNudge(person=p, reason=f"{news[hit.ticker]} at {hit.company}, {tie}. {since}.", days_since_contact=days))
+    nudges.sort(key=lambda n: (-(n.person.relationship.strength if n.person.relationship else 0), -(n.days_since_contact or 0)))
     return nudges
+
+
+def _ago(days: int) -> str:
+    if days < 60:
+        return f"{days} days ago"
+    if days < 700:
+        return f"{round(days / 30)} months ago"
+    return f"{days / 365:.1f} years ago"

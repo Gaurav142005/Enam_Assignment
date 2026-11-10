@@ -38,11 +38,15 @@ Deadline: **15 Nov 2026**.
 - [x] Live NSE announcements feed
 - [x] Live yfinance EOD
 - [x] Results headline numbers (from standardised quarterly statements)
-- [ ] One-line summaries for mid-priority filings
+- [x] One-line summaries where the exchange's own line says nothing ("Updates" → what happened), from the filing PDF
+- [x] New since you last looked; "checked Xm ago"; refresh on demand and every 15 minutes
+- [x] Unusual moves carry the likely reason (same-session filing or headline) and who to ask
+- [x] Alert rules persist
 
 ### Pull
 - [x] Works for **any** NSE ticker (no hard-wiring to the demo set)
 - [x] Section scaffold, with "Who can help" woven in
+- [x] **Ask a company anything**: answered from its transcripts, decks and annual report with page cites; says so when the documents don't answer
 - [x] **Deep research** (30–60 s job): 12-month movement timeline with market reactions, promised vs delivered, guidance, themes, risks, bull/bear, questions routed to your network; every claim page-cited
 - [x] **Promised vs delivered** across the last 4 quarters (the headline feature)
 - [x] Business, financial snapshot, trajectory, balance sheet, cash quality, shareholding: deterministic, from statements
@@ -55,9 +59,12 @@ Deadline: **15 Nov 2026**.
 - [x] Import the investor's own LinkedIn export (CSV or zip); re-upload syncs; employers resolved to NSE tickers
 - [x] Add / remove connections by hand (career + education feed overlap detection)
 - [x] Leadership of every portfolio company (management + board), marked where the investor already knows them
-- [ ] Ask the network in natural language ("who knows rural lending in the South?")
-- [ ] Supplier / customer / competitor reach (beyond "worked at the same company")
-- [ ] Link strength explained (tenure overlap length, recency, relationship strength)
+- [x] Ask the network directly ("who knows rural lending?", "finance people at Polycab", a school, a name)
+- [x] Who to call widens from insiders to competitors to sector experts, labelled
+- [x] Second-degree reach into leadership via connections who worked there in the same function
+- [x] Diligence page per person: how to reach them, what filings say, what to ask
+- [x] Log a conversation in one tap (drives the reconnect nudges); nudges say what happened
+- [ ] Supplier / customer reach (needs relationship data beyond filings)
 
 ## Demo set
 

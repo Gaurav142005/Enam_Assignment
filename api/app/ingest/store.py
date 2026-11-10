@@ -8,9 +8,10 @@ from __future__ import annotations
 import json
 import sqlite3
 import threading
+from collections.abc import Iterator
 from contextlib import contextmanager
 from datetime import datetime, timezone
-from typing import Any, Iterator
+from typing import Any
 
 from app import config
 
@@ -77,6 +78,12 @@ CREATE TABLE IF NOT EXISTS research_jobs (
   id TEXT PRIMARY KEY, ticker TEXT, status TEXT, steps TEXT, result TEXT, error TEXT, started_at TEXT, finished_at TEXT
 );
 CREATE INDEX IF NOT EXISTS ix_rj_ticker ON research_jobs (ticker, finished_at);
+CREATE TABLE IF NOT EXISTS settings (
+  key TEXT PRIMARY KEY, value TEXT, updated_at TEXT
+);
+CREATE TABLE IF NOT EXISTS contact_log (     -- when the investor last spoke to someone (any source of person)
+  person_id TEXT PRIMARY KEY, last_contact TEXT, note TEXT, updated_at TEXT
+);
 CREATE TABLE IF NOT EXISTS llm_cache (
   key TEXT PRIMARY KEY, model TEXT, response TEXT, created_at TEXT
 );

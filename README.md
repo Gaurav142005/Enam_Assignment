@@ -21,6 +21,7 @@ make ingest T=POLYCAB  # one company in depth, incl. transcripts + annual report
 make api               # FastAPI on :8000   (terminal 1)
 make web               # Next.js on :3000   (terminal 2)
 make test              # API tests (offline)
+make check             # tests + ruff + typecheck + eslint
 ```
 
 Without ingestion, the app runs on synthetic fixtures. `GET /data/{ticker}` on the API shows everything stored for a company.
@@ -38,6 +39,10 @@ api/                        FastAPI backend (Python, uv)
     priority.py taxonomy.py Scoring + announcement categories (from the ENAM glossary)
     graph.py                Network: inferred edges, who-knows-company, second-degree reach, themes, reconnect
     research.py             Pull: section pipeline (primary sources only)
+    watch.py                Auto-refresh of the portfolio (every 15 min) + refresh on demand
+    qa.py                   Ask a company a question: retrieval over its documents + cited answer
+    deep_research.py        30–60 s cited research job (movements, promised vs delivered, bull/bear, questions)
+    network_query.py        Direct network questions, insider paths, person dossier
     market.py               Prices for charts + value-weighted portfolio vs Nifty 50 (on-demand fetch, 6h cache)
     fundamentals.py         Deterministic analysis: snapshot, trajectory, balance sheet, cash quality, shareholding
     news.py                 Company headlines (Google News RSS, 3h cache)

@@ -3,14 +3,15 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import date, timedelta
-from typing import Callable
 
 from app.ingest import classify, documents, enrich, eod, http, nse, screener, store
 from app.services.taxonomy import classify as free_classify
 
 log = logging.getLogger(__name__)
+SUMMARY_CATEGORIES = {"M&A", "capex", "fund_raise", "litigation", "credit_rating", "press_release", "pledging", "insider_trading", "unclassified"}
 
 
 def ingest_fundamentals(ticker: str) -> str:
@@ -48,6 +49,7 @@ def ingest_company(
     pdf_days: int = 30,
     mgmt_pdf_days: int = 180,
     use_llm: bool = True,
+    only: set[str] | None = None,
     say: Callable[[str], None] = print,
 ) -> Report:
     ticker = ticker.upper().removesuffix(".NS")
@@ -107,8 +109,30 @@ def ingest_company(
                             xbrl[r["id"]] = x
                     except http.FetchError as e:
                         log.warning("attachment %s: %s", r["attachment_url"], e)
+            con.commit()  # release the write lock before slow model calls
             classify.classify_rows(rows, pdf_text=pdf_text, use_llm=use_llm)
 
+            # Material, recent, and the exchange one-liner is generic ("Updates", "Credit Rating") → read the filing, say what happened.
+            n_sum = 0
+            if use_llm:
+                from app.services.digest import is_generic
+
+                for r in rows:
+                    if (r["category"] in SUMMARY_CATEGORIES and not r.get("routine") and not r.get("summary") and r["attachment_url"]
+                            and r["filed_at"][:10] >= cutoff and r["id"] not in pdf_text and is_generic(r["text"], r["nse_desc"])):
+                        try:
+                            documents.ingest(con, r["attachment_url"], ticker=ticker, kind="filing", period=r["filed_at"][:10],
+                                             title=r["nse_desc"], max_pages=6)
+                            pdf_text[r["id"]] = documents.text(con, r["attachment_url"], max_pages=3)
+                        except http.FetchError as e:
+                            log.warning("attachment %s: %s", r["attachment_url"], e)
+                con.commit()
+                n_sum = classify.summarize_rows([r for r in rows if r["category"] in SUMMARY_CATEGORIES and not r.get("routine")], pdf_text)
+
+            con.commit()
+            # Model reads first (no lock held), database writes after.
+            extracted = {r["id"]: enrich.people_from_filing(r, pdf_text[r["id"]], xbrl=xbrl.get(r["id"]), use_llm=use_llm)
+                         for r in rows if r["category"] == "management_change" and r["id"] in pdf_text}
             n_people = n_results = 0
             for r in rows:
                 extra: dict = {}
@@ -117,7 +141,7 @@ def ingest_company(
                         extra["results"] = cut
                         n_results += 1
                 if r["category"] == "management_change" and r["id"] in pdf_text:
-                    people, src = enrich.people_from_filing(r, pdf_text[r["id"]], xbrl=xbrl.get(r["id"]), use_llm=use_llm)
+                    people, src = extracted[r["id"]]
                     enrich.store_people(con, r, people, src)
                     n_people += len(people)
                 r["extra"] = extra
@@ -131,7 +155,7 @@ def ingest_company(
         for r in rows:
             src[r["category_source"]] = src.get(r["category_source"], 0) + 1
         return (f"{len(rows)} announcements in {days}d (classified by {src}); {len(pdf_text)} attachments read; "
-                f"{n_results} results enriched; {n_people} people extracted")
+                f"{n_results} results enriched; {n_people} people extracted; {n_sum} summarised")
 
     def do_documents() -> str:
         with store.connect() as con:
@@ -151,11 +175,9 @@ def ingest_company(
         return f"{len(got)}/{len(picks)} documents, {pages} pages of text ({', '.join(got)})"
 
     say(f"\n▶ {ticker}")
-    step("fundamentals", do_screener)
-    step("prices", do_eod)
-    step("filings", do_filings)
-    step("news", do_news)
-    step("people", do_people)
+    for name, fn in (("fundamentals", do_screener), ("prices", do_eod), ("filings", do_filings), ("news", do_news), ("people", do_people)):
+        if only is None or name in only:
+            step(name, fn)
     if with_documents:
         step("documents", do_documents)
     return rep

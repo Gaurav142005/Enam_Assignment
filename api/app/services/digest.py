@@ -11,11 +11,12 @@ import re
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+from app import state
 from app.ingest import eod, store
 from app.models import AlertRules, Category, Digest, PushItem, ResultsCut, RoutineGroup
 from app.services import companies, filing_people, graph
 from app.services.priority import bucket, move_score, score
-from app.services.taxonomy import LABEL
+from app.services.taxonomy import BASE_WEIGHT, LABEL
 
 FIXTURES = Path(__file__).resolve().parent.parent / "data" / "fixtures" / "announcements.json"
 IST = timezone(timedelta(hours=5, minutes=30))
@@ -48,6 +49,11 @@ def headline(text: str, nse_desc: str) -> str:
 
 
 _ABBREV = {"mr", "ms", "mrs", "dr", "no", "co", "ltd", "pvt", "st", "jr", "sr", "smt", "shri", "vs", "w.e.f", "u/s", "reg"}
+
+
+def is_generic(text: str, nse_desc: str) -> bool:
+    """True when the exchange one-liner carries no information beyond its label."""
+    return headline(text, nse_desc) == nse_desc
 
 
 def _first_sentence(t: str) -> str:
@@ -97,11 +103,14 @@ def _live_announcements(since: datetime, rules: AlertRules) -> list[PushItem]:
             s = score(cat, rules, has_network=bool(network), has_enrichment=bool(people or results))
             if routine:
                 s = min(s, 20.0)
+            title, summary = _people_title(people) or headline(r["text"], r["nse_desc"]), r["summary"]
+            if summary and not people and title == r["nse_desc"]:
+                title, summary = summary.rstrip("."), None  # the model read the filing; lead with what happened
             items.append(
                 PushItem(
                     id=r["id"], kind="announcement", ticker=r["ticker"], company_name=name, category=cat,
                     priority=bucket(s), score=s,
-                    title=_people_title(people) or headline(r["text"], r["nse_desc"]), summary=r["summary"],
+                    title=title, summary=summary,
                     at=datetime.fromisoformat(r["filed_at"]), source_url=r["attachment_url"], results=results,
                     person=people[0] if people else None, network=network,
                 )
@@ -139,13 +148,35 @@ def _live_moves(rules: AlertRules) -> list[PushItem]:
             if m["vol_hit"] and m["price_hit"]:
                 title += f", price {chg:+.1f}%"
             at = datetime.fromisoformat(m["date"]).replace(hour=15, minute=30, tzinfo=IST)
+            context, context_url = _move_context(con, c.ticker, at)
             out.append(PushItem(
                 id=f"eod-{c.ticker}-{m['date']}", kind="volume_spike" if m["vol_hit"] else "price_move", ticker=c.ticker,
                 company_name=names[c.ticker].name, priority=bucket(s), score=s, title=title,
                 summary=f"Closed ₹{m['close']:,.1f} ({chg:+.1f}%)", at=at, change_pct=chg,
-                network=graph.who_knows_company(c.ticker, limit=1),
+                network=graph.who_knows_company(c.ticker, limit=1), context=context, context_url=context_url,
             ))
     return sorted(out, key=lambda i: -i.score)
+
+
+def _move_context(con, ticker: str, close_at: datetime) -> tuple[str | None, str | None]:
+    """Why did it move? The most material filing since the previous close, else the day's top headline. Never a guess."""
+    start = (close_at - timedelta(days=1 if close_at.weekday() else 3)).isoformat()
+    rows = con.execute("SELECT nse_desc, text, summary, category, attachment_url, extra FROM announcements WHERE ticker=? AND filed_at>? AND filed_at<=?",
+                       (ticker, start, close_at.isoformat())).fetchall()
+    best = None
+    for r in rows:
+        if json.loads(r["extra"] or "{}").get("routine") or BASE_WEIGHT.get(r["category"], 0) < 40:
+            continue
+        if best is None or BASE_WEIGHT[r["category"]] > BASE_WEIGHT[best["category"]]:
+            best = r
+    if best:
+        what = best["summary"] or headline(best["text"], best["nse_desc"])
+        return f"Filed that session: {what.rstrip('.')}", best["attachment_url"]
+    n = con.execute("SELECT title, source, url FROM news WHERE ticker=? AND published_at>? AND published_at<=? ORDER BY published_at DESC LIMIT 1",
+                    (ticker, start, (close_at + timedelta(hours=8)).isoformat())).fetchone()
+    if n:
+        return f"In the news ({n['source']}): {n['title']}", n["url"]
+    return "No filing or headline that session", None
 
 
 # ── fixtures (fresh clone, nothing ingested) ───────────────────────────────
@@ -195,8 +226,14 @@ def _fixture_moves(now: datetime, rules: AlertRules) -> list[PushItem]:
 def build(window_hours: int, rules: AlertRules) -> Digest:
     now = datetime.now(timezone.utc)
     since = now - timedelta(hours=window_hours)
-    if store.has_data():
+    live = store.has_data()
+    seen_raw = state.get("brief_seen_at") if live else None
+    seen = datetime.fromisoformat(seen_raw) if seen_raw else None
+    if live:
         items, moves = _live_announcements(since, rules), _live_moves(rules)
+        if seen:
+            items = [i.model_copy(update={"is_new": i.at > seen}) for i in items]
+            moves = [m.model_copy(update={"is_new": m.at > seen}) for m in moves]
     else:
         items = [i for i in _fixture_announcements(now, rules) if i.at >= since]
         moves = _fixture_moves(now, rules)
@@ -213,4 +250,8 @@ def build(window_hours: int, rules: AlertRules) -> Digest:
         attention=attention,
         moves=moves,
         routine=[RoutineGroup(category=c, count=len(v), items=v) for c, v in sorted(groups.items(), key=lambda kv: LABEL[kv[0]])],  # type: ignore[arg-type]
+        new_count=sum(i.is_new for i in attention) + sum(m.is_new for m in moves),
+        last_seen_at=seen,
+        refreshed_at=state.get("refreshed_at") if live else None,
+        live=live,
     )

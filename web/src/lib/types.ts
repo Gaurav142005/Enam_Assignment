@@ -58,6 +58,7 @@ export interface NetworkHint {
   degree: 1 | 2;
   via: string | null;
   strength: number;
+  relation: "insider" | "peer" | "expert" | "overlap";
 }
 
 export interface ReconnectNudge {
@@ -101,6 +102,9 @@ export interface PushItem {
   person: Person | null;
   network: NetworkHint[];
   synthetic: boolean;
+  is_new: boolean;
+  context: string | null;
+  context_url: string | null;
 }
 
 export interface RoutineGroup {
@@ -115,6 +119,10 @@ export interface Digest {
   attention: PushItem[];
   moves: PushItem[];
   routine: RoutineGroup[];
+  new_count: number;
+  last_seen_at: string | null;
+  refreshed_at: string | null;
+  live: boolean;
 }
 
 export interface AlertRules {
@@ -411,4 +419,42 @@ export interface ResearchJob {
   finished_at: string | null;
   error: string | null;
   result: DeepResearch | null;
+}
+
+export interface Passage {
+  doc: string;
+  page: number;
+  text: string;
+}
+
+export interface Answer {
+  ticker: string;
+  question: string;
+  answer: string | null;
+  points: CitedPoint[];
+  found: boolean;
+  passages: Passage[];
+  sources: SourceDoc[];
+  ask: NetworkHint | null;
+}
+
+export interface NetworkAnswer {
+  query: string;
+  understood: string;
+  results: NetworkHint[];
+  companies: Company[];
+}
+
+export interface FilingRef {
+  date: string;
+  title: string;
+  url: string | null;
+}
+
+export interface Dossier {
+  person: Person;
+  shared_with_you: string[];
+  paths: NetworkHint[];
+  in_filings: FilingRef[];
+  ask_about: string[];
 }

@@ -2,7 +2,8 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { ArrowUpRight, ChevronDown, SlidersHorizontal } from "lucide-react";
 import { PageHeader, SectionTitle } from "@/components/PageHeader";
-import { CATEGORY_ICON, MoveTile, PushCard } from "@/components/PushCard";
+import { BriefStatus } from "@/components/BriefStatus";
+import { CATEGORY_ICON, MoveRow, PushCard } from "@/components/PushCard";
 import { DemoNote, Empty } from "@/components/States";
 import { SwipeDeck } from "@/components/SwipeDeck";
 import { WindowPicker } from "@/components/WindowPicker";
@@ -40,10 +41,11 @@ export default async function BriefPage({ searchParams }: { searchParams: Promis
           </Link>
         }
       />
-      <div className="px-4">
+      <div className="flex flex-wrap items-center justify-between gap-2 px-4">
         <Suspense>
           <WindowPicker value={hours} />
         </Suspense>
+        <BriefStatus refreshedAt={d.refreshed_at} newCount={d.new_count} live={d.live} />
       </div>
 
       <SectionTitle>Needs your attention</SectionTitle>
@@ -60,9 +62,9 @@ export default async function BriefPage({ searchParams }: { searchParams: Promis
       {d.moves.length > 0 && (
         <>
           <SectionTitle right={<Link href="/settings" className="text-xs text-accent">Thresholds</Link>}>Unusual moves</SectionTitle>
-          <div className="grid grid-cols-2 gap-3 px-4">
+          <div className="card mx-4 divide-y divide-line">
             {d.moves.map((m) => (
-              <MoveTile key={m.id} item={m} />
+              <MoveRow key={m.id} item={m} />
             ))}
           </div>
         </>
@@ -105,7 +107,7 @@ export default async function BriefPage({ searchParams }: { searchParams: Promis
           </div>
         </>
       )}
-      {d.attention.some((i) => i.synthetic) && <DemoNote />}
+      {!d.live && <DemoNote />}
     </main>
   );
 }

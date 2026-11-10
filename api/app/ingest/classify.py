@@ -59,3 +59,33 @@ def classify_rows(rows: list[dict], *, pdf_text: dict[str, str] | None = None, u
         if "category" not in r:
             cat: Category = default_for(r["nse_desc"])
             r.update(category=cat, category_source="default", routine=cat == "unclassified")
+
+
+SUMMARY_SYSTEM = (
+    "You read excerpts of Indian stock-exchange (NSE) filings for an equity investor. For each item write `summary`: one plain-English "
+    "line (max 16 words) saying what actually happened, with the key amount, counterparty or name. No boilerplate like 'the company has informed'. "
+    "Use ONLY the text given; if it says nothing specific, return null. "
+    'Respond as JSON: {"items": [{"id": str, "summary": str|null}]}'
+)
+
+
+def summarize_rows(rows: list[dict], pdf_text: dict[str, str]) -> int:
+    """One batched cheap call: turn 'Updates' / 'Credit Rating' into what happened. Mutates rows; returns how many got a summary."""
+    todo = [r for r in rows if r["id"] in pdf_text and not r.get("summary")]
+    if not todo or not llm.available():
+        return 0
+    n = 0
+    for i in range(0, len(todo), 12):
+        batch = todo[i : i + 12]
+        payload = [{"id": r["id"], "label": r["nse_desc"], "line": r["text"][:300], "excerpt": " ".join(pdf_text[r["id"]].split())[:1800]} for r in batch]
+        try:
+            out = llm.json_call("cheap", SUMMARY_SYSTEM, json.dumps(payload, ensure_ascii=False))
+        except llm.LLMError as e:
+            log.warning("filing summaries failed: %s", e)
+            continue
+        by_id = {str(x.get("id")): x.get("summary") for x in out.get("items", []) if isinstance(x, dict)}
+        for r in batch:
+            if by_id.get(r["id"]):
+                r["summary"] = by_id[r["id"]].strip()
+                n += 1
+    return n

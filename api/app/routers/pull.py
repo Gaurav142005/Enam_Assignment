@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Query
 
-from app.models import Company, ResearchJob, ResearchReport
-from app.services import companies, deep_research, research
+from app.models import Answer, AskIn, Company, ResearchJob, ResearchReport
+from app.services import companies, deep_research, qa, research
 
 router = APIRouter(prefix="/pull", tags=["pull"])
 
@@ -34,3 +34,9 @@ def latest_deep_research(ticker: str) -> ResearchJob:
     if not (job := deep_research.latest(ticker.upper())):
         raise HTTPException(404, "no research yet")
     return job
+
+
+@router.post("/ask/{ticker}", response_model=Answer)
+def ask_company(ticker: str, body: AskIn) -> Answer:
+    """A question answered from the company's own transcripts, decks and annual report, with page cites."""
+    return qa.ask(ticker, body.question)

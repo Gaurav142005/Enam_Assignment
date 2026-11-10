@@ -59,8 +59,8 @@ export function PushCard({ item }: { item: PushItem }) {
   const hasDetails = !!(item.results || item.person || more.length || item.source_url);
 
   return (
-    <article className="card overflow-hidden">
-      <div className="space-y-3 p-4">
+    <article className="card flex h-full flex-col overflow-hidden">
+      <div className="flex-1 space-y-3 p-4">
         <header className="flex items-center gap-3">
           <TickerBadge ticker={item.ticker} />
           <div className="min-w-0 flex-1">
@@ -79,7 +79,10 @@ export function PushCard({ item }: { item: PushItem }) {
               )}
             </p>
           </div>
-          <span className="num self-start text-xs text-muted">{ago(item.at)}</span>
+          <span className="flex items-center gap-1.5 self-start">
+            {item.is_new && <span className="rounded-full bg-accent px-1.5 py-px text-[10px] font-semibold text-bg">New</span>}
+            <span className="num text-xs text-muted">{ago(item.at)}</span>
+          </span>
         </header>
 
         <div className="space-y-1">
@@ -87,7 +90,7 @@ export function PushCard({ item }: { item: PushItem }) {
           <KeyLine item={item} />
         </div>
 
-        {lead && <NetworkLine hint={lead} lead={item.person ? "Knows them:" : "Ask"} />}
+        {lead && <NetworkLine hint={lead} lead={item.person ? "Reach via" : "Ask"} />}
       </div>
 
       {hasDetails && (
@@ -104,7 +107,7 @@ export function PushCard({ item }: { item: PushItem }) {
               <div className="space-y-1.5">
                 <p className="eyebrow">Also in your network</p>
                 {more.map((h) => (
-                  <NetworkLine key={h.person_id} hint={h} lead={item.person ? "Knows them:" : "Ask"} />
+                  <NetworkLine key={h.person_id} hint={h} lead={item.person ? "Reach via" : "Ask"} />
                 ))}
               </div>
             )}
@@ -125,19 +128,50 @@ export function PushCard({ item }: { item: PushItem }) {
   );
 }
 
-/** EOD trigger as a compact tile: the move is the headline. */
-export function MoveTile({ item }: { item: PushItem }) {
+/** EOD trigger: the move is the headline, the likely reason sits right under it. */
+export function MoveRow({ item }: { item: PushItem }) {
   const up = (item.change_pct ?? 0) >= 0;
   const vol = item.kind === "volume_spike";
   const Icon = vol ? Activity : up ? TrendingUp : TrendingDown;
+  const [lead] = item.network;
   return (
-    <Link href={`/company/${item.ticker}`} className="card block p-3.5 active:opacity-70">
-      <div className="flex items-center justify-between">
-        <span className="text-sm font-semibold">{item.ticker}</span>
-        <Icon size={16} className={vol ? "text-warn" : up ? "text-up-ink" : "text-down-ink"} aria-label={vol ? "Volume spike" : up ? "Up" : "Down"} />
-      </div>
-      <p className={`num mt-2 text-xl font-semibold ${tone(item.change_pct)}`}>{pct(item.change_pct)}</p>
-      <p className="mt-0.5 text-xs leading-snug text-muted">{vol ? item.title.replace(/, price.*$/, "") : `Closed ${item.summary?.match(/₹[\d,.]+/)?.[0] ?? ""}`}</p>
-    </Link>
+    <div className="px-4 py-3">
+      <Link href={`/company/${item.ticker}`} className="flex items-center gap-3 active:opacity-70">
+        <TickerBadge ticker={item.ticker} size={34} />
+        <span className="min-w-0 flex-1">
+          <span className="flex items-center gap-1.5 text-sm font-semibold">
+            {item.ticker}
+            {item.is_new && <span className="rounded-full bg-accent px-1.5 py-px text-[10px] font-semibold text-bg">New</span>}
+          </span>
+          <span className="flex items-center gap-1 text-xs text-muted">
+            <Icon size={13} className={vol ? "text-warn" : up ? "text-up-ink" : "text-down-ink"} aria-hidden />
+            {item.title.replace(/, price.*$/, "")}
+          </span>
+        </span>
+        <span className="text-right">
+          <span className={`num block text-base font-semibold ${tone(item.change_pct)}`}>{pct(item.change_pct)}</span>
+          <span className="num block text-[11px] text-muted">{item.summary?.match(/₹[\d,.]+/)?.[0]}</span>
+        </span>
+      </Link>
+      {item.context && (
+        <p className="mt-2 pl-[46px] text-xs leading-snug text-muted">
+          {item.context_url ? (
+            <a href={item.context_url} target="_blank" rel="noopener noreferrer" className="hover:text-accent">
+              {item.context} <ArrowUpRight size={11} className="inline" />
+            </a>
+          ) : (
+            item.context
+          )}
+          {lead && (
+            <>
+              {" · "}
+              <Link href={`/people/${lead.person_id}`} className="font-medium text-accent">
+                Ask {lead.name}
+              </Link>
+            </>
+          )}
+        </p>
+      )}
+    </div>
   );
 }

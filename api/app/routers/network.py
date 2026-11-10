@@ -1,8 +1,21 @@
+from datetime import date
+
 from fastapi import APIRouter, File, HTTPException, Query, UploadFile
 
-from app.models import (CompanyPeopleSummary, CompanyPerson, ImportResult, NetworkHint, Person, PersonIn, ReconnectNudge,
-                        ThemeGroup)
-from app.services import company_people, connections, filing_people, graph
+from app.models import (
+    CompanyPeopleSummary,
+    CompanyPerson,
+    ContactIn,
+    Dossier,
+    ImportResult,
+    NetworkAnswer,
+    NetworkHint,
+    Person,
+    PersonIn,
+    ReconnectNudge,
+    ThemeGroup,
+)
+from app.services import company_people, connections, filing_people, graph, network_query
 
 router = APIRouter(prefix="/network", tags=["network"])
 MAX_UPLOAD = 20 * 1024 * 1024  # LinkedIn exports are small; this is generous
@@ -40,6 +53,28 @@ def person_connections(person_id: str) -> list[NetworkHint]:
     if not (p := graph.get(person_id) or filing_people.get(person_id)):
         raise HTTPException(404, "person not found")
     return graph.who_knows_person(p)
+
+
+@router.get("/people/{person_id}/dossier", response_model=Dossier)
+def person_dossier(person_id: str) -> Dossier:
+    """Diligence on people: career, who knows them, what filings say, what to ask."""
+    if not (p := graph.get(person_id) or filing_people.get(person_id)):
+        raise HTTPException(404, "person not found")
+    return network_query.dossier(p)
+
+
+@router.post("/people/{person_id}/contact", response_model=Person)
+def log_contact(person_id: str, body: ContactIn) -> Person:
+    """Log a conversation: keeps 'last spoke' honest and quiets the reconnect nudge."""
+    if not (p := graph.get(person_id)) or not p.relationship:
+        raise HTTPException(404, "not one of your connections")
+    graph.log_contact(person_id, body.on or date.today(), body.note)
+    return graph.get(person_id)  # type: ignore[return-value]
+
+
+@router.get("/ask", response_model=NetworkAnswer)
+def ask_network(q: str = Query(..., min_length=2, max_length=200)) -> NetworkAnswer:
+    return network_query.ask(q)
 
 
 @router.post("/import/linkedin", response_model=ImportResult)
@@ -83,5 +118,14 @@ def reconnect() -> list[ReconnectNudge]:
     from app import state
     from app.services import digest
 
-    d = digest.build(72, state.rules)
-    return graph.reconnect({i.ticker for i in [*d.attention, *d.moves]})[:8]
+    d = digest.build(96, state.get_rules())
+    news: dict[str, str] = {}
+    for i in [*d.attention, *d.moves]:  # ranked: the first item per company is the most material
+        if i.ticker not in news:
+            what = f"{i.results.period} results" if i.results else (CATEGORY_NOUN.get(i.category or "", "") or ("A sharp move" if i.kind != "announcement" else "News"))
+            news[i.ticker] = what
+    return graph.reconnect(news)[:8]
+
+
+CATEGORY_NOUN = {"M&A": "A deal", "management_change": "A management change", "litigation": "A legal development", "capex": "A capex announcement",
+                 "fund_raise": "A fund raise", "credit_rating": "A rating action", "press_release": "An announcement", "pledging": "A pledge change"}

@@ -18,6 +18,7 @@ from app.ingest import store
 from app.ingest.people_sources import clean_name, fetch_board, fetch_officers, name_key, same_person
 from app.models import CompanyPeopleSummary, CompanyPerson, NetworkHint, Person, Position
 from app.services import companies, graph
+from app.services.filing_people import _change
 
 log = logging.getLogger(__name__)
 STALE_AFTER = timedelta(days=7)
@@ -92,7 +93,7 @@ _SENIORITY = [r"chair", r"managing director|\bmd\b|\bceo\b|chief executive", r"\
               r"chief|president", r"executive director|whole[- ]time", r"head|vice president|\bvp\b", r"secretary|compliance"]
 
 
-def _rank(cp: "CompanyPerson") -> tuple:
+def _rank(cp: CompanyPerson) -> tuple:
     r = cp.role.lower()
     tier = next((i for i, pat in enumerate(_SENIORITY) if re.search(pat, r)), len(_SENIORITY))
     return (cp.status != "current", {"executive": 0, "director": 1, "independent": 2}[cp.kind], tier, cp.name)
@@ -131,9 +132,9 @@ def _rows(ticker: str) -> list[CompanyPerson]:
         k = _match_key(ch["name"], people)
         if k in people:
             p = people[k]
-            if ch["change"] in LEFT and (not p.as_of or when >= p.as_of):
+            if _change(ch["change"]) in LEFT and (not p.as_of or when >= p.as_of):
                 people[k] = p.model_copy(update={"status": "former", "sources": [*p.sources, f"Exchange filing {when}"]})
-        elif ch["change"] == "appointed" and ch["role"]:
+        elif _change(ch["change"]) == "appointed" and ch["role"]:
             role = re.sub(r"\s*\(.*?\)|\s+of$", "", ch["role"]).strip()
             people[k] = CompanyPerson(id=_pid(ticker, k), ticker=ticker, name=clean_name(ch["name"]), role=role, kind=_kind(role),  # type: ignore[arg-type]
                                       status="current", since=when, sources=[f"Exchange filing {when}"])
@@ -173,7 +174,13 @@ def for_company(ticker: str) -> list[CompanyPerson]:
         person = _to_person(cp)
         # Paths beyond "also worked here" (that's shown once, at company level): schools, earlier employers.
         paths = [h for h in graph.who_knows_person(person) if not h.reason.startswith(("both at", "both worked at"))]
-        out.append(cp.model_copy(update={"connection": _connection(cp, net), "paths": paths[:2]}))
+        conn = _connection(cp, net)
+        if not conn and cp.status == "current":
+            from app.services.network_query import insider_paths
+
+            seen = {h.person_id for h in paths}
+            paths += [h for h in insider_paths(cp.role, t) if h.person_id not in seen]
+        out.append(cp.model_copy(update={"connection": conn, "paths": paths[:2]}))
     return out
 
 
