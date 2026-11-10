@@ -1,10 +1,11 @@
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, HTTPException, Query, Request
+from pydantic import BaseModel
 
 from app import state
 from app.models import AlertRules, Digest
-from app.services import digest, watch
+from app.services import digest, notify, watch
 
 router = APIRouter(prefix="/push", tags=["push"])
 
@@ -41,3 +42,38 @@ def refresh() -> dict:
 @router.get("/refresh")
 def refresh_status() -> dict:
     return watch.status()
+
+
+class SubscriptionIn(BaseModel):
+    endpoint: str
+    keys: dict[str, str]
+
+
+class Unsubscribe(BaseModel):
+    endpoint: str
+
+
+@router.get("/notifications")
+def notifications_info() -> dict:
+    """The VAPID public key the browser needs to subscribe, and how many devices are subscribed."""
+    public, _ = notify.vapid_keys()
+    return {"public_key": public, "devices": notify.count()}
+
+
+@router.post("/notifications/subscribe")
+def subscribe(body: SubscriptionIn, request: Request) -> dict:
+    if not body.endpoint.startswith("https://") or not {"p256dh", "auth"} <= set(body.keys):
+        raise HTTPException(422, "not a Web Push subscription")
+    return {"devices": notify.subscribe(body.model_dump(), request.headers.get("user-agent"))}
+
+
+@router.post("/notifications/unsubscribe")
+def unsubscribe(body: Unsubscribe) -> dict:
+    notify.unsubscribe(body.endpoint)
+    return {"devices": notify.count()}
+
+
+@router.post("/notifications/test")
+def test_notification() -> dict:
+    sent = notify.send("FINN", "Notifications are on. You'll hear about critical filings, thesis challenges and unusual moves.", "/", tag="test")
+    return {"sent": sent}

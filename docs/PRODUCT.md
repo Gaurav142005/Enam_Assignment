@@ -43,6 +43,9 @@ Deadline: **15 Nov 2026**.
 - [x] New since you last looked; "checked Xm ago"; refresh on demand and every 15 minutes
 - [x] Unusual moves carry the likely reason (same-session filing or headline) and who to ask
 - [x] Alert rules persist
+- [x] Coming up: results dates, earnings calls, analyst meets, record dates for the next two weeks (exchange calendar + notices)
+- [x] Theses: your view per company; each material filing judged supports / challenges, shown on the Brief
+- [x] Push notifications (Web Push) for critical items, marked categories, thesis challenges and unusual moves; each sent once
 - [x] At a glance: one line per company above the deck (no model, instant); tap to jump to its card
 - [x] Lookback: 24h / 3d / 7d / 30d or since any date in the last 90 days; remembered on the device
 

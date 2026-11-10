@@ -46,6 +46,11 @@ First build takes ~3–4 minutes; health check is `/api/health`.
 ### 3. Updating
 Push to `main`. Railway rebuilds and redeploys; the volume (and anything imported on it) is kept.
 
+## Notifications
+Work out of the box on Railway (it serves HTTPS, which Web Push requires). Signing keys are generated on first use and
+kept on the volume; to pin them, set `FINN_VAPID_PUBLIC_KEY`, `FINN_VAPID_PRIVATE_KEY` and `FINN_VAPID_SUBJECT`
+(`mailto:you@…`). On iPhone, open the link in Safari → Share → Add to Home Screen, then turn notifications on in Alerts.
+
 ## Keeping demo data fresh
 - The app re-pulls filings and prices for the portfolio every `FINN_AUTO_REFRESH_MIN` minutes ("Checked Xm ago" on the Brief).
 - NSE sometimes blocks cloud IPs. If the Brief stops updating, refresh the snapshot from your laptop instead:

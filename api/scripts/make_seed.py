@@ -1,7 +1,7 @@
 """Build the demo data snapshot bundled into the Docker image (api/seed/finn.db.gz).
 
-Copies the local store and strips anything personal: imported/added connections, the contact log, usage counters
-and the Brief's "seen" bookmark. Public data stays: filings, prices, fundamentals, document text, leadership,
+Copies the local store and strips anything personal or secret: imported/added connections, the contact log, usage
+counters, the Brief's "seen" bookmark, notification subscriptions and the push signing key. Public data stays: filings, prices, fundamentals, document text, leadership,
 research reports and the model cache (so the demo doesn't spend model calls re-reading what's already read).
 
     uv run python scripts/make_seed.py
@@ -35,7 +35,9 @@ def main() -> int:
             DELETE FROM people;              -- the investor's own connections never ship
             DELETE FROM contact_log;
             DELETE FROM llm_usage;
-            DELETE FROM settings WHERE key IN ('brief_seen_at');
+            DELETE FROM settings WHERE key IN ('brief_seen_at', 'vapid');   -- the push private key must never ship
+            DELETE FROM push_subscriptions;
+            DELETE FROM push_sent;
             DELETE FROM research_jobs WHERE status != 'done';
             PRAGMA journal_mode=DELETE;
         """)

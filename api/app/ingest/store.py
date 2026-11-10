@@ -102,6 +102,12 @@ CREATE TABLE IF NOT EXISTS thesis_checks (     -- each material filing judged ag
   announcement_id TEXT, ticker TEXT, thesis_hash TEXT, stance TEXT, why TEXT, created_at TEXT,
   PRIMARY KEY (announcement_id, thesis_hash)
 );
+CREATE TABLE IF NOT EXISTS push_subscriptions (  -- devices that asked for notifications (Web Push)
+  endpoint TEXT PRIMARY KEY, subscription TEXT, user_agent TEXT, created_at TEXT
+);
+CREATE TABLE IF NOT EXISTS push_sent (            -- items already notified, so each is sent once
+  item_id TEXT PRIMARY KEY, sent_at TEXT
+);
 CREATE TABLE IF NOT EXISTS llm_cache (
   key TEXT PRIMARY KEY, model TEXT, response TEXT, created_at TEXT
 );

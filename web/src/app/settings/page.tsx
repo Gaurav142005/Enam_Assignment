@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { BackLink } from "@/components/BackLink";
+import { NotificationsToggle } from "@/components/NotificationsToggle";
 import { PageHeader, SectionTitle } from "@/components/PageHeader";
 import { api, apiPut } from "@/lib/api";
 import { CATEGORY_LABEL } from "@/lib/format";
@@ -33,6 +34,9 @@ export default function SettingsPage() {
         <BackLink />
       </div>
       <PageHeader compact title="Alerts" sub={saved ? "Saved. The Brief now uses these." : "You decide what counts as unusual; FINN watches for it."} />
+
+      <SectionTitle>On this device</SectionTitle>
+      <NotificationsToggle />
 
       <SectionTitle>End-of-day triggers</SectionTitle>
       <div className="card mx-4 divide-y divide-line">
