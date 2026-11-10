@@ -47,6 +47,7 @@ log = logging.getLogger(__name__)
 IST = timezone(timedelta(hours=5, minutes=30))
 FRESH_FOR = timedelta(hours=12)
 _runner = ThreadPoolExecutor(max_workers=2, thread_name_prefix="research")
+_BOOT = uuid.uuid4().hex[:4]  # identifies this server process; jobs from an earlier one can't still be running
 
 MATERIAL = {"results", "M&A", "fund_raise", "management_change", "litigation", "capex", "credit_rating", "pledging", "insider_trading", "press_release"}
 STEPS = [
@@ -86,7 +87,8 @@ def get_job(job_id: str) -> ResearchJob | None:
     if not row:
         return None
     job = _load(row)
-    if job.status in ("queued", "running") and datetime.now(timezone.utc) - job.started_at > timedelta(minutes=6):
+    orphaned = not job.id.startswith(_BOOT)  # started by a previous server process: its worker thread is gone
+    if job.status in ("queued", "running") and (orphaned or datetime.now(timezone.utc) - job.started_at > timedelta(minutes=6)):
         job = job.model_copy(update={"status": "error", "error": "Interrupted (the server restarted). Run it again."})
     return job
 
@@ -118,7 +120,7 @@ def start(ticker: str, refresh: bool = False) -> ResearchJob:
         row = con.execute("SELECT * FROM research_jobs WHERE ticker=? AND status IN ('queued','running') ORDER BY started_at DESC LIMIT 1", (t,)).fetchone()
     if row and (running := get_job(row["id"])) and running.status in ("queued", "running"):
         return running  # one run per company at a time
-    job = ResearchJob(id=uuid.uuid4().hex[:12], ticker=t, status="queued", steps=[ResearchStep(key=k, label=l) for k, l in STEPS],
+    job = ResearchJob(id=_BOOT + uuid.uuid4().hex[:10], ticker=t, status="queued", steps=[ResearchStep(key=k, label=l) for k, l in STEPS],
                       started_at=datetime.now(timezone.utc))
     _save(job)
     _runner.submit(_run, job)
@@ -435,7 +437,8 @@ def _extract(sources: list[SourceDoc], texts: dict[str, str], filings: list[dict
     for fut in done:
         doc, res = fut.result()
         if isinstance(res, Exception):
-            notes.append(f"Couldn't read {doc}: {str(res)[:120]}")
+            why = "the model was busy" if any(k in str(res) for k in ("503", "Timeout", "no answer", "429")) else "the model returned an unusable answer"
+            notes.append(f"{doc} wasn't read this time ({why}). Refresh to include it; everything else is reused.")
             continue
         for k, v in res.items():
             if isinstance(v, list):
