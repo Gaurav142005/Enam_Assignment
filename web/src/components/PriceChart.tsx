@@ -85,7 +85,8 @@ export function PriceChart({ ticker }: { ticker: string }) {
       autoSize: true,
       ...themeOptions(),
       rightPriceScale: { borderVisible: false, scaleMargins: { top: 0.08, bottom: 0.04 } },
-      timeScale: { borderVisible: false, fixLeftEdge: true, fixRightEdge: true, lockVisibleTimeRangeOnResize: true },
+      // No edge pinning: fitContent then leaves half a bar of air on both sides instead of clipping the first candle.
+      timeScale: { borderVisible: false, lockVisibleTimeRangeOnResize: true, rightOffset: 1 },
       handleScroll: false, // the range filter sets the window; touches on the chart drive the crosshair, not a pan
       handleScale: false,
     });
@@ -209,7 +210,7 @@ export function PriceChart({ ticker }: { ticker: string }) {
       </dl>
 
       <div className={`relative mt-2 h-80 transition-opacity ${loading && bars.length ? "opacity-50" : ""}`}>
-        <div ref={box} className="absolute inset-0" />
+        <div ref={box} className="absolute inset-y-0 left-3 right-1" />
         {!loading && !bars.length && (
           <p className="absolute inset-0 flex items-center justify-center text-sm text-muted">{error ?? "No price history for this ticker."}</p>
         )}

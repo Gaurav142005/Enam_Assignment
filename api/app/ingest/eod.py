@@ -6,8 +6,6 @@ import logging
 import sqlite3
 from datetime import datetime, time, timedelta, timezone
 
-import yfinance as yf
-
 log = logging.getLogger(__name__)
 IST = timezone(timedelta(hours=5, minutes=30))
 MARKET_CLOSE = time(15, 45)  # small buffer after the 15:30 close
@@ -22,6 +20,8 @@ def yahoo_symbol(ticker: str) -> str:
 
 
 def fetch_eod(ticker: str, period: str = "5y") -> list[dict]:
+    import yfinance as yf  # ~60 MB with pandas: loaded on first price fetch, not at startup
+
     h = yf.Ticker(yahoo_symbol(ticker)).history(period=period, interval="1d", auto_adjust=False)
     now = datetime.now(IST)
     rows = []

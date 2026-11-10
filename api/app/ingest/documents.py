@@ -8,8 +8,6 @@ import sqlite3
 import zipfile
 from urllib.parse import urlparse
 
-import pymupdf
-
 from app import config
 from app.ingest import http, store
 
@@ -55,6 +53,8 @@ def ingest(con: sqlite3.Connection, url: str, *, ticker: str, kind: str, period:
     sha, data, xbrl = _download(url, kind)
     pages: list[dict] = []
     if data:
+        import pymupdf  # ~35 MB: loaded the first time a PDF is read
+
         with pymupdf.open(stream=data, filetype="pdf") as pdf:
             n = pdf.page_count if max_pages is None else min(max_pages, pdf.page_count)
             pages = [{"url": url, "page": i + 1, "text": pdf[i].get_text()} for i in range(n)]

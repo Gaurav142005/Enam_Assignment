@@ -31,5 +31,7 @@ COPY deploy/start.sh /app/start.sh
 RUN chmod +x /app/start.sh
 
 ENV FINN_CACHE_DIR=/data API_URL=http://127.0.0.1:8000 NEXT_TELEMETRY_DISABLED=1 PORT=3000
+# Memory: fewer glibc malloc arenas keeps threaded Python from fragmenting; cap the Node heap so it can't creep.
+ENV MALLOC_ARENA_MAX=2 NODE_OPTIONS=--max-old-space-size=192
 EXPOSE 3000
 CMD ["/app/start.sh"]

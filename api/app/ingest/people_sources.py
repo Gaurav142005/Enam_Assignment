@@ -16,8 +16,6 @@ import re
 from datetime import datetime, timedelta, timezone
 from functools import lru_cache
 
-import yfinance as yf
-
 from app import config
 from app.ingest import http
 
@@ -72,6 +70,8 @@ def name_key(name: str) -> str:
 
 
 def fetch_officers(ticker: str) -> list[dict]:
+    import yfinance as yf  # loaded on demand (see eod.py)
+
     info = yf.Ticker(f"{ticker}.NS").info or {}
     out = []
     for o in info.get("companyOfficers") or []:

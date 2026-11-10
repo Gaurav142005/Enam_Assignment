@@ -46,7 +46,7 @@ from app.services.digest import _people_title, headline
 log = logging.getLogger(__name__)
 IST = timezone(timedelta(hours=5, minutes=30))
 FRESH_FOR = timedelta(hours=12)
-_runner = ThreadPoolExecutor(max_workers=2, thread_name_prefix="research")
+_runner = ThreadPoolExecutor(max_workers=1, thread_name_prefix="research")  # one at a time bounds peak memory; others queue
 _BOOT = uuid.uuid4().hex[:4]  # identifies this server process; jobs from an earlier one can't still be running
 
 MATERIAL = {"results", "M&A", "fund_raise", "management_change", "litigation", "capex", "credit_rating", "pledging", "insider_trading", "press_release"}

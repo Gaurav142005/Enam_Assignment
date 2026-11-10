@@ -10,11 +10,12 @@ Every push to `main` redeploys automatically.
 | Plan | Price | Fits FINN? |
 |---|---|---|
 | Free trial | $0, $5 one-time credit, 30 days, no card | Yes: covers about a month |
-| Free | $0, $1/month credit, 0.5 GB RAM cap | No: FINN idles at ~280 MB, peaks ~350 MB, and uses ~$3–4/month |
-| Hobby | $5/month, includes $5 of usage | Yes: FINN's ~$3–4/month of usage is covered, so $5 flat |
+| Free | $0, $1/month credit, 0.5 GB RAM cap | Fits in memory, but ~$2/month of usage outruns the $1 credit, so it stops mid-month |
+| Hobby | $5/month, includes $5 of usage | Yes: FINN's ~$2–3/month of usage is covered, so $5 flat |
 
-Measured locally in the production image: ~276 MB idle, ~352 MB while deep research parses a 700-page annual report.
-At Railway's rates (≈ $10 per GB-month of RAM, $20 per vCPU-month, $0.15 per GB-month of volume) that is about $3–4 a month.
+Measured in the production image: ~105 MB idle, ~240 MB once prices or PDFs have been read, ~255 MB peak while deep research
+parses a 480-page annual report. At Railway's rates (≈ $10 per GB-month of RAM, $20 per vCPU-month, $0.15 per GB-month of
+volume) that is about $2–3 a month. Optional: Settings → Resource limits → memory 512 MB, so a runaway can never bill more.
 
 ## Steps
 
