@@ -2,11 +2,11 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
-import { FileUp, ShieldCheck } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { FileUp, ShieldCheck, Users } from "lucide-react";
 import { BackLink } from "@/components/BackLink";
 import { PageHeader, SectionTitle } from "@/components/PageHeader";
-import { apiDelete, apiUpload } from "@/lib/api";
+import { api, apiDelete, apiPost, apiUpload } from "@/lib/api";
 import type { ImportResult } from "@/lib/types";
 
 /** Import the investor's own LinkedIn connections (their data export), re-upload any time to sync. */
@@ -18,6 +18,25 @@ export default function ImportPage() {
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ImportResult | null>(null);
   const [removed, setRemoved] = useState<number | null>(null);
+  const [publicDemo, setPublicDemo] = useState(false);
+
+  useEffect(() => {
+    api<{ public_demo: boolean }>("/network/config").then((c) => setPublicDemo(c.public_demo)).catch(() => {});
+  }, []);
+
+  const sample = async () => {
+    setBusy(true);
+    setError(null);
+    setRemoved(null);
+    try {
+      setResult(await apiPost<ImportResult>("/network/import/sample", {}));
+      router.refresh();
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const upload = async () => {
     if (!file) return;
@@ -49,6 +68,23 @@ export default function ImportPage() {
       </div>
       <PageHeader compact title="Import connections" sub="From your LinkedIn data export" />
 
+      {publicDemo && (
+        <p className="mx-4 mb-3 rounded-xl border border-warn/40 bg-warn/10 px-3 py-2.5 text-[13px] leading-snug">
+          This is a public demo, so uploading your own export is off: anything imported here would be visible to every visitor. Try it with the sample
+          instead (15 made-up people at real companies).
+        </p>
+      )}
+      <div className="mx-4 mb-3">
+        <button onClick={sample} disabled={busy} className="flex w-full items-center gap-3 rounded-2xl border border-line bg-surface px-4 py-4 text-left active:opacity-70 disabled:opacity-50">
+          <Users size={22} className="shrink-0 text-accent" />
+          <span className="min-w-0">
+            <span className="block text-sm font-medium">Try with sample connections</span>
+            <span className="block text-xs text-muted">See how an export maps onto your companies, with no data of your own</span>
+          </span>
+        </button>
+      </div>
+      {!publicDemo && (
+        <>
       <ol className="card mx-4 space-y-2 p-4 text-[13px] leading-snug">
         <li>
           <span className="font-medium">1.</span> On LinkedIn: <span className="text-muted">Settings → Data privacy → Get a copy of your data</span>
@@ -90,6 +126,10 @@ export default function ImportPage() {
         >
           {busy ? "Importing…" : "Import"}
         </button>
+      </div>
+        </>
+      )}
+      <div className="mx-4">
         {error && <p className="mt-3 text-sm text-down-ink">{error}</p>}
         {removed !== null && <p className="mt-3 text-sm text-muted">Removed {removed} imported connections.</p>}
       </div>

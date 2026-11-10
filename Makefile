@@ -1,4 +1,4 @@
-.PHONY: setup api web test check ingest ingest-all
+.PHONY: setup api web test check ingest ingest-all seed docker
 
 setup:
 	cd api && uv sync
@@ -24,3 +24,12 @@ test:
 check: test
 	cd api && uvx ruff check app tests
 	cd web && pnpm tsc --noEmit && pnpm lint
+
+# rebuild the demo snapshot bundled into the Docker image (personal data stripped)
+seed:
+	cd api && uv run python scripts/make_seed.py
+
+# build and run the production image locally on :3200
+docker:
+	docker build -t finn .
+	docker run --rm -p 3200:3000 -v finn-data:/data -e FINN_PUBLIC_DEMO=1 --env-file .env finn

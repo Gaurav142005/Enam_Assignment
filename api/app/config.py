@@ -13,6 +13,8 @@ FILES_DIR = CACHE_DIR / "files"
 # Demo network (synthetic people in data/network/people.json). Set FINN_DEMO_NETWORK=0 once real connections are imported.
 DEMO_NETWORK = os.getenv("FINN_DEMO_NETWORK", "1") != "0"
 AUTO_REFRESH_MIN = float(os.getenv("FINN_AUTO_REFRESH_MIN", "15"))
+# Public demo: visitors can't upload their own LinkedIn export (everyone would see it); a sample import is offered instead.
+PUBLIC_DEMO = os.getenv("FINN_PUBLIC_DEMO", "0") == "1"
 # Tried in order when a model times out or is overloaded (Gemini returns 503 under load).
 CHEAP_FALLBACKS = [m for m in os.getenv("FINN_CHEAP_FALLBACKS", "gemini-3.1-flash-lite").split(",") if m]
 STRONG_FALLBACKS = [m for m in os.getenv("FINN_STRONG_FALLBACKS", "gemini-3.6-flash,gemini-3-flash-preview,gemini-3.5-flash-lite").split(",") if m]

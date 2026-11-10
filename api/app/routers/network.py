@@ -1,7 +1,9 @@
 from datetime import date
+from pathlib import Path
 
 from fastapi import APIRouter, File, HTTPException, Query, UploadFile
 
+from app import config
 from app.models import (
     CompanyPeopleSummary,
     CompanyPerson,
@@ -18,6 +20,7 @@ from app.models import (
 from app.services import company_people, connections, filing_people, graph, network_query
 
 router = APIRouter(prefix="/network", tags=["network"])
+SAMPLE = Path(__file__).resolve().parent.parent / "data" / "network" / "sample_linkedin_connections.csv"
 MAX_UPLOAD = 20 * 1024 * 1024  # LinkedIn exports are small; this is generous
 
 
@@ -77,8 +80,21 @@ def ask_network(q: str = Query(..., min_length=2, max_length=200)) -> NetworkAns
     return network_query.ask(q)
 
 
+@router.get("/config")
+def network_config() -> dict[str, bool]:
+    return {"public_demo": config.PUBLIC_DEMO}
+
+
+@router.post("/import/sample", response_model=ImportResult)
+def import_sample() -> ImportResult:
+    """Import the bundled sample export (made-up people at real companies) to see the import end to end."""
+    return connections.import_linkedin(SAMPLE.read_bytes(), SAMPLE.name)
+
+
 @router.post("/import/linkedin", response_model=ImportResult)
 async def import_linkedin(file: UploadFile = File(...)) -> ImportResult:
+    if config.PUBLIC_DEMO:
+        raise HTTPException(403, "This is a public demo, so uploads are off: anything imported here would be visible to every visitor. Use the sample instead.")
     data = await file.read(MAX_UPLOAD + 1)
     if len(data) > MAX_UPLOAD:
         raise HTTPException(413, "file too large")

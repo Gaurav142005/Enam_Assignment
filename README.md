@@ -7,7 +7,7 @@ A mobile-first investing companion built for the ENAM Holdings Founding AI Engin
 - **Network:** who in my network can help me understand it, woven into both of the above.
 - **Portfolio:** period returns vs Nifty 50, leaders and laggards; daily candle charts (1M–5Y) for any NSE ticker.
 
-Product decisions: [docs/PRODUCT.md](docs/PRODUCT.md) · Architecture: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · Brief: [docs/brief/](docs/brief/)
+Deploying: [DEPLOY.md](DEPLOY.md) · Product decisions: [docs/PRODUCT.md](docs/PRODUCT.md) · Architecture: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · Brief: [docs/brief/](docs/brief/)
 
 ## Run it
 

@@ -98,3 +98,13 @@ def test_company_people_marks_connections_and_leavers(monkeypatch):
     people = {p.name: p for p in company_people.for_company("POLYCAB")}
     assert people["Test Cfo"].connection is not None  # same name AND same employer → it's your connection
     assert people["Old Director"].status == "former"
+
+
+def test_public_demo_blocks_uploads_but_offers_the_sample(monkeypatch):
+    from app import config
+
+    monkeypatch.setattr(config, "PUBLIC_DEMO", True)
+    assert client.get("/network/config").json() == {"public_demo": True}
+    r = client.post("/network/import/linkedin", files={"file": ("Connections.csv", SAMPLE.read_bytes(), "text/csv")})
+    assert r.status_code == 403
+    assert client.post("/network/import/sample").json()["total"] == 15
