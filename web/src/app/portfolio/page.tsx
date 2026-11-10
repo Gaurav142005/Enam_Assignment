@@ -1,11 +1,14 @@
 import Link from "next/link";
 import { Suspense } from "react";
+import { Plus } from "lucide-react";
 import { PageHeader, SectionTitle } from "@/components/PageHeader";
+import { ResetPortfolio } from "@/components/ResetPortfolio";
+import { SyncBanner } from "@/components/SyncBanner";
 import { SegmentedParam } from "@/components/Segmented";
 import { Sparkline } from "@/components/Sparkline";
 import { api } from "@/lib/api";
 import { inr, pct, rupees, shortDate, tone } from "@/lib/format";
-import type { Digest, Holding, PerfPeriod, PortfolioPerformance } from "@/lib/types";
+import type { Digest, Holding, HoldingRecord, PerfPeriod, PortfolioPerformance } from "@/lib/types";
 
 const PERIODS: PerfPeriod[] = ["1D", "1W", "1M", "3M", "6M", "1Y"];
 const PERIOD_NAME: Record<PerfPeriod, string> = { "1D": "today", "1W": "this week", "1M": "past month", "3M": "past 3 months", "6M": "past 6 months", "1Y": "past year" };
@@ -18,6 +21,8 @@ export default async function PortfolioPage({ searchParams }: { searchParams: Pr
     api<PortfolioPerformance>(`/market/portfolio?period=${period}`),
     api<Digest>("/push/digest?hours=168").catch(() => null),
   ]);
+  const records = await api<HoldingRecord[]>("/portfolio/holdings").catch(() => [] as HoldingRecord[]);
+  const syncing = records.filter((h) => h.syncing).map((h) => h.ticker);
   // The weave: which holdings have something material in this week's Brief.
   const flagged = new Map<string, string>();
   for (const i of brief?.attention ?? []) if (i.priority !== "normal" && !flagged.has(i.ticker)) flagged.set(i.ticker, i.results ? `${i.results.period} results` : i.title);
@@ -28,7 +33,16 @@ export default async function PortfolioPage({ searchParams }: { searchParams: Pr
 
   return (
     <main>
-      <PageHeader title="Portfolio" sub={`${d.holdings.length} companies${d.as_of ? ` · close ${shortDate(d.as_of)}` : ""}`} />
+      <PageHeader
+        title="Portfolio"
+        sub={`${d.holdings.length} companies${d.as_of ? ` · close ${shortDate(d.as_of)}` : ""}`}
+        right={
+          <Link href="/portfolio/add" className="mb-1 flex items-center gap-1 rounded-full bg-ink px-3 py-1.5 text-xs font-medium text-bg active:opacity-80">
+            <Plus size={14} /> Add
+          </Link>
+        }
+      />
+      <SyncBanner initial={syncing} />
 
       {d.total_value !== null && (
         <section className="card mx-4 p-4" aria-label="Portfolio value">
@@ -86,6 +100,7 @@ export default async function PortfolioPage({ searchParams }: { searchParams: Pr
         <span className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-accent align-middle" /> has something material in this week&apos;s Brief.
         End-of-day prices from Yahoo Finance. Period figures hold today&apos;s quantities constant; P&amp;L is unrealised, before costs and taxes.
       </p>
+      <ResetPortfolio />
     </main>
   );
 }

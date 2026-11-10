@@ -458,3 +458,15 @@ export interface Dossier {
   in_filings: FilingRef[];
   ask_about: string[];
 }
+
+export interface HoldingRecord {
+  ticker: string;
+  name: string;
+  sector: string | null;
+  qty: number;
+  avg_cost: number | null;
+  bought: string | null;
+  added_at: string | null;
+  syncing: boolean;
+  has_data: boolean;
+}

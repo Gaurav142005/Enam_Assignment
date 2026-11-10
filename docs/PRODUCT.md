@@ -23,6 +23,7 @@ Deadline: **15 Nov 2026**.
 ## Core features (scope for the prototype)
 
 ### Portfolio
+- [x] Add, edit and remove holdings in the app (any NSE company); a new holding is backfilled in the background and joins the Brief
 - [x] Holdings with quantity + average cost (`api/app/data/portfolio.json`): value, weight, unrealised and period P&L
 - [x] Value-weighted period returns vs Nifty 50; leaders and laggards
 - [x] Daily candle / line charts with volume for any NSE ticker
@@ -42,6 +43,8 @@ Deadline: **15 Nov 2026**.
 - [x] New since you last looked; "checked Xm ago"; refresh on demand and every 15 minutes
 - [x] Unusual moves carry the likely reason (same-session filing or headline) and who to ask
 - [x] Alert rules persist
+- [x] At a glance: one line per company above the deck (no model, instant); tap to jump to its card
+- [x] Lookback: 24h / 3d / 7d / 30d or since any date in the last 90 days; remembered on the device
 
 ### Pull
 - [x] Works for **any** NSE ticker (no hard-wiring to the demo set)

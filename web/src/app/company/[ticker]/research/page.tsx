@@ -263,7 +263,6 @@ function Points({ items, sources }: { items: (CitedPoint | Theme)[]; sources: Ma
 
 function Report({ r, onRefresh }: { r: DeepResearch; onRefresh: () => void }) {
   const sources = new Map(r.sources.map((s) => [s.id, s]));
-  const models = Object.keys(r.stats.llm.models ?? {});
   const docs = r.sources.filter((s) => s.kind !== "filing");
   const filings = r.sources.filter((s) => s.kind === "filing");
   return (
@@ -370,7 +369,7 @@ function Report({ r, onRefresh }: { r: DeepResearch; onRefresh: () => void }) {
                 )}
                 {s.pages > 0 && (
                   <span className="block text-[11px] text-muted">
-                    {s.pages} pages{s.used_pages && s.used_pages < s.pages ? ` · ${s.used_pages} most relevant sent to the model` : ""}
+                    {s.pages} pages{s.used_pages && s.used_pages < s.pages ? ` · ${s.used_pages} most relevant read` : ""}
                   </span>
                 )}
               </span>
@@ -379,17 +378,10 @@ function Report({ r, onRefresh }: { r: DeepResearch; onRefresh: () => void }) {
         </ul>
       </Section>
 
-      <p className="mx-4 mt-4 text-[11px] leading-relaxed text-muted">
-        Took {Math.round(r.stats.seconds)}s · {r.stats.llm.calls} model calls{r.stats.llm.cached ? ` (+${r.stats.llm.cached} from cache)` : ""} ·{" "}
-        {((r.stats.llm.tokens_in + r.stats.llm.tokens_out) / 1000).toFixed(0)}k tokens
-        {models.length > 0 && ` · written with ${models.join(", ")}`}. Primary sources only; every claim links to its page.
-      </p>
       {r.notes.length > 0 && (
-        <ul className="mx-4 mt-2 space-y-1 text-[11px] text-muted">
-          {r.notes.map((n) => (
-            <li key={n}>· {n}</li>
-          ))}
-        </ul>
+        <p className="mx-4 mt-4 text-[11px] leading-relaxed text-muted">
+          Some documents weren&apos;t read this time. Refresh to include them; everything already read is reused.
+        </p>
       )}
     </>
   );

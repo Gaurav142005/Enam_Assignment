@@ -13,27 +13,53 @@ DATA = Path(__file__).resolve().parent.parent / "data" / "portfolio.json"
 
 
 @lru_cache
-def _load() -> tuple[list[Company], list[Company]]:
+def _watchlist() -> list[Company]:
     raw = json.loads(DATA.read_text())
-    pick = lambda c: {k: c[k] for k in ("ticker", "name", "sector")}  # noqa: E731
-    portfolio = [Company(**pick(c), in_portfolio=True) for c in raw["portfolio"]]
-    watch = [Company(**pick(c)) for c in raw["research_watchlist"]]
-    return portfolio, watch
+    return [Company(ticker=c["ticker"], name=c["name"], sector=c["sector"]) for c in raw["research_watchlist"]]
+
+
+_cache: list[dict] | None = None
+
+
+def invalidate() -> None:
+    global _cache
+    _cache = None
+
+
+def demo_holdings() -> list[dict]:
+    raw = json.loads(DATA.read_text())
+    return [{"ticker": c["ticker"], "name": c["name"], "sector": c["sector"], "qty": c.get("qty") or 0, "avg_cost": c.get("avg_cost"),
+             "bought": c.get("bought"), "added_at": None} for c in raw["portfolio"]]
+
+
+def holdings() -> list[dict]:
+    """The investor's holdings, in the order they were added. Seeded from the demo portfolio the first time."""
+    global _cache
+    if _cache is None:
+        from app.ingest import store
+
+        with store.connect() as con:
+            rows = [dict(r) for r in con.execute("SELECT * FROM holdings ORDER BY added_at IS NOT NULL, added_at, rowid")]
+            if not rows and not con.execute("SELECT 1 FROM settings WHERE key='holdings_seeded'").fetchone():
+                rows = demo_holdings()
+                store.upsert(con, "holdings", rows)
+                con.execute("INSERT OR REPLACE INTO settings VALUES ('holdings_seeded', 'true', ?)", (store.now_iso(),))
+        _cache = rows
+    return _cache
 
 
 def portfolio() -> list[Company]:
-    return _load()[0]
+    return [Company(ticker=h["ticker"], name=h["name"], sector=h["sector"] or "—", in_portfolio=True) for h in holdings()]
 
 
-@lru_cache
 def positions() -> dict[str, dict]:
     """ticker → {qty, avg_cost, bought}. Separate from Company: holdings are the investor's, not the company's."""
-    raw = json.loads(DATA.read_text())
-    return {c["ticker"]: {k: c.get(k) for k in ("qty", "avg_cost", "bought")} for c in raw["portfolio"] if c.get("qty")}
+    return {h["ticker"]: {k: h.get(k) for k in ("qty", "avg_cost", "bought")} for h in holdings() if h.get("qty")}
 
 
 def watchlist() -> list[Company]:
-    return _load()[1]
+    held = {h["ticker"] for h in holdings()}
+    return [c for c in _watchlist() if c.ticker not in held]
 
 
 def known() -> dict[str, Company]:

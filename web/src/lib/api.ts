@@ -53,3 +53,9 @@ export async function apiDelete(path: string): Promise<unknown> {
   if (!res.ok) return detail(res, path);
   return res.status === 204 ? null : res.json();
 }
+
+export async function apiPutJson<T>(path: string, body: unknown): Promise<T> {
+  const res = await fetch(`/api${path}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  if (!res.ok) return detail(res, path);
+  return res.json() as Promise<T>;
+}

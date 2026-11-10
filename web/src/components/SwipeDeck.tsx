@@ -26,9 +26,26 @@ export function SwipeDeck({ children, label }: { children: React.ReactNode; labe
 
   useEffect(() => setIndex(0), [n]);
 
+  // "At a glance" links point at #card-<id>: bring that card into the deck's view and the deck onto the screen.
+  useEffect(() => {
+    const onHash = () => {
+      const el = track.current;
+      const id = decodeURIComponent(window.location.hash.slice(1));
+      if (!el || !id) return;
+      const i = Array.from(el.children).findIndex((c) => c.querySelector(`[id="${CSS.escape(id)}"]`));
+      if (i < 0) return;
+      go(i);
+      el.parentElement?.scrollIntoView({ behavior: "smooth", block: "start" });
+    };
+    window.addEventListener("hashchange", onHash);
+    onHash();
+    return () => window.removeEventListener("hashchange", onHash);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [n]);
+
   if (!n) return null;
   return (
-    <section aria-roledescription="carousel" aria-label={label}>
+    <section aria-roledescription="carousel" aria-label={label} className="scroll-mt-4">
       <div className="mb-2 flex items-center justify-end gap-1 px-4">
         <span className="num mr-1 text-xs text-muted" aria-live="polite">
           {index + 1} / {n}

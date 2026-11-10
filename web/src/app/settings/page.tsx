@@ -7,17 +7,13 @@ import { api, apiPut } from "@/lib/api";
 import { CATEGORY_LABEL } from "@/lib/format";
 import type { AlertRules, Category } from "@/lib/types";
 
-type Usage = { available: boolean; cheap_model: string; strong_model: string; today: { model: string; calls: number; tokens_in: number; tokens_out: number }[] };
-
 /** The investor decides what "unusual" and "material" mean; FINN watches for it. */
 export default function SettingsPage() {
   const [rules, setRules] = useState<AlertRules | null>(null);
   const [saved, setSaved] = useState(false);
-  const [usage, setUsage] = useState<Usage | null>(null);
 
   useEffect(() => {
     api<AlertRules>("/push/rules").then(setRules);
-    api<Usage>("/data/llm/usage").then(setUsage).catch(() => {});
   }, []);
 
   if (!rules) return <PageHeader title="Alerts" sub="Loading…" />;
@@ -63,25 +59,6 @@ export default function SettingsPage() {
         })}
       </div>
 
-      {usage && (
-        <>
-          <SectionTitle right={<span className="text-xs text-muted">{usage.available ? "connected" : "no key: rules only"}</span>}>AI usage today</SectionTitle>
-          <div className="card mx-4 divide-y divide-line text-[13px]">
-            {usage.today.length === 0 && <p className="px-4 py-3 text-muted">No model calls yet today. Most of FINN runs without one.</p>}
-            {usage.today.map((m) => (
-              <div key={m.model} className="flex items-center justify-between px-4 py-2.5">
-                <span className="font-mono text-[12px]">{m.model}</span>
-                <span className="num text-muted">
-                  {m.calls} calls · {Math.round((m.tokens_in + m.tokens_out) / 1000)}k tokens
-                </span>
-              </div>
-            ))}
-          </div>
-          <p className="mx-4 mt-2 text-[11px] leading-relaxed text-muted">
-            Bulk reading uses {usage.cheap_model}; analysis uses {usage.strong_model}. Every answer is cached, so nothing is read twice.
-          </p>
-        </>
-      )}
     </main>
   );
 }

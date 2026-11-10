@@ -12,10 +12,11 @@ def isolated(monkeypatch, tmp_path):
     """Fresh empty store per test (so the digest uses fixtures) and no network: NSE, screener, Yahoo, Google News fail fast."""
     from app import config
     from app.ingest import eod, http
-    from app.services import graph
+    from app.services import companies, graph
 
     monkeypatch.setattr(config, "DB_PATH", tmp_path / "finn.db")
     graph.invalidate()
+    companies.invalidate()
 
     def no_net(*a, **k):
         raise http.FetchError("network disabled in tests")
@@ -24,3 +25,4 @@ def isolated(monkeypatch, tmp_path):
     monkeypatch.setattr(eod, "fetch_eod", no_net)
     yield
     graph.invalidate()
+    companies.invalidate()

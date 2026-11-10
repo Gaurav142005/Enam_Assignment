@@ -6,6 +6,7 @@ synthetic fixtures, so the UI always runs.
 
 from __future__ import annotations
 
+import html
 import json
 import re
 from datetime import datetime, timedelta, timezone
@@ -43,7 +44,7 @@ _BOILER = re.compile(r"^.*?\bhas (?:informed|submitted to|submitted)(?: to)? the
 
 def headline(text: str, nse_desc: str) -> str:
     """NSE one-liners are mostly boilerplate. Strip it; fall back to NSE's label when nothing specific is left."""
-    t = _BOILER.sub("", text).strip(" .")
+    t = _BOILER.sub("", html.unescape(text)).strip(" .")
     t = t[:1].upper() + t[1:]
     if len(t.split()) < 3 or t.lower().rstrip(".") in {nse_desc.lower(), "general updates", "updates"}:
         return nse_desc
@@ -106,7 +107,7 @@ def _live_announcements(since: datetime, rules: AlertRules) -> list[PushItem]:
             s = score(cat, rules, has_network=bool(network), has_enrichment=bool(people or results))
             if routine:
                 s = min(s, 20.0)
-            title, summary = _people_title(people) or headline(r["text"], r["nse_desc"]), r["summary"]
+            title, summary = _people_title(people) or headline(r["text"], r["nse_desc"]), html.unescape(r["summary"]) if r["summary"] else None
             if summary and not people and title == r["nse_desc"]:
                 title, summary = summary.rstrip("."), None  # the model read the filing; lead with what happened
             items.append(

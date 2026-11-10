@@ -543,3 +543,25 @@ class Dossier(BaseModel):
     paths: list[NetworkHint] = []
     in_filings: list[FilingRef] = []
     ask_about: list[str] = []
+
+
+# ── Holdings (editable portfolio) ─────────────────────────────────────────
+
+
+class HoldingIn(BaseModel):
+    ticker: str = Field(min_length=1, max_length=20)
+    qty: int = Field(gt=0, le=100_000_000)
+    avg_cost: float | None = Field(None, gt=0)  # default: latest close
+    bought: date | None = None
+
+
+class HoldingRecord(BaseModel):
+    ticker: str
+    name: str
+    sector: str | None
+    qty: int
+    avg_cost: float | None
+    bought: str | None
+    added_at: str | None
+    syncing: bool = False  # backfilling filings / prices right now
+    has_data: bool = True

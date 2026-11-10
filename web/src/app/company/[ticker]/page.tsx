@@ -1,6 +1,7 @@
 import { ArrowUpRight, ChevronDown, ChevronRight, Minus, Sparkles, TrendingDown, TrendingUp } from "lucide-react";
 import { AskBox } from "@/components/AskBox";
 import { BackLink } from "@/components/BackLink";
+import { HoldingControls } from "@/components/HoldingControls";
 import { ColumnChart, LineChart } from "@/components/charts";
 import { NetworkLine } from "@/components/NetworkLine";
 import { PageHeader, SectionTitle } from "@/components/PageHeader";
@@ -8,19 +9,21 @@ import { PriceChart } from "@/components/PriceChart";
 import { Empty } from "@/components/States";
 import { api } from "@/lib/api";
 import { ago, inr, pct, tone } from "@/lib/format";
-import type { CompanyPerson, ResearchJob, Fundamentals, Holding, NewsItem, ResearchReport, Series, Signal } from "@/lib/types";
+import type { CompanyPerson, PriceHistory, ResearchJob, Fundamentals, Holding, NewsItem, ResearchReport, Series, Signal } from "@/lib/types";
 import { Avatar } from "@/components/Avatar";
 import Link from "next/link";
 
 /** PULL: one company. Price → your position → who can help → fundamentals (computed) → LLM sections → news (context). */
 export default async function CompanyPage({ params }: { params: Promise<{ ticker: string }> }) {
   const { ticker } = await params;
-  const [r, news, leaders, deep] = await Promise.all([
+  const [r, news, leaders, deep, px] = await Promise.all([
     api<ResearchReport>(`/pull/research/${encodeURIComponent(ticker)}`),
     api<NewsItem[]>(`/news/${encodeURIComponent(ticker)}`).catch(() => [] as NewsItem[]),
     api<CompanyPerson[]>(`/network/companies/${encodeURIComponent(ticker)}/people`).catch(() => [] as CompanyPerson[]),
     api<ResearchJob>(`/pull/deep/${encodeURIComponent(ticker)}/latest`).catch(() => null),
+    api<PriceHistory>(`/market/prices/${encodeURIComponent(ticker)}?range=1M`).catch(() => null),
   ]);
+  const lastClose = px?.bars.at(-1)?.close ?? null;
   const c = r.company;
   const f = r.fundamentals;
 
@@ -52,6 +55,11 @@ export default async function CompanyPage({ params }: { params: Promise<{ ticker
       </div>
 
       {r.position && <PositionCard h={r.position} />}
+      <div className="mx-4 mb-3 mt-2 flex justify-end">
+        <div className="w-full text-right [&>.card]:text-left">
+          <HoldingControls ticker={c.ticker} holding={r.position} lastClose={lastClose} />
+        </div>
+      </div>
       <div className={r.position ? "mt-3" : ""}>
         <PriceChart ticker={c.ticker} />
       </div>

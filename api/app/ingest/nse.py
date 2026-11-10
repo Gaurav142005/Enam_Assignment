@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import html
 from datetime import date, datetime, timedelta, timezone
 
 from app.ingest import http
@@ -28,7 +29,7 @@ def fetch_announcements(ticker: str, since: date, until: date | None = None) -> 
                 "ticker": x["symbol"],
                 "filed_at": filed.isoformat(),
                 "nse_desc": (x.get("desc") or "").strip(),
-                "text": " ".join((x.get("attchmntText") or "").split()),
+                "text": " ".join(html.unescape(x.get("attchmntText") or "").split()),
                 "attachment_url": x.get("attchmntFile") or None,
                 "company_name": x.get("sm_name"),
                 "isin": x.get("sm_isin"),

@@ -87,6 +87,9 @@ CREATE TABLE IF NOT EXISTS contact_log (     -- when the investor last spoke to 
 CREATE TABLE IF NOT EXISTS llm_usage (       -- per day, per model: what FINN actually spent
   day TEXT, model TEXT, calls INTEGER, tokens_in INTEGER, tokens_out INTEGER, PRIMARY KEY (day, model)
 );
+CREATE TABLE IF NOT EXISTS holdings (          -- the investor's portfolio (seeded from data/portfolio.json on first use)
+  ticker TEXT PRIMARY KEY, name TEXT, sector TEXT, qty INTEGER, avg_cost REAL, bought TEXT, added_at TEXT
+);
 CREATE TABLE IF NOT EXISTS llm_cache (
   key TEXT PRIMARY KEY, model TEXT, response TEXT, created_at TEXT
 );

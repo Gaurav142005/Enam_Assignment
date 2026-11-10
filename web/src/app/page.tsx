@@ -4,6 +4,7 @@ import { ArrowUpRight, ChevronDown, SlidersHorizontal } from "lucide-react";
 import { PageHeader, SectionTitle } from "@/components/PageHeader";
 import { BriefStatus } from "@/components/BriefStatus";
 import { CATEGORY_ICON, MoveRow, PushCard } from "@/components/PushCard";
+import { Glance } from "@/components/Glance";
 import { DemoNote, Empty } from "@/components/States";
 import { SwipeDeck } from "@/components/SwipeDeck";
 import { WindowPicker } from "@/components/WindowPicker";
@@ -53,12 +54,18 @@ export default async function BriefPage({ searchParams }: { searchParams: Promis
         <BriefStatus refreshedAt={d.refreshed_at} newCount={d.new_count} live={d.live} />
       </div>
 
+      <div className="mt-4">
+        <Glance items={top} moves={d.moves} />
+      </div>
+
       <SectionTitle>Needs your attention</SectionTitle>
       {d.attention.length ? (
         <>
           <SwipeDeck label="Items that need your attention">
             {top.map((i) => (
-              <PushCard key={i.id} item={i} />
+              <div key={i.id} id={`card-${i.id}`} className="h-full">
+                <PushCard item={i} />
+              </div>
             ))}
           </SwipeDeck>
           {rest.length > 0 && (

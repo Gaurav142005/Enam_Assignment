@@ -68,7 +68,7 @@ export function AskBox({ ticker }: { ticker: string }) {
           {a.answer ? (
             <p className={`text-[15px] leading-relaxed ${a.found ? "" : "text-muted"}`}>{a.answer}</p>
           ) : (
-            <p className="text-sm text-muted">No model is available right now, so here are the closest passages from the company&apos;s documents.</p>
+            <p className="text-sm text-muted">Couldn&apos;t write an answer right now; here are the closest passages from the company&apos;s documents.</p>
           )}
           {a.points.length > 0 && (
             <ul className="space-y-2">

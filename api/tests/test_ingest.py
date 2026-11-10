@@ -67,3 +67,7 @@ def test_people_from_xbrl():
 def test_headline_keeps_honorifics_together():
     h = headline("Titan Company Limited has informed the Exchange about Retirement of Mr. Noel N. Tata as Director. Next sentence.", "Retirement")
     assert h == "Retirement of Mr. Noel N. Tata as Director"
+
+
+def test_headline_decodes_html_entities():
+    assert headline("Acquisition of 38,222 shares of face value &#8377;10 each", "Acquisition").startswith("Acquisition of 38,222 shares of face value ₹10")
