@@ -561,7 +561,7 @@ def research(ticker: str, p: _Progress | None = None) -> DeepResearch:
     else:
         step("extract", "running", f"{len([s for s in sources if s.kind != 'filing'])} documents + filings")
         facts = _extract(sources, texts, filings, usage, notes)
-        summaries = {i["id"]: i for i in facts.get("F", {}).get("items", []) if isinstance(i, dict)}
+        summaries = {i["id"]: i for i in llm.items(facts.get("F", {})) if "id" in i}
         ann_to_f = {x["ann"]: x["id"] for x in filings}
         for s in fsources:
             if s.id in summaries and summaries[s.id].get("summary"):

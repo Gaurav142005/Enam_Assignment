@@ -221,3 +221,9 @@ def probe() -> bool:
         return True
     except (LLMError, httpx.TransportError):
         return _disabled is None  # only a permanent failure (zero quota, bad key) trips the breaker
+
+
+def items(out: Any, key: str = "items") -> list[dict]:
+    """Batched calls ask for {"items": [...]}; fallback models sometimes return the bare list. Accept both."""
+    raw = out.get(key, []) if isinstance(out, dict) else out if isinstance(out, list) else []
+    return [x for x in raw if isinstance(x, dict)]

@@ -47,7 +47,7 @@ def classify_rows(rows: list[dict], *, pdf_text: dict[str, str] | None = None, u
             ]
             try:
                 out = llm.json_call("cheap", SYSTEM, json.dumps(payload, ensure_ascii=False))
-                by_id = {str(x["id"]): x for x in out.get("items", [])}
+                by_id = {str(x["id"]): x for x in llm.items(out) if "id" in x}
             except llm.LLMError as e:
                 log.warning("LLM classification failed, using defaults: %s", e)
                 by_id = {}
@@ -83,7 +83,7 @@ def summarize_rows(rows: list[dict], pdf_text: dict[str, str]) -> int:
         except llm.LLMError as e:
             log.warning("filing summaries failed: %s", e)
             continue
-        by_id = {str(x.get("id")): x.get("summary") for x in out.get("items", []) if isinstance(x, dict)}
+        by_id = {str(x.get("id")): x.get("summary") for x in llm.items(out)}
         for r in batch:
             if by_id.get(r["id"]):
                 r["summary"] = by_id[r["id"]].strip()

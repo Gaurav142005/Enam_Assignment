@@ -9,6 +9,7 @@ import type { Category, PushItem } from "@/lib/types";
 import { NetworkLine } from "./NetworkLine";
 import { PersonBrief } from "./PersonBrief";
 import { ResultsTable } from "./ResultsTable";
+import { ThesisVerdict } from "./ThesisVerdict";
 import { TickerBadge } from "./TickerBadge";
 
 export const CATEGORY_ICON: Record<Category, LucideIcon> = {
@@ -89,6 +90,8 @@ export function PushCard({ item }: { item: PushItem }) {
           <h3 className="text-base font-semibold leading-snug line-clamp-3">{title}</h3>
           <KeyLine item={item} />
         </div>
+
+        {item.thesis && <ThesisVerdict check={item.thesis} />}
 
         {lead && <NetworkLine hint={lead} lead={lead.relation === "overlap" ? "Reach via" : "Ask"} />}
       </div>

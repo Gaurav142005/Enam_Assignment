@@ -71,3 +71,25 @@ def test_headline_keeps_honorifics_together():
 
 def test_headline_decodes_html_entities():
     assert headline("Acquisition of 38,222 shares of face value &#8377;10 each", "Acquisition").startswith("Acquisition of 38,222 shares of face value ₹10")
+
+
+def test_results_not_borrowed_by_an_early_business_update():
+    from app.ingest import store
+
+    with store.connect() as con:
+        store.upsert(con, "financials", [
+            {"ticker": "RCO", "statement": "quarters", "line": "Sales", "period": p, "value": v, "seq": i}
+            for i, (p, v) in enumerate([("Sep 2025", 100.0), ("Jun 2026", 110.0), ("Sep 2026", 130.0)])
+        ])
+        assert enrich.results_cut(con, "RCO", "2026-10-06T09:00:00+05:30", "Quarterly business update") is None  # 6 days after quarter end
+        cut = enrich.results_cut(con, "RCO", "2026-10-28T17:00:00+05:30", "Outcome of board meeting")
+        assert cut["period"] == "Q2 FY27" and cut["rows"][0]["yoy_pct"] == 30.0
+        assert enrich.results_cut(con, "RCO", "2027-03-30T17:00:00+05:30", "Outcome of board meeting") is None  # stale quarter
+
+
+def test_llm_items_accepts_both_shapes():
+    from app import llm
+
+    assert llm.items({"items": [{"id": 1}, "x"]}) == [{"id": 1}]
+    assert llm.items([{"id": 2}]) == [{"id": 2}]
+    assert llm.items("nope") == []

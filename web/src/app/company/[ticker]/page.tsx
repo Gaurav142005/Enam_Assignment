@@ -2,6 +2,7 @@ import { ArrowUpRight, ChevronDown, ChevronRight, Minus, Sparkles, TrendingDown,
 import { AskBox } from "@/components/AskBox";
 import { BackLink } from "@/components/BackLink";
 import { HoldingControls } from "@/components/HoldingControls";
+import { ThesisCard } from "@/components/ThesisCard";
 import { ColumnChart, LineChart } from "@/components/charts";
 import { NetworkLine } from "@/components/NetworkLine";
 import { PageHeader, SectionTitle } from "@/components/PageHeader";
@@ -55,6 +56,7 @@ export default async function CompanyPage({ params }: { params: Promise<{ ticker
       </div>
 
       {r.position && <PositionCard h={r.position} />}
+      <ThesisCard ticker={c.ticker} />
       <div className="mx-4 mb-3 mt-2 flex justify-end">
         <div className="w-full text-right [&>.card]:text-left">
           <HoldingControls ticker={c.ticker} holding={r.position} lastClose={lastClose} />

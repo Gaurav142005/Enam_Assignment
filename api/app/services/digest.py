@@ -119,6 +119,11 @@ def _live_announcements(since: datetime, rules: AlertRules) -> list[PushItem]:
                     person=people[0] if people else None, network=network,
                 )
             )
+    from app.services import thesis
+
+    verdicts = thesis.lookup([i.id for i in items])
+    if verdicts:
+        items = [i.model_copy(update={"thesis": verdicts.get(i.id)}) for i in items]
     return _dedupe(items)
 
 

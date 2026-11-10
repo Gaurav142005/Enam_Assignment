@@ -42,6 +42,7 @@ export function Glance({ items, moves }: { items: PushItem[]; moves: PushItem[] 
                 <span className="min-w-0 flex-1 line-clamp-2">
                   <span className="font-semibold">{i.ticker}</span> <span className="text-ink/80">{line(i)}</span>
                   {more.length > 0 && <span className="text-muted"> · +{more.length} more</span>}
+                  {[i, ...more].some((x) => x.thesis?.stance === "challenges") && <span className="font-medium text-down-ink"> · challenges your thesis</span>}
                 </span>
                 {i.is_new ? (
                   <span className="shrink-0 self-start rounded-full bg-accent px-1.5 py-px text-[10px] font-semibold text-bg">New</span>

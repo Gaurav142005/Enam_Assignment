@@ -43,6 +43,12 @@ def refresh_portfolio() -> None:
             events.refresh({c.ticker for c in [*companies.portfolio(), *companies.watchlist()]})
         except Exception:
             log.exception("events refresh failed")
+        try:
+            from app.services import thesis
+
+            thesis.check_all()
+        except Exception:
+            log.exception("thesis checks failed")
         state.put("refreshed_at", store.now_iso())
     except Exception:  # a failed refresh must never take the API down
         log.exception("portfolio refresh failed")

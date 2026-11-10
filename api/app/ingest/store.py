@@ -95,6 +95,13 @@ CREATE TABLE IF NOT EXISTS events (            -- upcoming: results dates, earni
   source TEXT, url TEXT, updated_at TEXT
 );
 CREATE INDEX IF NOT EXISTS ix_events_date ON events (date);
+CREATE TABLE IF NOT EXISTS theses (            -- why the investor owns it, in their words
+  ticker TEXT PRIMARY KEY, text TEXT, updated_at TEXT
+);
+CREATE TABLE IF NOT EXISTS thesis_checks (     -- each material filing judged against a thesis version
+  announcement_id TEXT, ticker TEXT, thesis_hash TEXT, stance TEXT, why TEXT, created_at TEXT,
+  PRIMARY KEY (announcement_id, thesis_hash)
+);
 CREATE TABLE IF NOT EXISTS llm_cache (
   key TEXT PRIMARY KEY, model TEXT, response TEXT, created_at TEXT
 );

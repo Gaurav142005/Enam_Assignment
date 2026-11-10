@@ -8,7 +8,7 @@ import json
 import logging
 import re
 import sqlite3
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
 from app import llm
 
@@ -64,10 +64,14 @@ def results_cut(con: sqlite3.Connection, ticker: str, filed_at: str, text: str) 
     filed = datetime.fromisoformat(filed_at).date()
     target = _period_from_text(text)
     if target not in order:
-        eligible = [p for p in periods if (e := _period_end(p)) and e <= filed]
+        # A quarter's results can't be out within ~9 days of it ending: a filing that early (e.g. a business update)
+        # must not borrow numbers that weren't public yet.
+        eligible = [p for p in periods if (e := _period_end(p)) and e + timedelta(days=9) <= filed]
         if not eligible:
             return None
         target = eligible[-1]
+        if (e := _period_end(target)) and (filed - e).days > 75:
+            return None  # the newest eligible quarter is stale: this filing isn't reporting it
     i = periods.index(target)
     prev = periods[i - 1] if i >= 1 else None
     mon, yr = target.split()

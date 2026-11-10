@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 
-from app.models import Company, HoldingIn, HoldingRecord
-from app.services import companies, holdings
+from app.models import Company, HoldingIn, HoldingRecord, Thesis, ThesisCheck, ThesisIn
+from app.services import companies, holdings, thesis
 
 router = APIRouter(prefix="/portfolio", tags=["portfolio"])
 
@@ -49,3 +49,29 @@ def remove_holding(ticker: str) -> None:
 @router.post("/holdings/reset", response_model=list[HoldingRecord])
 def reset_holdings() -> list[HoldingRecord]:
     return holdings.reset()
+
+
+@router.get("/theses", response_model=list[Thesis])
+def list_theses() -> list[Thesis]:
+    return list(thesis.all_theses().values())
+
+
+@router.get("/theses/{ticker}", response_model=Thesis | None)
+def get_thesis(ticker: str) -> Thesis | None:
+    return thesis.get(ticker)
+
+
+@router.put("/theses/{ticker}", response_model=Thesis)
+def put_thesis(ticker: str, body: ThesisIn) -> Thesis:
+    """Save your thesis; recent material filings are re-checked against it in the background."""
+    return thesis.save(ticker, body.text)
+
+
+@router.delete("/theses/{ticker}", status_code=204)
+def delete_thesis(ticker: str) -> None:
+    thesis.delete(ticker)
+
+
+@router.get("/theses/{ticker}/checks", response_model=list[ThesisCheck])
+def thesis_checks(ticker: str) -> list[ThesisCheck]:
+    return thesis.checks_for(ticker)

@@ -119,6 +119,26 @@ class ResultsCut(BaseModel):
     rows: list[MetricRow]
 
 
+class ThesisCheck(BaseModel):
+    announcement_id: str
+    stance: Literal["supports", "challenges", "neutral"]
+    why: str
+    date: str | None = None
+    title: str | None = None
+    url: str | None = None
+
+
+class Thesis(BaseModel):
+    ticker: str
+    text: str
+    updated_at: str | None = None
+    checking: bool = False  # re-checking recent filings right now
+
+
+class ThesisIn(BaseModel):
+    text: str = Field(min_length=5, max_length=600)
+
+
 class PushItem(BaseModel):
     id: str
     kind: Literal["announcement", "price_move", "volume_spike"]
@@ -139,6 +159,7 @@ class PushItem(BaseModel):
     is_new: bool = False  # filed since the investor last opened the Brief
     context: str | None = None  # moves: the likely reason (a filing or headline from the same session)
     context_url: str | None = None
+    thesis: ThesisCheck | None = None  # does this filing support or challenge your thesis?
 
 
 class RoutineGroup(BaseModel):

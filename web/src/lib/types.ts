@@ -85,6 +85,22 @@ export interface ResultsCut {
   rows: MetricRow[];
 }
 
+export interface ThesisCheck {
+  announcement_id: string;
+  stance: "supports" | "challenges" | "neutral";
+  why: string;
+  date: string | null;
+  title: string | null;
+  url: string | null;
+}
+
+export interface Thesis {
+  ticker: string;
+  text: string;
+  updated_at: string | null;
+  checking: boolean;
+}
+
 export interface PushItem {
   id: string;
   kind: "announcement" | "price_move" | "volume_spike";
@@ -105,6 +121,7 @@ export interface PushItem {
   is_new: boolean;
   context: string | null;
   context_url: string | null;
+  thesis: ThesisCheck | null;
 }
 
 export interface RoutineGroup {
