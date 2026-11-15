@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Space_Grotesk } from "next/font/google";
 import { TabBar } from "@/components/TabBar";
+import { themeBootScript } from "@/lib/theme";
 import "./globals.css";
 
 const sans = Geist({ variable: "--font-sans", subsets: ["latin"] });
@@ -26,7 +27,10 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeBootScript }} />
+      </head>
       <body className={`${sans.variable} ${mono.variable} ${display.variable} font-sans antialiased`}>
         <div className="mx-auto min-h-dvh max-w-app pb-[calc(5rem+env(safe-area-inset-bottom))]">
           {children}

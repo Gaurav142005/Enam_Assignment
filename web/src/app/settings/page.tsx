@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { BackLink } from "@/components/BackLink";
 import { NotificationsToggle } from "@/components/NotificationsToggle";
+import { ThemePicker } from "@/components/ThemeToggle";
 import { PageHeader, SectionTitle } from "@/components/PageHeader";
 import { api, apiPut } from "@/lib/api";
 import { CATEGORY_LABEL } from "@/lib/format";
@@ -34,6 +35,9 @@ export default function SettingsPage() {
         <BackLink />
       </div>
       <PageHeader compact title="Alerts" sub={saved ? "Saved. The Brief now uses these." : "You decide what counts as unusual; FINN watches for it."} />
+
+      <SectionTitle>Appearance</SectionTitle>
+      <ThemePicker />
 
       <SectionTitle>On this device</SectionTitle>
       <NotificationsToggle />

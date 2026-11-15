@@ -24,25 +24,46 @@
   color-scheme: light;
 }
 
+/* Dark tokens: follow the system unless the viewer picked a theme (html[data-theme]), set before first paint in layout.tsx. */
 @media (prefers-color-scheme: dark) {
-  :root {
-    --bg: 11 16 32; /* #0B1020 navy */
-    --surface: 19 26 46; /* #131A2E */
-    --ink: 232 236 245;
-    --muted: 148 158 182; /* 6.4:1 */
-    --line: 36 45 70;
-    --accent: 145 146 250; /* #9192FA, 6.3:1 */
-    --accent-soft: 33 36 80;
-    --up: 23 160 143; /* #17A08F */
-    --down: 228 96 47; /* #E4602F */
-    --up-ink: 23 160 143;
-    --down-ink: 228 96 47;
-    --warn: 230 170 80;
-    --series-1: 57 135 229;
-    --series-2: 217 89 38;
-    --series-3: 25 158 112;
-    color-scheme: dark;
+  :root:where(:not([data-theme="light"])) {
+  --bg: 11 16 32; /* #0B1020 navy */
+  --surface: 19 26 46; /* #131A2E */
+  --ink: 232 236 245;
+  --muted: 148 158 182; /* 6.4:1 */
+  --line: 36 45 70;
+  --accent: 145 146 250; /* #9192FA, 6.3:1 */
+  --accent-soft: 33 36 80;
+  --up: 23 160 143; /* #17A08F */
+  --down: 228 96 47; /* #E4602F */
+  --up-ink: 23 160 143;
+  --down-ink: 228 96 47;
+  --warn: 230 170 80;
+  --series-1: 57 135 229;
+  --series-2: 217 89 38;
+  --series-3: 25 158 112;
+  color-scheme: dark;
+
   }
+}
+:root[data-theme="dark"] {
+  --bg: 11 16 32; /* #0B1020 navy */
+  --surface: 19 26 46; /* #131A2E */
+  --ink: 232 236 245;
+  --muted: 148 158 182; /* 6.4:1 */
+  --line: 36 45 70;
+  --accent: 145 146 250; /* #9192FA, 6.3:1 */
+  --accent-soft: 33 36 80;
+  --up: 23 160 143; /* #17A08F */
+  --down: 228 96 47; /* #E4602F */
+  --up-ink: 23 160 143;
+  --down-ink: 228 96 47;
+  --warn: 230 170 80;
+  --series-1: 57 135 229;
+  --series-2: 217 89 38;
+  --series-3: 25 158 112;
+  color-scheme: dark;
+
 }
 
 html,

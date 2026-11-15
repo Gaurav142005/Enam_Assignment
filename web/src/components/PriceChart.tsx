@@ -15,6 +15,7 @@ import {
 } from "lightweight-charts";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { api } from "@/lib/api";
+import { THEME_EVENT } from "@/lib/theme";
 import { compact, pct, rupees, shortDate, tone } from "@/lib/format";
 import type { Bar, PriceHistory, PriceRange } from "@/lib/types";
 import { Segmented } from "./Segmented";
@@ -109,8 +110,10 @@ export function PriceChart({ ticker }: { ticker: string }) {
       setBars((b) => [...b]); // re-tint volume bars
     };
     media.addEventListener("change", retheme);
+    window.addEventListener(THEME_EVENT, retheme); // the in-app light / dark switch
     return () => {
       media.removeEventListener("change", retheme);
+      window.removeEventListener(THEME_EVENT, retheme);
       c.remove();
       chart.current = null;
     };

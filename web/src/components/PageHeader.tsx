@@ -1,4 +1,5 @@
 import { Logo } from "./Logo";
+import { ThemeToggle } from "./ThemeToggle";
 
 /** Top-level pages get the FINN logo; detail pages (compact) have a back link instead. */
 export function PageHeader({
@@ -22,7 +23,10 @@ export function PageHeader({
       {!compact && (
         <div className="mb-3 flex items-center justify-between">
           <Logo />
-          {right}
+          <div className="flex items-center gap-1">
+            <ThemeToggle />
+            {right}
+          </div>
         </div>
       )}
       <div className="flex items-end justify-between gap-3">
