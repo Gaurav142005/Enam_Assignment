@@ -33,7 +33,8 @@ export default async function BriefPage({ searchParams }: { searchParams: Promis
   const hours = Number((await searchParams).h) || 24;
   const [d, perf] = await Promise.all([
     api<Digest>(`/push/digest?hours=${hours}`),
-    api<PortfolioPerformance>("/market/portfolio?period=1D").catch(() => null),
+    // The money card follows the Brief's window: 24h = last session, 7d = the last seven days, a custom date = since then.
+    api<PortfolioPerformance>(`/market/portfolio?days=${Math.max(1, Math.round(hours / 24))}`).catch(() => null),
   ]);
   const routineCount = d.routine.reduce((n, g) => n + g.count, 0);
   const top = d.attention.slice(0, DECK_SIZE);

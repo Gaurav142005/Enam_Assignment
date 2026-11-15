@@ -36,9 +36,9 @@ def vapid_keys() -> tuple[str, str]:
     if saved:
         return saved["public"], saved["private"]
     from cryptography.hazmat.primitives import serialization
-    from py_vapid import Vapid01
+    from py_vapid import Vapid02
 
-    v = Vapid01()
+    v = Vapid02()
     v.generate_keys()
     public = _b64url(v.public_key.public_bytes(serialization.Encoding.X962, serialization.PublicFormat.UncompressedPoint))
     private = v.private_pem().decode()
@@ -64,16 +64,18 @@ def count() -> int:
 
 def send(title: str, body: str, url: str = "/", tag: str | None = None) -> int:
     """Deliver to every subscribed device. Returns how many accepted it."""
+    from py_vapid import Vapid02
     from pywebpush import WebPushException, webpush
 
     _, private = vapid_keys()
+    signer = Vapid02.from_pem(private.encode())  # RFC 8292 signer object; pywebpush rejects PEM text
     with store.connect() as con:
         subs = [(r["endpoint"], json.loads(r["subscription"])) for r in con.execute("SELECT endpoint, subscription FROM push_subscriptions")]
     payload = json.dumps({"title": title, "body": body, "url": url, "tag": tag})
     ok = 0
     for endpoint, sub in subs:
         try:
-            webpush(subscription_info=sub, data=payload, vapid_private_key=private, vapid_claims={"sub": config.VAPID_SUBJECT}, timeout=10, ttl=6 * 3600)
+            webpush(subscription_info=sub, data=payload, vapid_private_key=signer, vapid_claims={"sub": config.VAPID_SUBJECT}, timeout=10, ttl=6 * 3600)
             ok += 1
         except WebPushException as e:
             status = getattr(e.response, "status_code", None)

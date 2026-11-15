@@ -7,8 +7,9 @@ router = APIRouter(prefix="/market", tags=["market"])
 
 
 @router.get("/portfolio", response_model=PortfolioPerformance)
-def portfolio_performance(period: PerfPeriod = "1M") -> PortfolioPerformance:
-    return market.performance(period)
+def portfolio_performance(period: PerfPeriod = "1M", days: int | None = Query(None, ge=1, le=366)) -> PortfolioPerformance:
+    """`days` overrides `period` with an exact calendar-day window (1 = last session)."""
+    return market.performance(period, days)
 
 
 @router.get("/prices/{ticker}", response_model=PriceHistory)

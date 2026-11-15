@@ -57,13 +57,13 @@ def _series(con, ticker: str, since: str) -> list[tuple[str, float]]:
         "SELECT date, close FROM eod WHERE ticker=? AND date>=? ORDER BY date", (ticker, since))]
 
 
-def _period_return(con, ticker: str, period: PerfPeriod) -> tuple[float | None, list[float], str | None, float | None]:
+def _period_return(con, ticker: str, period: PerfPeriod, days: int | None = None) -> tuple[float | None, list[float], str | None, float | None]:
     """(return %, sparkline closes, as-of date, last close). Start = last close on/before (as-of − period)."""
     last = con.execute("SELECT date, close FROM eod WHERE ticker=? ORDER BY date DESC LIMIT 1", (ticker,)).fetchone()
     if not last:
         return None, [], None, None
     asof = date.fromisoformat(last["date"])
-    days = PERIOD_DAYS[period]
+    days = PERIOD_DAYS[period] if days is None else (None if days <= 1 else days)  # explicit day count wins (the Brief's window)
     if days is None:  # 1D: previous session
         prev = con.execute("SELECT date, close FROM eod WHERE ticker=? AND date<? ORDER BY date DESC LIMIT 1", (ticker, last["date"])).fetchone()
         start_close = prev["close"] if prev else None
@@ -80,7 +80,8 @@ def _period_return(con, ticker: str, period: PerfPeriod) -> tuple[float | None, 
     return ret, [round(x, 2) for x in spark], last["date"], last["close"]
 
 
-def performance(period: PerfPeriod) -> PortfolioPerformance:
+def performance(period: PerfPeriod, days: int | None = None) -> PortfolioPerformance:
+    """Portfolio vs benchmark over a preset period, or over the last `days` calendar days (any lookback the Brief uses)."""
     port = companies.portfolio()
     for c in [*port, companies.Company(ticker=BENCHMARK, name="Nifty 50", sector="Index")]:
         ensure_prices(c.ticker)
@@ -88,7 +89,7 @@ def performance(period: PerfPeriod) -> PortfolioPerformance:
     holdings: list[Holding] = []
     with store.connect() as con:
         for c in port:
-            ret, spark, asof, close = _period_return(con, c.ticker, period)
+            ret, spark, asof, close = _period_return(con, c.ticker, period, days)
             day, _, _, _ = _period_return(con, c.ticker, "1D")
             p = pos.get(c.ticker, {})
             qty, cost = int(p.get("qty") or 0), p.get("avg_cost")
@@ -104,7 +105,7 @@ def performance(period: PerfPeriod) -> PortfolioPerformance:
                 period_pnl=qty * (close - start_px) if qty and start_px else None,
                 day_pnl=qty * (close - day_px) if qty and day_px else None,
             ))
-        bench_ret, bench_spark, bench_asof, bench_close = _period_return(con, BENCHMARK, period)
+        bench_ret, bench_spark, bench_asof, bench_close = _period_return(con, BENCHMARK, period, days)
 
     total = sum(h.value or 0 for h in holdings) or None
     for h in holdings:
@@ -121,6 +122,7 @@ def performance(period: PerfPeriod) -> PortfolioPerformance:
     holdings.sort(key=lambda h: (h.return_pct is None, -(h.return_pct or 0)))
     return PortfolioPerformance(
         period=period,
+        days=days,
         as_of=max((h.as_of for h in holdings if h.as_of), default=None),
         portfolio_return_pct=port_ret,
         weighting=weighting,  # type: ignore[arg-type]

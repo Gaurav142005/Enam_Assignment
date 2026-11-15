@@ -241,6 +241,7 @@ export interface Holding {
 
 export interface PortfolioPerformance {
   period: PerfPeriod;
+  days: number | null;
   as_of: string | null;
   portfolio_return_pct: number | null;
   weighting: "value" | "equal";

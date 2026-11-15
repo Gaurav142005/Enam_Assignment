@@ -54,3 +54,34 @@ def test_gone_subscriptions_are_removed(monkeypatch):
 
     monkeypatch.setattr(pywebpush, "webpush", boom)
     assert notify.send("t", "b") == 0 and notify.count() == 0
+
+
+def test_real_library_encrypts_and_signs(monkeypatch):
+    """No stubbed webpush: the real library must accept our key and produce an encrypted, VAPID-signed request."""
+    import base64
+
+    import requests
+    from cryptography.hazmat.primitives import serialization
+    from cryptography.hazmat.primitives.asymmetric import ec
+
+    b64 = lambda b: base64.urlsafe_b64encode(b).rstrip(b"=").decode()
+    browser_key = ec.generate_private_key(ec.SECP256R1()).public_key()
+    sub = {"endpoint": "https://fcm.googleapis.com/fcm/send/test-token",
+           "keys": {"p256dh": b64(browser_key.public_bytes(serialization.Encoding.X962, serialization.PublicFormat.UncompressedPoint)),
+                    "auth": b64(b"0123456789abcdef")}}
+    client.post("/push/notifications/subscribe", json=sub)
+    seen = {}
+
+    class Ok:
+        status_code = 201
+        text = ""
+        headers: dict = {}
+
+    def fake_post(url, data=None, headers=None, timeout=None, **k):
+        seen.update(url=url, headers=headers, size=len(data or b""))
+        return Ok()
+
+    monkeypatch.setattr(requests, "post", fake_post)
+    assert notify.send("FINN", "test") == 1
+    assert seen["url"] == sub["endpoint"] and seen["headers"]["Authorization"].startswith("vapid t=")
+    assert seen["headers"]["Content-Encoding"] == "aes128gcm" and seen["size"] > 100

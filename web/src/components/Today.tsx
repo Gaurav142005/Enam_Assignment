@@ -25,6 +25,10 @@ export function Today({ perf, items, more }: { perf: PortfolioPerformance | null
   const mkt = perf?.benchmark_return_pct ?? null;
   const gap = you !== null && mkt !== null ? you - mkt : null;
   const ranked = (perf?.holdings ?? []).filter((h) => h.return_pct !== null);
+  const days = perf?.days ?? 1;
+  const pnl = days > 1 ? perf?.period_pnl ?? null : perf?.day_pnl ?? null;
+  const since = new Date(Date.now() - days * 86400000).toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+  const label = days > 1 ? `Last ${days} days · since ${since}` : `Last session${perf?.as_of ? ` · ${shortDate(perf.as_of)}` : ""}`;
   const best = ranked[0];
   const worst = ranked.at(-1);
 
@@ -33,12 +37,12 @@ export function Today({ perf, items, more }: { perf: PortfolioPerformance | null
       <div className="bg-gradient-to-br from-tint-peach via-tint-peach/40 to-transparent">
       {perf && (
         <div className="p-4 pb-3">
-          <p className="eyebrow">Last session{perf.as_of ? ` · ${shortDate(perf.as_of)}` : ""}</p>
+          <p className="eyebrow">{label}</p>
           <div className="mt-2 grid grid-cols-2 gap-3">
             <div>
               <p className="text-[13px] text-muted">Your portfolio</p>
               <p className={`font-display text-[34px] font-medium leading-none tracking-tight ${tone(you)}`}>{pct(you)}</p>
-              {perf.day_pnl !== null && <p className={`mt-1 text-[14px] font-medium ${tone(perf.day_pnl)}`}>{inr(perf.day_pnl, true)}</p>}
+              {pnl !== null && <p className={`mt-1 text-[14px] font-medium ${tone(pnl)}`}>{inr(pnl, true)}</p>}
             </div>
             <div>
               <p className="text-[13px] text-muted">{perf.benchmark_name}</p>

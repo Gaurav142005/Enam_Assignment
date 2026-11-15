@@ -292,6 +292,7 @@ class Holding(BaseModel):
 
 class PortfolioPerformance(BaseModel):
     period: PerfPeriod
+    days: int | None = None  # set when computed over an explicit day window
     as_of: str | None
     portfolio_return_pct: float | None  # value-weighted over the period (equal-weighted if no quantities)
     weighting: Literal["value", "equal"]
