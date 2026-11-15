@@ -3,6 +3,12 @@
 set -e
 
 mkdir -p "$FINN_CACHE_DIR"
+# FINN_RESEED=1 replaces the database with the bundled snapshot on boot (e.g. after shipping a fresher one). Opt-in:
+# it discards anything changed on the live deployment since.
+if [ "${FINN_RESEED:-0}" = "1" ] && [ -f /app/api/seed/finn.db.gz ]; then
+  echo "FINN_RESEED=1: replacing the database with the bundled snapshot"
+  rm -f "$FINN_CACHE_DIR/finn.db" "$FINN_CACHE_DIR/finn.db-wal" "$FINN_CACHE_DIR/finn.db-shm"
+fi
 if [ ! -f "$FINN_CACHE_DIR/finn.db" ] && [ -f /app/api/seed/finn.db.gz ]; then
   echo "Seeding $FINN_CACHE_DIR/finn.db from the bundled snapshot"
   gunzip -c /app/api/seed/finn.db.gz > "$FINN_CACHE_DIR/finn.db"

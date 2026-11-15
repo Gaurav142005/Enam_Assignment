@@ -69,3 +69,9 @@ make docker   # build + run on http://localhost:3200 with a throwaway volume
 - The Gemini free tier allows ~20 requests/day on some models; FINN skips exhausted models and uses the next.
   `Settings → AI usage today` shows what has been spent.
 - Your local `.env` is never copied into the image (`.dockerignore`); set secrets only in Railway's Variables.
+
+## Shipping a fresher demo snapshot
+
+The bundled snapshot (`api/seed/finn.db.gz`, built with `make seed`) is only loaded when the volume has no database.
+To replace an existing deployment's data with a new snapshot, set `FINN_RESEED=1`, redeploy once, then remove the
+variable (otherwise every restart resets the data).
