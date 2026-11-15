@@ -3,28 +3,7 @@
 The brief asks for four topics: **data pipelines**, **security & privacy**, **LLMs & agents** and **cloud**. The short
 version is in the covering email; this is the long form.
 
-```
- Phone (PWA, Web Push)
-        │  HTTPS
-┌───────▼──────────────────────────── one container (Railway) ─────────────────────────────────────┐
-│  web/  Next.js 15 (server components, mobile-first)                                              │
-│     Brief · Portfolio · Ask → Company · Network → Person · Settings          service worker (push) │
-│        │ JSON — contract: api/app/models.py ⇄ web/src/lib/types.ts                               │
-│  api/  FastAPI                                                                                   │
-│     push ── digest ─ materiality ─ titles ─ priority ─ thesis ─ notify ──┐                        │
-│     pull ── research (deterministic) ─ qa ─ deep_research (agentic job)  ├── graph (network) ◀── woven into both
-│     network ── connections ─ company_people ─ network_query ─────────────┘                        │
-│     watch: every 15 min → refresh filings + prices → events → thesis checks → push notifications │
-│     llm.py: one routing point (cheap ⇄ strong, fallbacks, cooldowns, SQLite cache, daily meter)   │
-│        │                                                                                          │
-│  /data volume: SQLite (WAL) — filings, prices, financials, page-indexed documents, people,       │
-│                model cache. Seeded from api/seed/finn.db.gz on first boot.                        │
-└──────┬──────────────┬───────────────┬──────────────────┬──────────────────┬──────────────────────┘
-       │              │               │                  │                  │
-   NSE APIs       Yahoo Finance    screener.in →      Google News RSS    Gemini API
-   announcements  (yfinance .NS)   BSE-hosted ARs,    (context only,     (Flash-Lite / Flash,
-   calendar, XBRL EOD prices       transcripts, decks  never research)    free tier)
-```
+![FINN architecture](architecture.png)
 
 ## Data pipelines
 

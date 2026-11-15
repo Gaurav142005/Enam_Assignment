@@ -2,7 +2,7 @@
 
 A mobile-first investing companion built for the ENAM Holdings Founding AI Engineer build challenge.
 
-**Live demo: <LIVE_URL>** (open it on a phone, or use your browser's phone view)
+**Live demo: <https://enamassignment-production.up.railway.app/>** 
 
 FINN is a briefing, not a dashboard. It answers *"what changed, does it matter, and who can tell me more?"* in under a minute:
 
@@ -19,6 +19,12 @@ FINN is a briefing, not a dashboard. It answers *"what changed, does it matter, 
 </p>
 
 **A two-minute tour:** open the Brief and switch the window to *30d* → swipe the deck and open the Titan results card (numbers, thesis verdict, who to ask) → tap a company → *Research* → *Open deep research* → *Network* → ask "Anyone at Dixon?".
+
+## Architecture
+
+<img src="docs/architecture.png" width="720" alt="FINN architecture: a phone talks over HTTPS to one Railway container running the Next.js web app and the FastAPI API (Push, Pull and Network services, the network graph woven into Push and Pull, a 15-minute watcher, and one LLM routing module) on a SQLite volume, fed by NSE, Yahoo Finance, screener.in, Google News and the Gemini API." />
+
+Details on data pipelines, security & privacy, LLM use and cloud: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 **Docs:** [Architecture](docs/ARCHITECTURE.md) (pipelines, privacy, LLMs, cloud) · [Product decisions](docs/PRODUCT.md) · [AI build history](docs/build-history/) · [Deploying](DEPLOY.md) · [The brief](docs/brief/)
 
