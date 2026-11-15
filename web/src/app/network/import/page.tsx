@@ -69,7 +69,7 @@ export default function ImportPage() {
       <PageHeader compact title="Import connections" sub="From your LinkedIn data export" />
 
       {publicDemo && (
-        <p className="mx-4 mb-3 rounded-xl border border-warn/40 bg-warn/10 px-3 py-2.5 text-[13px] leading-snug">
+        <p className="mx-4 mb-3 rounded-xl border border-warn/40 bg-warn/10 px-3 py-2.5 text-[14px] leading-snug">
           This is a public demo, so uploading your own export is off: anything imported here would be visible to every visitor. Try it with the sample
           instead (15 made-up people at real companies).
         </p>
@@ -85,7 +85,7 @@ export default function ImportPage() {
       </div>
       {!publicDemo && (
         <>
-      <ol className="card mx-4 space-y-2 p-4 text-[13px] leading-snug">
+      <ol className="card mx-4 space-y-2 p-4 text-[14px] leading-snug">
         <li>
           <span className="font-medium">1.</span> On LinkedIn: <span className="text-muted">Settings → Data privacy → Get a copy of your data</span>
         </li>
@@ -145,7 +145,7 @@ export default function ImportPage() {
             ].map(([k, v]) => (
               <div key={k}>
                 <p className="text-xl font-semibold">{v}</p>
-                <p className="text-[11px] text-muted">{k}</p>
+                <p className="text-[12px] text-muted">{k}</p>
               </div>
             ))}
           </div>
@@ -159,7 +159,7 @@ export default function ImportPage() {
                     <Link href={`/company/${l.ticker}`} className="flex items-center justify-between px-4 py-3 text-sm active:bg-line/40">
                       <span>
                         <span className="font-medium">{l.ticker}</span>
-                        {l.in_portfolio && <span className="ml-2 rounded-full bg-accent-soft px-2 py-0.5 text-[10px] text-accent">portfolio</span>}
+                        {l.in_portfolio && <span className="ml-2 rounded-full bg-accent-soft px-2 py-0.5 text-[11px] text-accent">portfolio</span>}
                         <span className="block text-xs text-muted">{l.name}</span>
                       </span>
                       <span className="num text-muted">{l.count}</span>

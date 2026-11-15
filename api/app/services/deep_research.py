@@ -45,7 +45,6 @@ from app.services.digest import _people_title, headline
 
 log = logging.getLogger(__name__)
 IST = timezone(timedelta(hours=5, minutes=30))
-FRESH_FOR = timedelta(hours=12)
 _runner = ThreadPoolExecutor(max_workers=1, thread_name_prefix="research")  # one at a time bounds peak memory; others queue
 _BOOT = uuid.uuid4().hex[:4]  # identifies this server process; jobs from an earlier one can't still be running
 
@@ -114,8 +113,8 @@ def recent(limit: int = 8) -> list[dict]:
 
 def start(ticker: str, refresh: bool = False) -> ResearchJob:
     t = ticker.upper().removesuffix(".NS")
-    if not refresh and (done := latest(t)) and done.finished_at and datetime.now(timezone.utc) - done.finished_at < FRESH_FOR:
-        return done
+    if not refresh and (done := latest(t)):
+        return done  # open the last report instantly; it shows its age and a Refresh button
     with store.connect() as con:
         row = con.execute("SELECT * FROM research_jobs WHERE ticker=? AND status IN ('queued','running') ORDER BY started_at DESC LIMIT 1", (t,)).fetchone()
     if row and (running := get_job(row["id"])) and running.status in ("queued", "running"):

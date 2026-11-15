@@ -112,7 +112,7 @@ export default function NewConnectionPage() {
         <button type="submit" disabled={busy || name.trim().length < 2} className="mt-2 w-full rounded-full bg-ink py-3 text-sm font-medium text-bg disabled:opacity-40">
           {busy ? "Saving…" : "Save connection"}
         </button>
-        <p className="pb-4 text-center text-[11px] text-muted">Past roles and schools are what let FINN find overlaps with company leaders.</p>
+        <p className="pb-4 text-center text-[12px] text-muted">Past roles and schools are what let FINN find overlaps with company leaders.</p>
       </form>
     </main>
   );

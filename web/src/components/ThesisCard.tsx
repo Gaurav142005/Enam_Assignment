@@ -94,7 +94,7 @@ export function ThesisCard({ ticker }: { ticker: string }) {
               </>
             )}
           </div>
-          {!thesis && <p className="text-[11px] text-muted">FINN checks every material filing against it and tells you when one supports or challenges it.</p>}
+          {!thesis && <p className="text-[12px] text-muted">FINN checks every material filing against it and tells you when one supports or challenges it.</p>}
         </div>
       ) : (
         <>
@@ -108,7 +108,7 @@ export function ThesisCard({ ticker }: { ticker: string }) {
             {!thesis.checking && checks.length === 0 && <p className="text-xs text-muted">No recent filing bears on it either way.</p>}
             {checks.map((c) => (
               <div key={c.announcement_id} className="border-t border-line pt-2">
-                <p className="mb-1 flex items-center justify-between gap-2 text-[11px] text-muted">
+                <p className="mb-1 flex items-center justify-between gap-2 text-[12px] text-muted">
                   <span className="truncate">
                     {c.date} · {c.title}
                   </span>

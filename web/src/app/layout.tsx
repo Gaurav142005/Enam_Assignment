@@ -1,10 +1,11 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Newsreader } from "next/font/google";
 import { TabBar } from "@/components/TabBar";
 import "./globals.css";
 
 const sans = Geist({ variable: "--font-sans", subsets: ["latin"] });
 const mono = Geist_Mono({ variable: "--font-mono", subsets: ["latin"] });
+const display = Newsreader({ variable: "--font-display", subsets: ["latin"], style: ["normal", "italic"] });
 
 export const metadata: Metadata = {
   title: "FINN",
@@ -26,8 +27,8 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className={`${sans.variable} ${mono.variable} font-sans antialiased`}>
-        <div className="mx-auto min-h-dvh max-w-app pb-[calc(4.5rem+env(safe-area-inset-bottom))]">
+      <body className={`${sans.variable} ${mono.variable} ${display.variable} font-sans antialiased`}>
+        <div className="mx-auto min-h-dvh max-w-app pb-[calc(5rem+env(safe-area-inset-bottom))]">
           {children}
         </div>
         <TabBar />

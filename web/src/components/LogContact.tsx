@@ -17,7 +17,7 @@ export function LogContact({ id }: { id: string }) {
         router.refresh();
       }}
       disabled={done}
-      className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface px-3.5 py-2 text-[13px] font-medium disabled:text-up-ink"
+      className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface px-3.5 py-2 text-[14px] font-medium disabled:text-up-ink"
     >
       {done ? <Check size={15} /> : <MessageCircle size={15} />}
       {done ? "Logged for today" : "We spoke today"}

@@ -39,7 +39,7 @@ export default async function NetworkPage({ searchParams }: { searchParams: Prom
     <main>
       <PageHeader
         title="Network"
-        sub={`${people.length} people${imported ? ` · ${imported} from LinkedIn` : ""}`}
+        sub={`${people.length} people who can explain what’s moving${imported ? ` · ${imported} from LinkedIn` : ""}`}
         right={
           <div className="mb-1 flex gap-1">
             <Link href="/network/import" aria-label="Import LinkedIn connections" className="rounded-full p-2 text-muted active:bg-line/50">
@@ -91,7 +91,7 @@ export default async function NetworkPage({ searchParams }: { searchParams: Prom
       {!imported && (
         <Link href="/network/import" className="card mx-4 flex items-center gap-3 p-4 active:opacity-70">
           <FileUp size={22} className="shrink-0 text-accent" />
-          <span className="min-w-0 flex-1 text-[13px] leading-snug">
+          <span className="min-w-0 flex-1 text-[14px] leading-snug">
             <span className="block font-medium">Bring in your LinkedIn connections</span>
             <span className="block text-muted">Upload your data export and FINN maps who you know at every company you own or research.</span>
           </span>
@@ -106,7 +106,7 @@ export default async function NetworkPage({ searchParams }: { searchParams: Prom
             {nudges.map((n) => (
               <Link key={n.person.id} href={`/people/${n.person.id}`} className="flex items-center gap-3 px-4 py-3 active:bg-line/40">
                 <Avatar name={n.person.name} />
-                <span className="min-w-0 text-[13px] leading-snug">
+                <span className="min-w-0 text-[14px] leading-snug">
                   <span className="block font-medium">{n.person.name}</span>
                   <span className="block text-muted">{n.reason}</span>
                 </span>
@@ -127,7 +127,7 @@ export default async function NetworkPage({ searchParams }: { searchParams: Prom
                 </Link>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {ps.map((p) => (
-                    <Link key={p.id} href={`/people/${p.id}`} className="flex items-center gap-1.5 rounded-full bg-accent-soft/60 py-1 pl-1 pr-3 text-[13px] active:opacity-70">
+                    <Link key={p.id} href={`/people/${p.id}`} className="flex items-center gap-1.5 rounded-full bg-accent-soft/60 py-1 pl-1 pr-3 text-[14px] active:opacity-70">
                       <Avatar name={p.name} size={22} />
                       {p.name}
                     </Link>
@@ -181,7 +181,7 @@ export default async function NetworkPage({ searchParams }: { searchParams: Prom
                   href={on ? "/network" : `/network?theme=${encodeURIComponent(t.theme)}#everyone`}
                   scroll={false}
                   aria-pressed={on}
-                  className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[13px] ${on ? "border-ink bg-ink text-bg" : "border-line bg-surface"}`}
+                  className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[14px] ${on ? "border-ink bg-ink text-bg" : "border-line bg-surface"}`}
                 >
                   {t.theme}
                   <span className={`num text-xs ${on ? "text-bg/70" : "text-muted"}`}>{t.people.length}</span>
@@ -214,11 +214,11 @@ export default async function NetworkPage({ searchParams }: { searchParams: Prom
           <li key={p.id}>
             <Link href={`/people/${p.id}`} className="flex items-center gap-3 px-4 py-3 active:bg-line/40">
               <Avatar name={p.name} />
-              <span className="min-w-0 flex-1 text-[13px] leading-snug">
+              <span className="min-w-0 flex-1 text-[14px] leading-snug">
                 <span className="block font-medium">{p.name}</span>
                 <span className="block truncate text-muted">{p.headline}</span>
               </span>
-              {SOURCE_LABEL[p.source] && <span className="shrink-0 text-[10px] uppercase tracking-wide text-muted">{SOURCE_LABEL[p.source]}</span>}
+              {SOURCE_LABEL[p.source] && <span className="shrink-0 text-[11px] uppercase tracking-wide text-muted">{SOURCE_LABEL[p.source]}</span>}
             </Link>
           </li>
         ))}

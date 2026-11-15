@@ -95,7 +95,7 @@ function Progress({ job, elapsed }: { job: ResearchJob; elapsed: number }) {
       </div>
       <ol className="space-y-3">
         {job.steps.map((s) => (
-          <li key={s.key} className="flex gap-3 text-[13px]">
+          <li key={s.key} className="flex gap-3 text-[14px]">
             <span className="mt-0.5 shrink-0">
               {s.status === "done" ? (
                 <Check size={16} className="text-up-ink" />
@@ -114,7 +114,7 @@ function Progress({ job, elapsed }: { job: ResearchJob; elapsed: number }) {
           </li>
         ))}
       </ol>
-      <p className="mt-4 text-[11px] text-muted">Usually 20–60 seconds. Re-runs reuse everything already read.</p>
+      <p className="mt-4 text-[12px] text-muted">Usually 20–60 seconds. Re-runs reuse everything already read.</p>
     </section>
   );
 }
@@ -130,11 +130,11 @@ function Cites({ cites, sources }: { cites: Cite[]; sources: Map<string, SourceD
         const href = s?.url ? `${s.url}${c.page ? `#page=${c.page}` : ""}` : undefined;
         const label = `${c.doc}${c.page ? ` p.${c.page}` : ""}`;
         return href ? (
-          <a key={i} href={href} target="_blank" rel="noopener noreferrer" title={s?.title} className="num rounded bg-accent-soft px-1 text-[10px] font-medium text-accent">
+          <a key={i} href={href} target="_blank" rel="noopener noreferrer" title={s?.title} className="num rounded bg-accent-soft px-1 text-[11px] font-medium text-accent">
             {label}
           </a>
         ) : (
-          <span key={i} className="num rounded bg-line px-1 text-[10px] text-muted">
+          <span key={i} className="num rounded bg-line px-1 text-[11px] text-muted">
             {label}
           </span>
         );
@@ -190,13 +190,13 @@ function Timeline({ items, sources }: { items: Movement[]; sources: Map<string, 
               <span className="absolute -left-[9px] mt-0.5 flex h-[18px] w-[18px] items-center justify-center rounded-full border border-line bg-surface">
                 <Icon size={11} className="text-muted" aria-hidden />
               </span>
-              <div className="text-[13px] leading-snug">
+              <div className="text-[14px] leading-snug">
                 <p className="flex items-start gap-1.5">
                   <T size={14} className={`mt-0.5 shrink-0 ${m.tone === "positive" ? "text-up-ink" : m.tone === "negative" ? "text-down-ink" : "text-muted"}`} aria-label={m.tone} />
                   <span className="font-medium">{m.title}</span>
                 </p>
                 {m.detail && m.detail !== m.title && <p className="mt-0.5 pl-5 text-muted">{m.detail}</p>}
-                <p className="mt-1 flex flex-wrap items-center gap-2 pl-5 text-[11px] text-muted">
+                <p className="mt-1 flex flex-wrap items-center gap-2 pl-5 text-[12px] text-muted">
                   <span className="num">{new Date(`${m.date}T00:00:00`).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}</span>
                   {m.reaction_pct !== null && (
                     <span className={`num rounded-full bg-bg px-1.5 py-px font-medium ${tone(m.reaction_pct)}`}>stock {pct(m.reaction_pct)}</span>
@@ -221,10 +221,10 @@ function Promises({ items, sources }: { items: PromiseCheck[]; sources: Map<stri
   return (
     <ul className="space-y-3">
       {items.map((p, i) => (
-        <li key={i} className="rounded-xl border border-line p-3 text-[13px] leading-snug">
+        <li key={i} className="rounded-xl border border-line p-3 text-[14px] leading-snug">
           <div className="mb-1.5 flex items-center justify-between">
             <span className="font-semibold">{p.quarter}</span>
-            <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${VERDICT[p.verdict].cls}`}>{VERDICT[p.verdict].label}</span>
+            <span className={`rounded-full px-2 py-0.5 text-[12px] font-medium ${VERDICT[p.verdict].cls}`}>{VERDICT[p.verdict].label}</span>
           </div>
           <p>
             <span className="text-muted">Promised: </span>
@@ -245,7 +245,7 @@ function Points({ items, sources }: { items: (CitedPoint | Theme)[]; sources: Ma
   return (
     <ul className="space-y-2.5">
       {items.map((x, i) => (
-        <li key={i} className="text-[13px] leading-snug">
+        <li key={i} className="text-[14px] leading-snug">
           {"title" in x ? (
             <>
               <span className="font-medium">{x.title}. </span>
@@ -267,7 +267,7 @@ function Report({ r, onRefresh }: { r: DeepResearch; onRefresh: () => void }) {
   const filings = r.sources.filter((s) => s.kind === "filing");
   return (
     <>
-      <div className="mx-4 flex items-center justify-between text-[11px] text-muted">
+      <div className="mx-4 flex items-center justify-between text-[12px] text-muted">
         <span>
           {ago(r.generated_at)} ago · {docs.length} documents · {r.stats.pages_read.toLocaleString("en-IN")} pages · {filings.length} filings
         </span>
@@ -297,10 +297,10 @@ function Report({ r, onRefresh }: { r: DeepResearch; onRefresh: () => void }) {
         <Section title="Guidance on record" count={r.guidance.length}>
           <ul className="divide-y divide-line">
             {r.guidance.map((g, i) => (
-              <li key={i} className="py-2.5 text-[13px] leading-snug">
+              <li key={i} className="py-2.5 text-[14px] leading-snug">
                 <p className="text-muted">
                   {g.metric}
-                  {g.horizon && <span className="text-[11px]"> · {g.horizon}</span>}
+                  {g.horizon && <span className="text-[12px]"> · {g.horizon}</span>}
                 </p>
                 <p className="mt-0.5 font-semibold">
                   {g.value}
@@ -340,7 +340,7 @@ function Report({ r, onRefresh }: { r: DeepResearch; onRefresh: () => void }) {
         <Section title="Questions worth asking" count={r.questions.length}>
           <ul className="space-y-4">
             {r.questions.map((q, i) => (
-              <li key={i} className="text-[13px] leading-snug">
+              <li key={i} className="text-[14px] leading-snug">
                 <p className="font-medium">{q.question}</p>
                 {q.why && <p className="mt-0.5 text-muted">{q.why}</p>}
                 {q.ask && (
@@ -355,10 +355,10 @@ function Report({ r, onRefresh }: { r: DeepResearch; onRefresh: () => void }) {
       )}
 
       <Section title="Sources read" count={r.sources.length} open={false}>
-        <ul className="space-y-2 text-[13px]">
+        <ul className="space-y-2 text-[14px]">
           {r.sources.map((s) => (
             <li key={s.id} className="flex gap-2">
-              <span className="num w-7 shrink-0 text-[11px] font-medium text-muted">{s.id}</span>
+              <span className="num w-7 shrink-0 text-[12px] font-medium text-muted">{s.id}</span>
               <span className="min-w-0 flex-1">
                 {s.url ? (
                   <a href={s.url} target="_blank" rel="noopener noreferrer" className="hover:text-accent">
@@ -368,7 +368,7 @@ function Report({ r, onRefresh }: { r: DeepResearch; onRefresh: () => void }) {
                   s.title
                 )}
                 {s.pages > 0 && (
-                  <span className="block text-[11px] text-muted">
+                  <span className="block text-[12px] text-muted">
                     {s.pages} pages{s.used_pages && s.used_pages < s.pages ? ` · ${s.used_pages} most relevant read` : ""}
                   </span>
                 )}
@@ -379,7 +379,7 @@ function Report({ r, onRefresh }: { r: DeepResearch; onRefresh: () => void }) {
       </Section>
 
       {r.notes.length > 0 && (
-        <p className="mx-4 mt-4 text-[11px] leading-relaxed text-muted">
+        <p className="mx-4 mt-4 text-[12px] leading-relaxed text-muted">
           Some documents weren&apos;t read this time. Refresh to include them; everything already read is reused.
         </p>
       )}

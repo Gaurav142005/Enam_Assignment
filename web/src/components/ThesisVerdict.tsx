@@ -6,7 +6,7 @@ export function ThesisVerdict({ check, compact = false }: { check: ThesisCheck; 
   const supports = check.stance === "supports";
   const Icon = supports ? ShieldCheck : ShieldAlert;
   return (
-    <p className={`flex gap-1.5 text-[13px] leading-snug ${compact ? "" : "rounded-xl px-3 py-2"} ${!compact && (supports ? "bg-up/10" : "bg-down/10")}`}>
+    <p className={`flex gap-1.5 text-[14px] leading-snug ${compact ? "" : "rounded-xl px-3 py-2"} ${!compact && (supports ? "bg-up/10" : "bg-down/10")}`}>
       <Icon size={15} className={`mt-px shrink-0 ${supports ? "text-up-ink" : "text-down-ink"}`} aria-hidden />
       <span>
         <span className={`font-medium ${supports ? "text-up-ink" : "text-down-ink"}`}>{supports ? "Supports your thesis" : "Challenges your thesis"}</span>

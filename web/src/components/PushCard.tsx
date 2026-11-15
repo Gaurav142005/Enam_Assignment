@@ -32,7 +32,7 @@ function KeyLine({ item }: { item: PushItem }) {
     const rev = r.rows.find((x) => x.metric === "Revenue");
     const pat = r.rows.find((x) => x.metric === "PAT");
     return (
-      <p className="text-[13px] text-muted">
+      <p className="text-[14px] text-muted">
         {rev && (
           <>
             Revenue <span className={`num font-semibold ${tone(rev.yoy_pct)}`}>{pct(rev.yoy_pct)}</span>
@@ -47,8 +47,8 @@ function KeyLine({ item }: { item: PushItem }) {
       </p>
     );
   }
-  if (item.person) return <p className="text-[13px] text-muted line-clamp-3">{item.person.bio ?? item.person.headline}</p>;
-  if (item.summary) return <p className="text-[13px] text-muted line-clamp-3">{item.summary}</p>;
+  if (item.person) return <p className="text-[14px] text-muted line-clamp-3">{item.person.bio ?? item.person.headline}</p>;
+  if (item.summary) return <p className="text-[14px] text-muted line-clamp-3">{item.summary}</p>;
   return null;
 }
 
@@ -81,7 +81,7 @@ export function PushCard({ item }: { item: PushItem }) {
             </p>
           </div>
           <span className="flex items-center gap-1.5 self-start">
-            {item.is_new && <span className="rounded-full bg-accent px-1.5 py-px text-[10px] font-semibold text-bg">New</span>}
+            {item.is_new && <span className="rounded-full bg-accent px-1.5 py-px text-[11px] font-semibold text-bg">New</span>}
             <span className="num text-xs text-muted">{ago(item.at)}</span>
           </span>
         </header>
@@ -144,7 +144,7 @@ export function MoveRow({ item }: { item: PushItem }) {
         <span className="min-w-0 flex-1">
           <span className="flex items-center gap-1.5 text-sm font-semibold">
             {item.ticker}
-            {item.is_new && <span className="rounded-full bg-accent px-1.5 py-px text-[10px] font-semibold text-bg">New</span>}
+            {item.is_new && <span className="rounded-full bg-accent px-1.5 py-px text-[11px] font-semibold text-bg">New</span>}
           </span>
           <span className="flex items-center gap-1 text-xs text-muted">
             <Icon size={13} className={vol ? "text-warn" : up ? "text-up-ink" : "text-down-ink"} aria-hidden />
@@ -153,7 +153,7 @@ export function MoveRow({ item }: { item: PushItem }) {
         </span>
         <span className="text-right">
           <span className={`num block text-base font-semibold ${tone(item.change_pct)}`}>{pct(item.change_pct)}</span>
-          <span className="num block text-[11px] text-muted">{item.summary?.match(/₹[\d,.]+/)?.[0]}</span>
+          <span className="num block text-[12px] text-muted">{item.summary?.match(/₹[\d,.]+/)?.[0]}</span>
         </span>
       </Link>
       {item.context && (

@@ -4,7 +4,7 @@ export function Empty({ children }: { children: React.ReactNode }) {
 
 export function DemoNote() {
   return (
-    <p className="mx-4 mt-8 text-center text-[11px] text-muted">
+    <p className="mx-4 mt-8 text-center text-[12px] text-muted">
       Demo data: announcements and network profiles are synthetic until the live feeds are wired.
     </p>
   );

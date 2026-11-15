@@ -34,7 +34,7 @@ function Readout({ series, i, annual }: { series: Series[]; i: number; annual: b
   const period = series[0]?.points[i]?.period ?? "";
   return (
     <div className="mb-1 flex min-h-[2.25rem] flex-wrap items-end gap-x-4 gap-y-0.5 text-xs">
-      <span className="w-full text-[11px] text-muted">{periodLabel(period, annual)}</span>
+      <span className="w-full text-[12px] text-muted">{periodLabel(period, annual)}</span>
       {series.map((s, k) => (
         <span key={s.key} className="flex items-center gap-1.5">
           {series.length > 1 && <span className="h-0.5 w-3 rounded-full" style={{ background: SLOT[k] }} aria-hidden />}
@@ -49,7 +49,7 @@ function Readout({ series, i, annual }: { series: Series[]; i: number; annual: b
 function Legend({ series, mark }: { series: Series[]; mark: "rect" | "line" }) {
   if (series.length < 2) return null;
   return (
-    <div className="mt-1 flex flex-wrap gap-x-4 text-[11px] text-muted">
+    <div className="mt-1 flex flex-wrap gap-x-4 text-[12px] text-muted">
       {series.map((s, k) => (
         <span key={s.key} className="flex items-center gap-1.5">
           <span className={mark === "rect" ? "h-2 w-2 rounded-sm" : "h-0.5 w-3 rounded-full"} style={{ background: SLOT[k] }} aria-hidden />

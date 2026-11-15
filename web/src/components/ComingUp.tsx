@@ -37,7 +37,7 @@ export function ComingUp({ items }: { items: Upcoming[] }) {
               const Icon = ICON[u.kind];
               const when = [timeLabel(u.time), u.end_date ? `to ${dayLabel(u.end_date)}` : null].filter(Boolean).join(" · ");
               return (
-                <li key={u.id} className="text-[13px] leading-snug">
+                <li key={u.id} className="text-[14px] leading-snug">
                   <span className="flex items-start gap-2">
                     <Icon size={14} className="mt-0.5 shrink-0 text-muted" aria-hidden />
                     <span className="min-w-0">
@@ -45,7 +45,7 @@ export function ComingUp({ items }: { items: Upcoming[] }) {
                         {u.ticker}
                       </Link>{" "}
                       <span className="text-ink/80">{u.title}</span>
-                      {!u.in_portfolio && <span className="ml-1 text-[11px] text-muted">(research list)</span>}
+                      {!u.in_portfolio && <span className="ml-1 text-[12px] text-muted">(research list)</span>}
                       {when && <span className="block text-xs text-muted">{when}</span>}
                       {u.ask && (
                         <Link href={`/people/${u.ask.person_id}`} className="block text-xs font-medium text-accent">

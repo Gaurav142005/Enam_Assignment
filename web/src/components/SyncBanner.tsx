@@ -27,7 +27,7 @@ export function SyncBanner({ initial }: { initial: string[] }) {
 
   if (!syncing.length) return null;
   return (
-    <p className="mx-4 mb-3 flex items-center gap-2 rounded-xl bg-accent-soft/60 px-3 py-2.5 text-[13px]" aria-live="polite">
+    <p className="mx-4 mb-3 flex items-center gap-2 rounded-xl bg-accent-soft/60 px-3 py-2.5 text-[14px]" aria-live="polite">
       <Loader2 size={15} className="animate-spin text-accent" />
       Fetching filings and prices for {syncing.join(", ")}…
     </p>

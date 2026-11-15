@@ -73,12 +73,12 @@ export function AskBox({ ticker }: { ticker: string }) {
           {a.points.length > 0 && (
             <ul className="space-y-2">
               {a.points.map((p, i) => (
-                <li key={i} className="border-l-2 border-line pl-3 text-[13px] leading-snug text-muted">
+                <li key={i} className="border-l-2 border-line pl-3 text-[14px] leading-snug text-muted">
                   {p.text}{" "}
                   {p.cites.map((c, k) => {
                     const s = src.get(c.doc);
                     return (
-                      <a key={k} href={s ? `${s.url}${c.page ? `#page=${c.page}` : ""}` : undefined} target="_blank" rel="noopener noreferrer" title={s?.title} className="num ml-1 rounded bg-accent-soft px-1 text-[10px] font-medium text-accent">
+                      <a key={k} href={s ? `${s.url}${c.page ? `#page=${c.page}` : ""}` : undefined} target="_blank" rel="noopener noreferrer" title={s?.title} className="num ml-1 rounded bg-accent-soft px-1 text-[11px] font-medium text-accent">
                         {c.doc}
                         {c.page ? ` p.${c.page}` : ""}
                       </a>
@@ -97,7 +97,7 @@ export function AskBox({ ticker }: { ticker: string }) {
                 {p.text.slice(0, 320)}…
               </p>
             ))}
-          {a.sources.length > 0 && <p className="text-[11px] text-muted">From: {a.sources.map((s) => `${s.id} ${s.title}`).join(" · ")}</p>}
+          {a.sources.length > 0 && <p className="text-[12px] text-muted">From: {a.sources.map((s) => `${s.id} ${s.title}`).join(" · ")}</p>}
           {a.ask && (
             <div>
               <p className="eyebrow mb-1.5">For colour beyond the documents</p>

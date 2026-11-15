@@ -14,75 +14,127 @@ import type { CompanyPerson, PriceHistory, ResearchJob, Fundamentals, Holding, N
 import { Avatar } from "@/components/Avatar";
 import Link from "next/link";
 
-/** PULL: one company. Price → your position → who can help → fundamentals (computed) → LLM sections → news (context). */
-export default async function CompanyPage({ params }: { params: Promise<{ ticker: string }> }) {
+const TABS = [
+  { key: "overview", label: "Overview" },
+  { key: "research", label: "Research" },
+  { key: "people", label: "People" },
+  { key: "news", label: "News" },
+] as const;
+type Tab = (typeof TABS)[number]["key"];
+
+/** PULL: one company, in four short tabs instead of one long scroll. Only the open tab's data is fetched. */
+export default async function CompanyPage({ params, searchParams }: { params: Promise<{ ticker: string }>; searchParams: Promise<{ tab?: string }> }) {
   const { ticker } = await params;
+  const raw = (await searchParams).tab;
+  const tab: Tab = TABS.some((t) => t.key === raw) ? (raw as Tab) : "overview";
+  const enc = encodeURIComponent(ticker);
   const [r, news, leaders, deep, px] = await Promise.all([
-    api<ResearchReport>(`/pull/research/${encodeURIComponent(ticker)}`),
-    api<NewsItem[]>(`/news/${encodeURIComponent(ticker)}`).catch(() => [] as NewsItem[]),
-    api<CompanyPerson[]>(`/network/companies/${encodeURIComponent(ticker)}/people`).catch(() => [] as CompanyPerson[]),
-    api<ResearchJob>(`/pull/deep/${encodeURIComponent(ticker)}/latest`).catch(() => null),
-    api<PriceHistory>(`/market/prices/${encodeURIComponent(ticker)}?range=1M`).catch(() => null),
+    api<ResearchReport>(`/pull/research/${enc}`),
+    tab === "news" ? api<NewsItem[]>(`/news/${enc}`).catch(() => [] as NewsItem[]) : Promise.resolve([] as NewsItem[]),
+    tab === "people" ? api<CompanyPerson[]>(`/network/companies/${enc}/people`).catch(() => [] as CompanyPerson[]) : Promise.resolve([] as CompanyPerson[]),
+    tab === "research" ? api<ResearchJob>(`/pull/deep/${enc}/latest`).catch(() => null) : Promise.resolve(null),
+    tab === "overview" ? api<PriceHistory>(`/market/prices/${enc}?range=1M`).catch(() => null) : Promise.resolve(null),
   ]);
   const lastClose = px?.bars.at(-1)?.close ?? null;
   const c = r.company;
   const f = r.fundamentals;
+
+  const tabs = (
+    <nav className="no-scrollbar -mx-4 flex gap-1 overflow-x-auto border-b border-line px-4" aria-label={`${c.ticker} sections`}>
+      {TABS.map((t) => (
+        <Link
+          key={t.key}
+          href={t.key === "overview" ? `/company/${c.ticker}` : `/company/${c.ticker}?tab=${t.key}`}
+          replace
+          scroll={false}
+          aria-current={tab === t.key ? "page" : undefined}
+          className={`-mb-px shrink-0 border-b-2 px-3 pb-2 pt-1 text-[15px] ${tab === t.key ? "border-ink font-semibold text-ink" : "border-transparent text-muted"}`}
+        >
+          {t.label}
+        </Link>
+      ))}
+    </nav>
+  );
 
   return (
     <main>
       <div className="px-4">
         <BackLink />
       </div>
-      <PageHeader compact title={c.ticker} sub={`${f?.name ?? c.name}${c.sector !== "—" ? ` · ${c.sector}` : ""}`} />
+      <PageHeader compact title={c.ticker} sub={`${f?.name ?? c.name}${c.sector !== "—" ? ` · ${c.sector}` : ""}`} below={tabs} />
 
-      <Link href={`/company/${c.ticker}/research`} className="card mx-4 mb-3 flex items-start gap-3 p-4 active:opacity-70">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent">
-          <Sparkles size={18} />
-        </span>
-        <span className="min-w-0 flex-1 text-[13px] leading-snug">
-          <span className="block font-semibold">{deep?.finished_at ? "Open deep research" : "Run deep research"}</span>
-          <span className="block text-muted">
-            {deep?.finished_at
-              ? `Generated ${ago(deep.finished_at)} ago · ${deep.result?.movements.length ?? 0} movements · ${deep.result?.sources.length ?? 0} sources`
-              : "Reads transcripts, decks, the annual report and a year of filings. About a minute."}
-          </span>
-          {deep?.result?.summary && <span className="mt-1.5 text-ink/80 line-clamp-3">{deep.result.summary}</span>}
-        </span>
-        <ChevronRight size={16} className="text-muted" />
-      </Link>
-
-      <div className="mb-3">
-        <AskBox ticker={c.ticker} />
-      </div>
-
-      {r.position && <PositionCard h={r.position} />}
-      <ThesisCard ticker={c.ticker} />
-      <div className="mx-4 mb-3 mt-2 flex justify-end">
-        <div className="w-full text-right [&>.card]:text-left">
-          <HoldingControls ticker={c.ticker} holding={r.position} lastClose={lastClose} />
+      {tab === "overview" && (
+        <div className="space-y-3 pt-2">
+          {r.position && <PositionCard h={r.position} />}
+          <div className="mx-4 text-right [&>.card]:text-left">
+            <HoldingControls ticker={c.ticker} holding={r.position} lastClose={lastClose} />
+          </div>
+          <PriceChart ticker={c.ticker} />
+          {f && <KeyNumbers f={f} />}
+          <ThesisCard ticker={c.ticker} />
+          {r.network[0] && (
+            <div className="px-4">
+              <NetworkLine hint={r.network[0]} />
+            </div>
+          )}
         </div>
-      </div>
-      <div className={r.position ? "mt-3" : ""}>
-        <PriceChart ticker={c.ticker} />
-      </div>
-
-      <SectionTitle>Who can help</SectionTitle>
-      {r.network.length ? (
-        <div className="space-y-1.5 px-4">
-          {r.network.map((h) => (
-            <NetworkLine key={h.person_id} hint={h} />
-          ))}
-        </div>
-      ) : (
-        <Empty>No one in your network has worked here yet.</Empty>
       )}
 
-      {leaders.length > 0 && <Leadership people={leaders} />}
+      {tab === "research" && (
+        <div className="pt-2">
+          <Link href={`/company/${c.ticker}/research`} className="card mx-4 mb-3 flex items-start gap-3 p-4 active:opacity-70">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent">
+              <Sparkles size={18} />
+            </span>
+            <span className="min-w-0 flex-1 text-[14px] leading-snug">
+              <span className="block font-semibold">{deep?.finished_at ? "Open deep research" : "Run deep research"}</span>
+              <span className="block text-muted">
+                {deep?.finished_at
+                  ? `Generated ${ago(deep.finished_at)} ago · ${deep.result?.movements.length ?? 0} movements · ${deep.result?.sources.length ?? 0} sources`
+                  : "Reads transcripts, decks, the annual report and a year of filings. About a minute."}
+              </span>
+              {deep?.result?.summary && <span className="mt-1.5 text-ink/80 line-clamp-3">{deep.result.summary}</span>}
+            </span>
+            <ChevronRight size={16} className="text-muted" />
+          </Link>
+          <AskBox ticker={c.ticker} />
+          {f ? <FundamentalsView f={f} /> : <Empty>Fundamentals unavailable for {c.ticker} right now.</Empty>}
+        </div>
+      )}
 
-      {f ? <FundamentalsView f={f} /> : <Empty>Fundamentals unavailable for {c.ticker} right now.</Empty>}
+      {tab === "people" && (
+        <div className="pt-1">
+          <SectionTitle>Who can help</SectionTitle>
+          {r.network.length ? (
+            <div className="space-y-1.5 px-4">
+              {r.network.map((h) => (
+                <NetworkLine key={h.person_id} hint={h} />
+              ))}
+            </div>
+          ) : (
+            <Empty>No one in your network has worked here yet.</Empty>
+          )}
+          {leaders.length > 0 && <Leadership people={leaders} />}
+        </div>
+      )}
 
-      {news.length > 0 && <NewsList items={news} />}
+      {tab === "news" && (news.length > 0 ? <NewsList items={news} /> : <Empty>No recent headlines.</Empty>)}
     </main>
+  );
+}
+
+function KeyNumbers({ f }: { f: Fundamentals }) {
+  return (
+    <section aria-label="Key numbers">
+      <dl className="card mx-4 grid grid-cols-3 gap-x-2 gap-y-4 p-4">
+        {f.snapshot.map((m) => (
+          <div key={m.label} className="min-w-0">
+            <dd className="num truncate text-[15px] font-semibold">{m.value}</dd>
+            <dt className="text-[12px] text-muted">{m.label}</dt>
+          </div>
+        ))}
+      </dl>
+    </section>
   );
 }
 
@@ -90,19 +142,19 @@ function PositionCard({ h }: { h: Holding }) {
   return (
     <section className="card mx-4 grid grid-cols-3 gap-2 p-4 text-center" aria-label="Your position">
       <div>
-        <p className="text-[11px] text-muted">Your holding</p>
+        <p className="text-[12px] text-muted">Your holding</p>
         <p className="mt-0.5 text-sm font-semibold">{inr(h.value)}</p>
-        <p className="num text-[11px] text-muted">{h.qty.toLocaleString("en-IN")} sh</p>
+        <p className="num text-[12px] text-muted">{h.qty.toLocaleString("en-IN")} sh</p>
       </div>
       <div>
-        <p className="text-[11px] text-muted">Unrealised</p>
+        <p className="text-[12px] text-muted">Unrealised</p>
         <p className={`mt-0.5 text-sm font-semibold ${tone(h.pnl)}`}>{inr(h.pnl, true)}</p>
-        <p className={`num text-[11px] ${tone(h.pnl_pct)}`}>{pct(h.pnl_pct)}</p>
+        <p className={`num text-[12px] ${tone(h.pnl_pct)}`}>{pct(h.pnl_pct)}</p>
       </div>
       <div>
-        <p className="text-[11px] text-muted">Weight</p>
+        <p className="text-[12px] text-muted">Weight</p>
         <p className="mt-0.5 text-sm font-semibold">{h.weight_pct?.toFixed(1)}%</p>
-        <p className="num text-[11px] text-muted">avg ₹{h.avg_cost?.toLocaleString("en-IN")}</p>
+        <p className="num text-[12px] text-muted">avg ₹{h.avg_cost?.toLocaleString("en-IN")}</p>
       </div>
     </section>
   );
@@ -121,7 +173,7 @@ function Signals({ items }: { items: Signal[] }) {
       {items.map((s) => {
         const { Icon, cls, label } = TONE_ICON[s.tone];
         return (
-          <li key={s.text} className="flex gap-2.5 text-[13px] leading-snug">
+          <li key={s.text} className="flex gap-2.5 text-[14px] leading-snug">
             <Icon size={16} className={`mt-0.5 shrink-0 ${cls}`} aria-label={label} />
             <span>{s.text}</span>
           </li>
@@ -163,19 +215,9 @@ function FundamentalsView({ f }: { f: Fundamentals }) {
 
   return (
     <>
-      <SectionTitle right={<span className="text-xs text-muted">{f.view}</span>}>Fundamentals</SectionTitle>
-      <dl className="card mx-4 grid grid-cols-3 gap-x-2 gap-y-3 p-4">
-        {f.snapshot.map((m) => (
-          <div key={m.label} className="min-w-0">
-            <dd className="num truncate text-sm font-semibold">{m.value}</dd>
-            <dt className="text-[11px] text-muted">{m.label}</dt>
-          </div>
-        ))}
-      </dl>
-
       {f.about && (
         <Block title="Business" teaser={{ section: "financials", tone: "neutral", text: f.about.split(". ")[0] }}>
-          <p className="text-[13px] leading-relaxed text-muted">{f.about}</p>
+          <p className="text-[14px] leading-relaxed text-muted">{f.about}</p>
         </Block>
       )}
 
@@ -215,7 +257,7 @@ function FundamentalsView({ f }: { f: Fundamentals }) {
         </Block>
       )}
 
-      <p className="mx-4 mt-2 text-[11px] text-muted">
+      <p className="mx-4 mt-2 text-[12px] text-muted">
         Computed from {f.view} statements compiled from annual reports and exchange filings ·{" "}
         <a href={f.source_url} target="_blank" rel="noopener noreferrer" className="text-accent">
           screener.in
@@ -228,7 +270,7 @@ function FundamentalsView({ f }: { f: Fundamentals }) {
 function NewsList({ items }: { items: NewsItem[] }) {
   return (
     <>
-      <SectionTitle right={<span className="text-[11px] text-muted">secondary · not used in research</span>}>In the news</SectionTitle>
+      <SectionTitle right={<span className="text-[12px] text-muted">secondary · not used in research</span>}>In the news</SectionTitle>
       <ul className="card mx-4 divide-y divide-line">
         {items.slice(0, 3).map((n) => (
           <NewsRow key={n.url} n={n} />
@@ -259,8 +301,8 @@ function NewsRow({ n }: { n: NewsItem }) {
     <li>
       <a href={n.url} target="_blank" rel="noopener noreferrer" className="flex gap-3 px-4 py-3 active:bg-line/40">
         <span className="min-w-0 flex-1">
-          <span className="block text-[13px] leading-snug">{n.title}</span>
-          <span className="mt-0.5 block text-[11px] text-muted">
+          <span className="block text-[14px] leading-snug">{n.title}</span>
+          <span className="mt-0.5 block text-[12px] text-muted">
             {n.source} · {ago(n.published_at)} ago
           </span>
         </span>
@@ -275,16 +317,16 @@ function LeaderRow({ p }: { p: CompanyPerson }) {
     <li>
       <Link href={p.connection ? `/people/${p.connection.person_id}` : `/people/${p.id}`} className="flex items-center gap-3 px-4 py-2.5 active:bg-line/40">
         <Avatar name={p.name} size={30} />
-        <span className="min-w-0 flex-1 text-[13px] leading-snug">
+        <span className="min-w-0 flex-1 text-[14px] leading-snug">
           <span className="flex items-center gap-1.5 font-medium">
             <span className={p.status === "former" ? "text-muted line-through decoration-1" : ""}>{p.name}</span>
-            {p.connection && <span className="rounded-full bg-accent px-1.5 py-px text-[10px] font-medium text-bg">You know them</span>}
+            {p.connection && <span className="rounded-full bg-accent px-1.5 py-px text-[11px] font-medium text-bg">You know them</span>}
           </span>
           <span className="block truncate text-muted">
             {p.status === "former" ? "Former · " : ""}
             {p.role}
           </span>
-          {p.paths[0] && <span className="block truncate text-[11px] text-accent">via {p.paths[0].name}: {p.paths[0].reason}</span>}
+          {p.paths[0] && <span className="block truncate text-[12px] text-accent">via {p.paths[0].name}: {p.paths[0].reason}</span>}
         </span>
       </Link>
     </li>
@@ -324,7 +366,7 @@ function Leadership({ people }: { people: CompanyPerson[] }) {
           </li>
         )}
       </ul>
-      <p className="mx-4 mt-2 text-[11px] text-muted">
+      <p className="mx-4 mt-2 text-[12px] text-muted">
         Management from Yahoo Finance; board from the NSE corporate-governance filing{asOf ? ` (${asOf})` : ""}; changes since from exchange filings.
       </p>
     </section>

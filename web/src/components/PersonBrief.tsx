@@ -11,7 +11,7 @@ export function PersonBrief({ p }: { p: Person }) {
   return (
     <Link href={`/people/${p.id}`} className="flex gap-3 rounded-xl border border-line p-3 active:opacity-70">
       <Avatar name={p.name} size={36} />
-      <div className="min-w-0 flex-1 text-[13px] leading-snug">
+      <div className="min-w-0 flex-1 text-[14px] leading-snug">
         <p className="font-medium">{p.name}</p>
         <p className="text-muted">{p.headline}</p>
         {p.bio && <p className="mt-1 text-muted">{p.bio}</p>}

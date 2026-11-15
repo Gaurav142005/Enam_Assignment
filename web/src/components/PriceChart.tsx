@@ -192,7 +192,7 @@ export function PriceChart({ ticker }: { ticker: string }) {
       </div>
 
       {/* OHLC readout: values lead, labels follow. */}
-      <dl className="num mt-3 grid grid-cols-5 gap-1 px-4 text-[11px]">
+      <dl className="num mt-3 grid grid-cols-5 gap-1 px-4 text-[12px]">
         {(
           [
             ["Open", bar && rupees(bar.open, 0)],
@@ -218,7 +218,7 @@ export function PriceChart({ ticker }: { ticker: string }) {
 
       <div className="flex items-center justify-between border-t border-line px-4 py-2.5">
         <Segmented value={range} options={RANGES} label="Chart range" onChange={(r) => setRange(r as PriceRange)} />
-        <span className="text-[11px] text-muted">Daily · NSE</span>
+        <span className="text-[12px] text-muted">Daily · NSE</span>
       </div>
     </section>
   );

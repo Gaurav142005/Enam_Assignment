@@ -50,10 +50,10 @@ export default async function AskPage({ searchParams }: { searchParams: Promise<
                   <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-accent-soft text-accent">
                     <Sparkles size={14} />
                   </span>
-                  <span className="min-w-0 flex-1 text-[13px] leading-snug">
+                  <span className="min-w-0 flex-1 text-[14px] leading-snug">
                     <span className="flex items-baseline justify-between gap-2">
                       <span className="font-semibold">{r.ticker}</span>
-                      <span className="num shrink-0 text-[11px] text-muted">{ago(r.finished_at)} ago</span>
+                      <span className="num shrink-0 text-[12px] text-muted">{ago(r.finished_at)} ago</span>
                     </span>
                     <span className="text-muted line-clamp-2">{r.summary ?? `${r.movements} movements in the last 12 months`}</span>
                   </span>

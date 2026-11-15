@@ -58,7 +58,7 @@ export default function AddHoldingPage() {
                       <span className="block text-sm font-medium">{c.ticker}</span>
                       <span className="block truncate text-xs text-muted">{c.name}</span>
                     </span>
-                    {c.in_portfolio && <span className="text-[11px] text-muted">Already held</span>}
+                    {c.in_portfolio && <span className="text-[12px] text-muted">Already held</span>}
                   </button>
                 </li>
               ))}
@@ -88,7 +88,7 @@ export default function AddHoldingPage() {
               router.refresh();
             }}
           />
-          <p className="mt-3 text-[11px] text-muted">FINN pulls its filings, prices, fundamentals and leadership in the background; it appears in the Brief within a minute or two.</p>
+          <p className="mt-3 text-[12px] text-muted">FINN pulls its filings, prices, fundamentals and leadership in the background; it appears in the Brief within a minute or two.</p>
         </section>
       )}
     </main>

@@ -44,7 +44,7 @@ export default function SettingsPage() {
         <Stepper label="Volume above" unit="× avg" value={rules.volume_multiple} step={0.5} min={1} onChange={(v) => save({ ...rules, volume_multiple: v })} />
       </div>
 
-      <p className="mx-4 mt-2 text-[11px] text-muted">Checked against each end-of-day close. Volume is compared with its 20-day average.</p>
+      <p className="mx-4 mt-2 text-[12px] text-muted">Checked against each end-of-day close. Volume is compared with its 20-day average.</p>
 
       <SectionTitle>Announcement types I care about</SectionTitle>
       <div className="flex flex-wrap gap-2 px-4">
@@ -55,7 +55,7 @@ export default function SettingsPage() {
               key={c}
               onClick={() => toggle(c)}
               aria-pressed={on}
-              className={`rounded-full border px-3 py-1.5 text-[13px] ${on ? "border-ink bg-ink text-bg" : "border-line bg-surface text-muted"}`}
+              className={`rounded-full border px-3 py-1.5 text-[14px] ${on ? "border-ink bg-ink text-bg" : "border-line bg-surface text-muted"}`}
             >
               {CATEGORY_LABEL[c]}
             </button>

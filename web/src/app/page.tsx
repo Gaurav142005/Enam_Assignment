@@ -5,13 +5,13 @@ import { PageHeader, SectionTitle } from "@/components/PageHeader";
 import { BriefStatus } from "@/components/BriefStatus";
 import { CATEGORY_ICON, MoveRow, PushCard } from "@/components/PushCard";
 import { ComingUp } from "@/components/ComingUp";
-import { Glance } from "@/components/Glance";
+import { Today } from "@/components/Today";
 import { DemoNote, Empty } from "@/components/States";
 import { SwipeDeck } from "@/components/SwipeDeck";
 import { WindowPicker } from "@/components/WindowPicker";
 import { api } from "@/lib/api";
 import { ago, CATEGORY_LABEL, windowLabel } from "@/lib/format";
-import type { Digest } from "@/lib/types";
+import type { Digest, PortfolioPerformance } from "@/lib/types";
 
 const DECK_SIZE = 10; // a deck you can actually swipe through; everything else stays one tap away
 
@@ -31,7 +31,10 @@ function lede(d: Digest, hours: number): string {
 /** PUSH — the Brief. What changed across my portfolio, ranked; routine collapsed; network woven in. */
 export default async function BriefPage({ searchParams }: { searchParams: Promise<{ h?: string }> }) {
   const hours = Number((await searchParams).h) || 24;
-  const d = await api<Digest>(`/push/digest?hours=${hours}`);
+  const [d, perf] = await Promise.all([
+    api<Digest>(`/push/digest?hours=${hours}`),
+    api<PortfolioPerformance>("/market/portfolio?period=1D").catch(() => null),
+  ]);
   const routineCount = d.routine.reduce((n, g) => n + g.count, 0);
   const top = d.attention.slice(0, DECK_SIZE);
   const rest = d.attention.slice(DECK_SIZE);
@@ -56,7 +59,7 @@ export default async function BriefPage({ searchParams }: { searchParams: Promis
       </div>
 
       <div className="mt-4">
-        <Glance items={top} moves={d.moves} />
+        <Today perf={perf} items={top.slice(0, 2)} more={Math.max(0, d.attention.length - 2)} />
       </div>
 
       <SectionTitle>Needs your attention</SectionTitle>
@@ -82,7 +85,7 @@ export default async function BriefPage({ searchParams }: { searchParams: Promis
                 {rest.map((i) => {
                   const Icon = i.category ? CATEGORY_ICON[i.category] : CATEGORY_ICON.unclassified;
                   return (
-                    <li key={i.id} className="flex items-start gap-3 px-4 py-2.5 text-[13px] leading-snug">
+                    <li key={i.id} className="flex items-start gap-3 px-4 py-2.5 text-[14px] leading-snug">
                       <Icon size={15} className="mt-0.5 shrink-0 text-muted" aria-hidden />
                       <span className="min-w-0 flex-1">
                         <Link href={`/company/${i.ticker}`} className="font-semibold">
@@ -142,7 +145,7 @@ export default async function BriefPage({ searchParams }: { searchParams: Promis
                   </summary>
                   <ul className="space-y-2.5 px-4 pb-3 pl-11">
                     {g.items.map((i) => (
-                      <li key={i.id} className="flex gap-2 text-[13px]">
+                      <li key={i.id} className="flex gap-2 text-[14px]">
                         <Link href={`/company/${i.ticker}`} className="w-20 shrink-0 font-medium">
                           {i.ticker}
                         </Link>

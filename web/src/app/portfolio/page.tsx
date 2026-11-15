@@ -50,11 +50,11 @@ export default async function PortfolioPage({ searchParams }: { searchParams: Pr
           <p className="mt-1 text-5xl font-semibold tracking-tight">{inr(d.total_value)}</p>
           <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
             <div>
-              <p className="text-[11px] text-muted">Last session</p>
+              <p className="text-[12px] text-muted">Last session</p>
               <p className={`font-semibold ${tone(d.day_pnl)}`}>{inr(d.day_pnl, true)}</p>
             </div>
             <div>
-              <p className="text-[11px] text-muted">Since purchase · cost {inr(d.total_cost)}</p>
+              <p className="text-[12px] text-muted">Since purchase · cost {inr(d.total_cost)}</p>
               <p className={`font-semibold ${tone(d.total_pnl)}`}>
                 {inr(d.total_pnl, true)}{" "}
                 <span className="font-normal">({pct(d.total_pnl !== null && d.total_cost ? (d.total_pnl / d.total_cost) * 100 : null)})</span>
@@ -96,7 +96,7 @@ export default async function PortfolioPage({ searchParams }: { searchParams: Pr
       <HoldingList items={beating} period={period} flagged={flagged} />
       <SectionTitle>Lagging {d.benchmark_name} · {lagging.length}</SectionTitle>
       <HoldingList items={lagging} period={period} flagged={flagged} />
-      <p className="mx-4 mt-6 text-center text-[11px] text-muted">
+      <p className="mx-4 mt-6 text-center text-[12px] text-muted">
         <span className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-accent align-middle" /> has something material in this week&apos;s Brief.
         End-of-day prices from Yahoo Finance. Period figures hold today&apos;s quantities constant; P&amp;L is unrealised, before costs and taxes.
       </p>

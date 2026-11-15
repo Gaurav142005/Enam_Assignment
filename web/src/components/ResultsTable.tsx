@@ -8,7 +8,7 @@ function Delta({ v }: { v: number | null }) {
 
 export function ResultsTable({ r }: { r: ResultsCut }) {
   return (
-    <table className="w-full text-[13px]">
+    <table className="w-full text-[14px]">
       <thead>
         <tr className="text-muted">
           <th className="pb-1 text-left font-normal">{r.period}</th>

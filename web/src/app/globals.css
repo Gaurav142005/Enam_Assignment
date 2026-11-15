@@ -57,7 +57,7 @@ body {
     box-shadow: 0 1px 2px rgb(var(--ink) / 0.04), 0 4px 12px -6px rgb(var(--ink) / 0.06);
   }
   .eyebrow {
-    @apply text-[11px] font-medium uppercase tracking-[0.08em] text-muted;
+    @apply text-[11.5px] font-semibold uppercase tracking-[0.09em] text-muted;
   }
   .num {
     @apply font-mono tabular-nums;

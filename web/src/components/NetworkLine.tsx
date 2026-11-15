@@ -11,10 +11,10 @@ export function NetworkLine({ hint, lead = "Ask" }: { hint: NetworkHint; lead?: 
       className="flex items-center gap-3 rounded-xl bg-accent-soft/60 px-3 py-2.5 active:opacity-70"
     >
       <Avatar name={hint.name} size={28} />
-      <span className="min-w-0 flex-1 text-[13px] leading-snug">
+      <span className="min-w-0 flex-1 text-[14px] leading-snug">
         <span className="font-medium">{[lead, hint.name].filter(Boolean).join(" ")}</span>
-        {hint.relation === "peer" && <span className="ml-1.5 rounded-full bg-line px-1.5 py-px text-[10px] text-muted">competitor</span>}
-        {hint.relation === "expert" && <span className="ml-1.5 rounded-full bg-line px-1.5 py-px text-[10px] text-muted">sector expert</span>}
+        {hint.relation === "peer" && <span className="ml-1.5 rounded-full bg-line px-1.5 py-px text-[11px] text-muted">competitor</span>}
+        {hint.relation === "expert" && <span className="ml-1.5 rounded-full bg-line px-1.5 py-px text-[11px] text-muted">sector expert</span>}
         {hint.degree === 2 && hint.via && <span className="text-muted"> via {hint.via}</span>}
         <span className="text-muted line-clamp-2">{hint.reason}</span>
       </span>

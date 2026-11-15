@@ -50,7 +50,7 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
         <h1 className="mt-3 text-xl font-semibold">{p.name}</h1>
         <p className="mt-0.5 text-sm text-muted">{p.headline}</p>
         {p.bio && <p className="mt-2 max-w-xs text-xs leading-relaxed text-muted">{p.bio}</p>}
-        <p className="mt-2 flex items-center gap-3 text-[11px] uppercase tracking-wide text-muted">
+        <p className="mt-2 flex items-center gap-3 text-[12px] uppercase tracking-wide text-muted">
           {SOURCE[p.source]}
           {p.linkedin_url && (
             <a href={p.linkedin_url} target="_blank" rel="noopener noreferrer" className="normal-case tracking-normal text-accent">
@@ -63,7 +63,7 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
       {rel && (
         <section className="card mx-4 mt-3 p-4" aria-label="Your relationship">
           <div className="flex items-center justify-between gap-3">
-            <div className="min-w-0 text-[13px] leading-snug">
+            <div className="min-w-0 text-[14px] leading-snug">
               <p className="font-medium">{rel.context}</p>
               <p className="mt-0.5 flex items-center gap-2 text-muted">
                 <Strength value={rel.strength} /> {lastSpoke(rel.last_contact)}
@@ -79,7 +79,7 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
           <SectionTitle>How you can reach them</SectionTitle>
           <div className="space-y-1.5 px-4">
             {d.shared_with_you.map((x) => (
-              <p key={x} className="rounded-xl border border-accent/30 bg-accent-soft/60 px-3 py-2.5 text-[13px] font-medium">
+              <p key={x} className="rounded-xl border border-accent/30 bg-accent-soft/60 px-3 py-2.5 text-[14px] font-medium">
                 {x}
               </p>
             ))}
@@ -97,7 +97,7 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
           <SectionTitle>Worth asking about</SectionTitle>
           <ul className="card mx-4 divide-y divide-line">
             {d.ask_about.map((q) => (
-              <li key={q} className="px-4 py-3 text-[13px] leading-snug">
+              <li key={q} className="px-4 py-3 text-[14px] leading-snug">
                 {q}
               </li>
             ))}
@@ -110,10 +110,10 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
           <SectionTitle>On the record</SectionTitle>
           <ul className="card mx-4 divide-y divide-line">
             {d.in_filings.map((f) => (
-              <li key={`${f.date}-${f.title}`} className="flex items-start justify-between gap-3 px-4 py-3 text-[13px]">
+              <li key={`${f.date}-${f.title}`} className="flex items-start justify-between gap-3 px-4 py-3 text-[14px]">
                 <span>
                   {f.title}
-                  <span className="num block text-[11px] text-muted">{shortDate(f.date)}</span>
+                  <span className="num block text-[12px] text-muted">{shortDate(f.date)}</span>
                 </span>
                 {f.url && (
                   <a href={f.url} target="_blank" rel="noopener noreferrer" aria-label="Open filing" className="shrink-0 text-accent">
@@ -129,7 +129,7 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
       <SectionTitle>Career</SectionTitle>
       <ol className="card mx-4 divide-y divide-line">
         {p.positions.map((pos) => (
-          <li key={`${pos.company}-${pos.title}-${pos.start}`} className="px-4 py-3 text-[13px]">
+          <li key={`${pos.company}-${pos.title}-${pos.start}`} className="px-4 py-3 text-[14px]">
             <p className="font-medium">{pos.title || "Role not stated"}</p>
             <p className="text-muted">
               {pos.ticker ? (
@@ -155,7 +155,7 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
           <SectionTitle>Education</SectionTitle>
           <ul className="card mx-4 divide-y divide-line">
             {p.education.map((e) => (
-              <li key={e.school} className="px-4 py-3 text-[13px]">
+              <li key={e.school} className="px-4 py-3 text-[14px]">
                 <p className="font-medium">{e.school}</p>
                 <p className="text-muted">{[e.degree, tenure(e.start, e.end, false)].filter(Boolean).join(" · ")}</p>
               </li>
@@ -169,7 +169,7 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
           <SectionTitle>Go-to for</SectionTitle>
           <div className="flex flex-wrap gap-2 px-4">
             {p.expertise.map((x) => (
-              <Link key={x} href={`/network?q=${encodeURIComponent(x)}`} className="rounded-full bg-accent-soft px-3 py-1 text-[13px] text-accent">
+              <Link key={x} href={`/network?q=${encodeURIComponent(x)}`} className="rounded-full bg-accent-soft px-3 py-1 text-[14px] text-accent">
                 {x}
               </Link>
             ))}
