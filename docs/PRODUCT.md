@@ -1,7 +1,6 @@
 # FINN: product decisions
 
 Source brief: [brief/01-challenge-brief.pdf](brief/01-challenge-brief.pdf) · glossary: [brief/02-reference-glossary.pdf](brief/02-reference-glossary.pdf)
-Deadline: **15 Nov 2026**.
 
 ## Point of view
 
@@ -15,10 +14,12 @@ Deadline: **15 Nov 2026**.
 
 | Tab | Layer | Job |
 |---|---|---|
-| **Brief** `/` | Push | Dated lede naming what matters → *Needs your attention* as a swipeable card deck (each card: title, one key line, best person to ask; details fold away) · *Unusual moves* tiles · *Routine* collapsed by type. Thresholds via ⚙ → `/settings`. |
-| **Portfolio** `/portfolio` | — | Value, P&L, value-weighted returns vs Nifty 50, leaders/laggards with sparklines. |
-| **Ask** `/ask` → `/company/[ticker]` | Pull | Search any of ~2,600 NSE companies → company page: position, price chart, who can help, leadership, then collapsible research sections that show their lead finding when closed. |
-| **Network** `/network` → `/people/[id]` | Network | Reconnect nudges · expertise map · people. A person page shows their career and, for outsiders (e.g. a new CFO), who you know who knows them. |
+| **Brief** `/` | Push | One-line lede naming what can move a price → *Today* card (your portfolio vs Nifty for the window, who led, who held it back, the two price-moving headlines) → *Needs your attention* as a swipeable deck (each card: title, one key line, thesis verdict, best person to ask; opens in place) → *Coming up* grouped by event → *Unusual moves* → *Routine* collapsed by type. Window: 24h (the last session, so a Sunday shows Friday) / 3d / 7d / 30d / any date. |
+| **Portfolio** `/portfolio` | — | Value, P&L, value-weighted returns vs Nifty 50, beating / lagging the index with sparklines; add, edit, remove holdings. |
+| **Ask** `/ask` → `/company/[ticker]` | Pull | Search any of ~2,600 NSE companies → company page with the price pinned in the header and four tabs: Overview (position, chart, key numbers, your thesis), Research (deep research, ask anything, fundamentals), People (who can help, leadership), News. |
+| **Network** `/network` → `/people/[id]` | Network | Ask the network · your people at portfolio companies · reconnect nudges · leadership coverage · expertise map · everyone. A person page is a diligence brief: career, how to reach them, what filings say, what to ask. |
+
+First visit gets a three-screen intro (Brief / Ask / Network). Light, dark or match the device.
 
 ## Core features (scope for the prototype)
 
@@ -27,7 +28,7 @@ Deadline: **15 Nov 2026**.
 - [x] Holdings with quantity + average cost (`api/app/data/portfolio.json`): value, weight, unrealised and period P&L
 - [x] Value-weighted period returns vs Nifty 50; leaders and laggards
 - [x] Daily candle / line charts with volume for any NSE ticker
-- [x] Company news (Google News RSS), shown as secondary context, never a research input
+- [x] Company news (Google News RSS), filtered to business and price-relevant headlines and de-duplicated; secondary context, never a research input
 
 ### Push
 - [x] Windowed digest with priority ranking (`api/app/services/priority.py`)
@@ -48,6 +49,8 @@ Deadline: **15 Nov 2026**.
 - [x] Push notifications (Web Push) for critical items, marked categories, thesis challenges and unusual moves; each sent once
 - [x] At a glance: one line per company above the deck (no model, instant); tap to jump to its card
 - [x] Lookback: 24h / 3d / 7d / 30d or since any date in the last 90 days; remembered on the device
+- [x] Price-sensitivity on every filing (rules, plus the move beyond the Nifty when the rules can't tell); only price-moving items headline the Brief
+- [x] Clean titles: filing boilerplate stripped ("A press release dated …", "(designated as …)", results → "Q2 FY27 results")
 
 ### Pull
 - [x] Works for **any** NSE ticker (no hard-wiring to the demo set)
@@ -80,10 +83,19 @@ Deadline: **15 Nov 2026**.
 
 Edit these in `api/app/data/`.
 
-## Build order
+## Deliberately left out
 
-1. ~~Skeleton~~ (this commit)
-2. **Push:** live NSE feed + yfinance, classifier, results extraction
-3. **Pull:** document fetch + cache, extraction, *promised vs delivered*
-4. **Network:** richer graph, natural-language queries, link-strength explanations
-5. Deploy (Vercel + Render/Fly), writeup, build-history export
+- **Chat as the main interface.** An investor's first question is "what changed?", which a ranked briefing answers faster than a prompt. Questions live where they're asked: on a company, or to the network.
+- **A model in the ranking loop.** Ranking, price-sensitivity, results numbers and the network graph are deterministic: instant, free, explainable and testable. Models only read and write prose.
+- **Embeddings / a vector store.** Page-indexed lexical retrieval over a single company's documents is enough at this scale and cites pages exactly.
+- **Scraping LinkedIn.** Against its terms. The investor brings their own export instead.
+- **Supplier / customer reach.** Needs relationship data beyond filings.
+- **Multi-user and auth.** One investor per deployment for the prototype; the path is in ARCHITECTURE.md.
+
+## Next
+
+1. Learn from behaviour: which cards get opened, dismissed or shared, to tune ranking per investor.
+2. Calendar and email context (with consent) for warmer network signals: "you met her at the Polycab AGM".
+3. Voice: a two-minute spoken morning brief.
+4. Supplier / customer graph from annual-report related-party and segment notes.
+5. Postgres + per-investor tenancy + SSO; a worker queue for ingestion.

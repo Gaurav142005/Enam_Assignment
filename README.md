@@ -2,12 +2,25 @@
 
 A mobile-first investing companion built for the ENAM Holdings Founding AI Engineer build challenge.
 
-- **Push:** what changed across my portfolio, ranked, with routine filings collapsed.
-- **Pull:** on-demand research on any NSE company, grounded only in its own filings.
-- **Network:** who in my network can help me understand it, woven into both of the above.
-- **Portfolio:** period returns vs Nifty 50, leaders and laggards; daily candle charts (1M–5Y) for any NSE ticker.
+**Live demo: <LIVE_URL>** (open it on a phone, or use your browser's phone view)
 
-Deploying: [DEPLOY.md](DEPLOY.md) · Product decisions: [docs/PRODUCT.md](docs/PRODUCT.md) · Architecture: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · Brief: [docs/brief/](docs/brief/)
+FINN is a briefing, not a dashboard. It answers *"what changed, does it matter, and who can tell me more?"* in under a minute:
+
+- **Push (Brief):** every filing across the portfolio for the window you pick, ranked, with only price-moving items up top and routine ones collapsed. Results come with QoQ / YoY numbers, management changes with the person's background, material events with the best person to call. Configurable price and volume alerts, a calendar of what's coming, your thesis checked against every filing, and Web Push notifications.
+- **Pull (Ask):** any NSE company. Fundamentals computed from statements, "ask anything" answered from transcripts and annual reports with page citations, and a 30–60 s deep-research report with *promised vs delivered* over the last four quarters.
+- **Network:** woven into both. Who you know at the company, a competitor or in the sector; second-degree paths to new management; an expertise map; reasons to reconnect. Built from your own LinkedIn export, never scraping.
+
+<p>
+<img src="docs/screenshots/1-brief.png" width="19%" alt="Brief" />
+<img src="docs/screenshots/2-card-open.png" width="19%" alt="A results card, opened" />
+<img src="docs/screenshots/3-company.png" width="19%" alt="Company page" />
+<img src="docs/screenshots/4-deep-research.png" width="19%" alt="Deep research" />
+<img src="docs/screenshots/5-network.png" width="19%" alt="Network" />
+</p>
+
+**A two-minute tour:** open the Brief and switch the window to *30d* → swipe the deck and open the Titan results card (numbers, thesis verdict, who to ask) → tap a company → *Research* → *Open deep research* → *Network* → ask "Anyone at Dixon?".
+
+**Docs:** [Architecture](docs/ARCHITECTURE.md) (pipelines, privacy, LLMs, cloud) · [Product decisions](docs/PRODUCT.md) · [AI build history](docs/build-history/) · [Deploying](DEPLOY.md) · [The brief](docs/brief/)
 
 ## Run it
 
@@ -36,6 +49,10 @@ api/                        FastAPI backend (Python, uv)
   app/routers/              push · pull · network · portfolio
   app/services/
     digest.py               Push: rank → enrich → weave network → collapse routine
+    materiality.py          Can this filing move the price? (rules + the move beyond the Nifty)
+    titles.py               Filing boilerplate → short card titles
+    thesis.py               Each material filing judged against your thesis
+    notify.py               Web Push (VAPID) for what crosses your thresholds
     priority.py taxonomy.py Scoring + announcement categories (from the ENAM glossary)
     graph.py                Network: inferred edges, who-knows-company, second-degree reach, themes, reconnect
     research.py             Pull: section pipeline (primary sources only)
@@ -55,9 +72,9 @@ api/                        FastAPI backend (Python, uv)
   tests/
 web/                        Next.js 15 App Router, Tailwind, mobile-first
   src/app/                  /  (Brief)  /portfolio  /ask  /company/[ticker]  /network  /people/[id]  /settings
-  src/components/           PushCard, ResultsTable, PersonBrief, NetworkLine, …
+  src/components/           BriefCard, SwipeDeck, Today, ComingUp, PriceChart, NetworkLine, …
   src/lib/                  api client, types, formatters
-docs/                       brief PDFs, product + architecture notes
+docs/                       brief PDFs, product + architecture notes, screenshots, AI build history
 ```
 
 ## Data status
