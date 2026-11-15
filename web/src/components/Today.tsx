@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { inr, pct, shortDate, tone } from "@/lib/format";
+import { inr, pct, shortDate, shortDay, tone } from "@/lib/format";
 import type { PortfolioPerformance, PushItem } from "@/lib/types";
 
 /** The headline fact of an item, in plain words (results → the numbers; otherwise its title). */
@@ -20,15 +20,19 @@ function fact(i: PushItem): React.ReactNode {
  * The 10-second read: how your money moved last session against the market, who moved it, and the one or two things
  * worth your time. Everything else is below.
  */
-export function Today({ perf, items, more }: { perf: PortfolioPerformance | null; items: PushItem[]; more: number }) {
+export function Today({ perf, since, items, more }: { perf: PortfolioPerformance | null; since?: string | null; items: PushItem[]; more: number }) {
   const you = perf?.portfolio_return_pct ?? null;
   const mkt = perf?.benchmark_return_pct ?? null;
   const gap = you !== null && mkt !== null ? you - mkt : null;
   const ranked = (perf?.holdings ?? []).filter((h) => h.return_pct !== null);
   const days = perf?.days ?? 1;
   const pnl = days > 1 ? perf?.period_pnl ?? null : perf?.day_pnl ?? null;
-  const since = new Date(Date.now() - days * 86400000).toLocaleDateString("en-IN", { day: "numeric", month: "short" });
-  const label = days > 1 ? `Last ${days} days · since ${since}` : `Last session${perf?.as_of ? ` · ${shortDate(perf.as_of)}` : ""}`;
+  const from = new Date(Date.now() - days * 86400000).toLocaleDateString("en-IN", { day: "numeric", month: "short", timeZone: "Asia/Kolkata" });
+  const label = since
+    ? `Since ${shortDay(since)}`
+    : days > 1
+      ? `Last ${days} days · since ${from}`
+      : `Last session${perf?.as_of ? ` · ${shortDate(perf.as_of)}` : ""}`;
   const best = ranked[0];
   const worst = ranked.at(-1);
 

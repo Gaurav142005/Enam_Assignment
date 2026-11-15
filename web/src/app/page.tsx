@@ -11,7 +11,7 @@ import { DemoNote, Empty } from "@/components/States";
 import { SwipeDeck } from "@/components/SwipeDeck";
 import { WindowPicker } from "@/components/WindowPicker";
 import { api } from "@/lib/api";
-import { ago, CATEGORY_LABEL, windowLabel } from "@/lib/format";
+import { ago, CATEGORY_LABEL, shortDay, windowLabel } from "@/lib/format";
 import type { Digest, PortfolioPerformance } from "@/lib/types";
 
 const DECK_SIZE = 10; // a deck you can actually swipe through; everything else stays one tap away
@@ -20,8 +20,9 @@ function today(): string {
   return new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", timeZone: "Asia/Kolkata" });
 }
 
-/** "in the last 7 days", or "since Friday" when the 24h window stretched over a weekend. */
-function span(d: Digest, hours: number): string {
+/** "in the last 7 days", "since 3 Nov" for a picked date, or "since Friday" when the 24h window stretched over a weekend. */
+function span(d: Digest, hours: number, since?: string | null): string {
+  if (since) return `since ${shortDay(since)}`;
   if (hours === 24 && d.since && Date.now() - Date.parse(d.since) > 26 * 3600e3) {
     return `since ${new Date(d.since).toLocaleDateString("en-IN", { weekday: "long", timeZone: "Asia/Kolkata" })}`;
   }
@@ -29,25 +30,29 @@ function span(d: Digest, hours: number): string {
 }
 
 /** One sentence that names what matters, so the investor knows before swiping. */
-function lede(d: Digest, hours: number): string {
+function lede(d: Digest, hours: number, since: string | null): string {
   const moving = d.attention.filter((i) => i.price_sensitive);
-  if (!moving.length) return d.attention.length ? `Nothing likely to move a price ${span(d, hours)}.` : `Nothing material ${span(d, hours)}.`;
+  if (!moving.length) return d.attention.length ? `Nothing likely to move a price ${span(d, hours, since)}.` : `Nothing material ${span(d, hours, since)}.`;
   const names = [...new Set(moving.map((i) => i.ticker))];
   const head = names.slice(0, 3).join(", ");
   if (hours > 72 && moving.length > 6) {
     // Over a week or a month a raw count stops meaning anything: lead with the biggest, then give the total.
-    return `Biggest: ${head}. ${moving.length} filings could move prices ${span(d, hours)}.`;
+    return `Biggest: ${head}. ${moving.length} filings could move prices ${span(d, hours, since)}.`;
   }
   return `${moving.length} that could move prices: ${head}${names.length > 3 ? ` and ${names.length - 3} more` : ""}.`;
 }
 
 /** PUSH — the Brief. What changed across my portfolio, ranked; routine collapsed; network woven in. */
-export default async function BriefPage({ searchParams }: { searchParams: Promise<{ h?: string }> }) {
-  const hours = Number((await searchParams).h) || 24;
+export default async function BriefPage({ searchParams }: { searchParams: Promise<{ h?: string; since?: string }> }) {
+  const sp = await searchParams;
+  // A picked date runs from midnight India time that day; presets are hours.
+  const sinceMs = sp.since && /^\d{4}-\d{2}-\d{2}$/.test(sp.since) ? Date.parse(`${sp.since}T00:00:00+05:30`) : NaN;
+  const since = Number.isFinite(sinceMs) ? sp.since! : null;
+  const hours = since ? Math.min(24 * 90, Math.max(1, Math.ceil((Date.now() - sinceMs) / 3600e3))) : Number(sp.h) || 24;
   const [d, perf] = await Promise.all([
     api<Digest>(`/push/digest?hours=${hours}`),
     // The money card follows the Brief's window: 24h = last session, 7d = the last seven days, a custom date = since then.
-    api<PortfolioPerformance>(`/market/portfolio?days=${Math.max(1, Math.round(hours / 24))}`).catch(() => null),
+    api<PortfolioPerformance>(`/market/portfolio?days=${Math.max(1, since ? Math.ceil(hours / 24) : Math.round(hours / 24))}`).catch(() => null),
   ]);
   const routineCount = d.routine.reduce((n, g) => n + g.count, 0);
   const top = d.attention.slice(0, DECK_SIZE);
@@ -61,7 +66,7 @@ export default async function BriefPage({ searchParams }: { searchParams: Promis
       <PageHeader
         eyebrow={today()}
         title="Brief"
-        sub={lede(d, hours)}
+        sub={lede(d, hours, since)}
         right={
           <Link href="/settings" aria-label="Alert settings" className="mb-1 rounded-full p-2 text-muted active:bg-line/50">
             <SlidersHorizontal size={20} />
@@ -70,13 +75,13 @@ export default async function BriefPage({ searchParams }: { searchParams: Promis
       />
       <div className="flex flex-wrap items-center justify-between gap-2 px-4">
         <Suspense>
-          <WindowPicker value={hours} />
+          <WindowPicker value={hours} since={since} />
         </Suspense>
         <BriefStatus refreshedAt={d.refreshed_at} newCount={d.new_count} live={d.live} />
       </div>
 
       <div className="mt-4">
-        <Today perf={perf} items={headline} more={Math.max(0, d.attention.length - headline.length)} />
+        <Today perf={perf} since={since} items={headline} more={Math.max(0, d.attention.length - headline.length)} />
       </div>
 
       <SectionTitle>Needs your attention</SectionTitle>
@@ -125,7 +130,7 @@ export default async function BriefPage({ searchParams }: { searchParams: Promis
           )}
         </>
       ) : (
-        <Empty>Nothing material {span(d, hours)}. Widen the window to look further back.</Empty>
+        <Empty>Nothing material {span(d, hours, since)}. Widen the window to look further back.</Empty>
       )}
 
       {d.upcoming.length > 0 && (

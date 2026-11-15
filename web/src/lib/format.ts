@@ -40,6 +40,11 @@ export function initials(name: string): string {
   return name.split(" ").map((w) => w[0]).slice(0, 2).join("");
 }
 
+/** "2026-11-03" → "3 Nov" (India time). */
+export function shortDay(iso: string): string {
+  return new Date(`${iso}T12:00:00+05:30`).toLocaleDateString("en-IN", { day: "numeric", month: "short", timeZone: "Asia/Kolkata" });
+}
+
 export function windowLabel(hours: number): string {
   if (hours < 24) return `${hours} hours`;
   const d = hours / 24;
