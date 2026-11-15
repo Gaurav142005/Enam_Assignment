@@ -22,3 +22,6 @@ api/cache/
 *.db
 
 .DS_Store
+
+# saved web pages
+*_files/

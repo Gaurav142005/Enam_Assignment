@@ -41,6 +41,7 @@ make api               # FastAPI on :8000   (terminal 1)
 make web               # Next.js on :3000   (terminal 2)
 make test              # API tests (offline)
 make check             # tests + ruff + typecheck + eslint
+cd api && uv run python scripts/test_gemini.py   # check a Gemini key works (never prints it)
 ```
 
 Without ingestion, the app runs on synthetic fixtures. `GET /data/{ticker}` on the API shows everything stored for a company.
