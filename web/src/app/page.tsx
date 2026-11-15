@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { ArrowUpRight, ChevronDown, SlidersHorizontal } from "lucide-react";
 import { PageHeader, SectionTitle } from "@/components/PageHeader";
+import { PullToRefresh } from "@/components/PullToRefresh";
 import { BriefStatus } from "@/components/BriefStatus";
 import { CATEGORY_ICON, MoveRow, PushCard } from "@/components/PushCard";
 import { ComingUp } from "@/components/ComingUp";
@@ -44,6 +45,7 @@ export default async function BriefPage({ searchParams }: { searchParams: Promis
 
   return (
     <main>
+      <PullToRefresh>
       <PageHeader
         eyebrow={today()}
         title="Brief"
@@ -170,6 +172,7 @@ export default async function BriefPage({ searchParams }: { searchParams: Promis
         </>
       )}
       {!d.live && <DemoNote />}
+      </PullToRefresh>
     </main>
   );
 }

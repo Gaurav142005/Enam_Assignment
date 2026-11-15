@@ -81,6 +81,7 @@ export default async function CompanyPage({ params, searchParams }: { params: Pr
         }
       />
 
+      <div key={tab} className="animate-fade-in motion-reduce:animate-none">
       {tab === "overview" && (
         <div className="space-y-3 pt-2">
           {r.position && <PositionCard h={r.position} />}
@@ -137,6 +138,7 @@ export default async function CompanyPage({ params, searchParams }: { params: Pr
       )}
 
       {tab === "news" && (news.length > 0 ? <NewsList items={news} /> : <Empty>No recent headlines.</Empty>)}
+      </div>
     </main>
   );
 }

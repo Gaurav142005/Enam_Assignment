@@ -99,6 +99,7 @@ body {
   background: rgb(var(--bg));
   color: rgb(var(--ink));
   -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none; /* the Brief has its own pull-to-refresh; no browser reload fighting it */
 }
 
 @layer components {
@@ -119,6 +120,41 @@ body {
 
 details > summary {
   list-style: none;
+}
+/* Collapsible sections open with the same short rise as pages. */
+details[open] > :not(summary) {
+  animation: rise 260ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@keyframes rise {
+  from {
+    transform: translateY(6px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+/* Pressable cards give a little under the thumb. */
+a.card,
+button.card {
+  transition: transform 120ms ease-out;
+}
+a.card:active,
+button.card:active {
+  transform: scale(0.985);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 details > summary::-webkit-details-marker {
   display: none;
