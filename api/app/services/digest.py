@@ -15,7 +15,7 @@ from pathlib import Path
 from app import state
 from app.ingest import eod, events, store
 from app.models import AlertRules, Category, Digest, PushItem, ResultsCut, RoutineGroup, Upcoming
-from app.services import companies, filing_people, graph, materiality
+from app.services import companies, filing_people, graph, materiality, titles
 from app.services.priority import bucket, move_score, score
 from app.services.taxonomy import BASE_WEIGHT, LABEL
 
@@ -120,7 +120,7 @@ def _live_announcements(since: datetime, rules: AlertRules) -> list[PushItem]:
                 PushItem(
                     id=r["id"], kind="announcement", ticker=r["ticker"], company_name=name, category=cat,
                     priority=bucket(s), score=s,
-                    title=title, summary=summary,
+                    title=titles.tidy(title, r["text"]), summary=summary,
                     at=filed, source_url=r["attachment_url"], results=results,
                     person=people[0] if people else None, network=network, price_sensitive=sensitive, reaction_pct=reaction,
                 )

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { BackLink } from "@/components/BackLink";
 import { NotificationsToggle } from "@/components/NotificationsToggle";
 import { ThemePicker } from "@/components/ThemeToggle";
+import { ReplayWelcome } from "@/components/Welcome";
 import { PageHeader, SectionTitle } from "@/components/PageHeader";
 import { api, apiPut } from "@/lib/api";
 import { CATEGORY_LABEL } from "@/lib/format";
@@ -41,6 +42,8 @@ export default function SettingsPage() {
 
       <SectionTitle>On this device</SectionTitle>
       <NotificationsToggle />
+      <div className="h-2" />
+      <ReplayWelcome />
 
       <SectionTitle>End-of-day triggers</SectionTitle>
       <div className="card mx-4 divide-y divide-line">

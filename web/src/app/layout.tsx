@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Space_Grotesk } from "next/font/google";
 import { TabBar } from "@/components/TabBar";
+import { Welcome } from "@/components/Welcome";
 import { themeBootScript } from "@/lib/theme";
 import "./globals.css";
 
@@ -36,6 +37,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {children}
         </div>
         <TabBar />
+        <Welcome />
       </body>
     </html>
   );

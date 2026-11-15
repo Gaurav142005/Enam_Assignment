@@ -109,8 +109,11 @@ body {
   .eyebrow {
     @apply text-[11.5px] font-semibold uppercase tracking-[0.09em] text-muted;
   }
+  /* Figures: same-width digits in the body face, so columns line up without prices looking like code. */
   .num {
-    @apply font-mono tabular-nums;
+    @apply tabular-nums;
+    font-feature-settings: "tnum" 1, "zero" 0;
+    letter-spacing: -0.005em;
   }
 }
 

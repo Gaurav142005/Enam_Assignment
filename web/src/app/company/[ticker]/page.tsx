@@ -9,7 +9,7 @@ import { PageHeader, SectionTitle } from "@/components/PageHeader";
 import { PriceChart } from "@/components/PriceChart";
 import { Empty } from "@/components/States";
 import { api } from "@/lib/api";
-import { ago, inr, pct, tone } from "@/lib/format";
+import { ago, inr, pct, rupees, tone } from "@/lib/format";
 import type { CompanyPerson, PriceHistory, ResearchJob, Fundamentals, Holding, NewsItem, ResearchReport, Series, Signal } from "@/lib/types";
 import { Avatar } from "@/components/Avatar";
 import Link from "next/link";
@@ -33,9 +33,17 @@ export default async function CompanyPage({ params, searchParams }: { params: Pr
     tab === "news" ? api<NewsItem[]>(`/news/${enc}`).catch(() => [] as NewsItem[]) : Promise.resolve([] as NewsItem[]),
     tab === "people" ? api<CompanyPerson[]>(`/network/companies/${enc}/people`).catch(() => [] as CompanyPerson[]) : Promise.resolve([] as CompanyPerson[]),
     tab === "research" ? api<ResearchJob>(`/pull/deep/${enc}/latest`).catch(() => null) : Promise.resolve(null),
-    tab === "overview" ? api<PriceHistory>(`/market/prices/${enc}?range=1M`).catch(() => null) : Promise.resolve(null),
+    api<PriceHistory>(`/market/prices/${enc}?range=1M`).catch(() => null), // the header price shows on every tab
   ]);
   const lastClose = px?.bars.at(-1)?.close ?? null;
+  const prevClose = px?.bars.at(-2)?.close ?? null;
+  const dayChg = lastClose !== null && prevClose ? (lastClose / prevClose - 1) * 100 : null;
+  const closeDay = px?.bars.at(-1)?.time;
+  const closeLabel = !closeDay
+    ? ""
+    : closeDay === new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" })
+      ? "today"
+      : new Date(`${closeDay}T12:00:00+05:30`).toLocaleDateString("en-IN", { weekday: "short", timeZone: "Asia/Kolkata" });
   const c = r.company;
   const f = r.fundamentals;
 
@@ -61,7 +69,17 @@ export default async function CompanyPage({ params, searchParams }: { params: Pr
       <div className="px-4">
         <BackLink />
       </div>
-      <PageHeader compact title={c.ticker} sub={`${f?.name ?? c.name}${c.sector !== "—" ? ` · ${c.sector}` : ""}`} below={tabs} />
+      <PageHeader compact title={c.ticker} sub={`${f?.name ?? c.name}${c.sector !== "—" ? ` · ${c.sector}` : ""}`} below={tabs}
+        right={
+          lastClose !== null && (
+            <p className="shrink-0 pb-0.5 text-right leading-tight">
+              <span className="num block text-[17px] font-semibold">{rupees(lastClose, lastClose < 100 ? 2 : 0)}</span>
+              <span className={`num text-[13px] font-medium ${tone(dayChg)}`}>{pct(dayChg)}</span>
+              {closeLabel && <span className="text-[12px] text-muted"> {closeLabel}</span>}
+            </p>
+          )
+        }
+      />
 
       {tab === "overview" && (
         <div className="space-y-3 pt-2">

@@ -35,6 +35,16 @@ export default {
         display: ["var(--font-display)", "system-ui", "sans-serif"],
       },
       maxWidth: { app: "30rem" },
+      keyframes: {
+        "fade-in": { from: { opacity: "0" }, to: { opacity: "1" } },
+        "sheet-up": { from: { transform: "translateY(24px)", opacity: "0" }, to: { transform: "none", opacity: "1" } },
+        rise: { from: { transform: "translateY(6px)", opacity: "0" }, to: { transform: "none", opacity: "1" } },
+      },
+      animation: {
+        "fade-in": "fade-in 200ms ease-out both",
+        "sheet-up": "sheet-up 320ms cubic-bezier(0.2, 0.8, 0.2, 1) both",
+        rise: "rise 260ms cubic-bezier(0.2, 0.8, 0.2, 1) both",
+      },
     },
   },
   plugins: [],
