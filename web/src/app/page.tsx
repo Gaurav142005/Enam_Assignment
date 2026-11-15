@@ -21,11 +21,11 @@ function today(): string {
 
 /** One sentence that names what matters, so the investor knows before swiping. */
 function lede(d: Digest, hours: number): string {
-  if (!d.attention.length) return `Nothing material in the last ${windowLabel(hours)}.`;
-  const names = [...new Set(d.attention.map((i) => i.ticker))];
+  const moving = d.attention.filter((i) => i.price_sensitive);
+  if (!moving.length) return d.attention.length ? `Nothing likely to move a price in the last ${windowLabel(hours)}.` : `Nothing material in the last ${windowLabel(hours)}.`;
+  const names = [...new Set(moving.map((i) => i.ticker))];
   const head = names.slice(0, 3).join(", ");
-  const n = d.attention.filter((i) => i.priority !== "normal").length || d.attention.length;
-  return `${n} that matter: ${head}${names.length > 3 ? ` and ${names.length - 3} more companies` : ""}.`;
+  return `${moving.length} that could move prices: ${head}${names.length > 3 ? ` and ${names.length - 3} more` : ""}.`;
 }
 
 /** PUSH — the Brief. What changed across my portfolio, ranked; routine collapsed; network woven in. */
@@ -39,6 +39,8 @@ export default async function BriefPage({ searchParams }: { searchParams: Promis
   const routineCount = d.routine.reduce((n, g) => n + g.count, 0);
   const top = d.attention.slice(0, DECK_SIZE);
   const rest = d.attention.slice(DECK_SIZE);
+  // Only what can move a share price makes the headline; everything else stays in the deck below.
+  const headline = d.attention.filter((i) => i.price_sensitive).slice(0, 2);
 
   return (
     <main>
@@ -60,7 +62,7 @@ export default async function BriefPage({ searchParams }: { searchParams: Promis
       </div>
 
       <div className="mt-4">
-        <Today perf={perf} items={top.slice(0, 2)} more={Math.max(0, d.attention.length - 2)} />
+        <Today perf={perf} items={headline} more={Math.max(0, d.attention.length - headline.length)} />
       </div>
 
       <SectionTitle>Needs your attention</SectionTitle>

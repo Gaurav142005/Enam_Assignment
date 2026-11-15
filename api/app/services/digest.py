@@ -15,7 +15,7 @@ from pathlib import Path
 from app import state
 from app.ingest import eod, events, store
 from app.models import AlertRules, Category, Digest, PushItem, ResultsCut, RoutineGroup, Upcoming
-from app.services import companies, filing_people, graph
+from app.services import companies, filing_people, graph, materiality
 from app.services.priority import bucket, move_score, score
 from app.services.taxonomy import BASE_WEIGHT, LABEL
 
@@ -110,13 +110,19 @@ def _live_announcements(since: datetime, rules: AlertRules) -> list[PushItem]:
             title, summary = _people_title(people) or headline(r["text"], r["nse_desc"]), html.unescape(r["summary"]) if r["summary"] else None
             if summary and not people and title == r["nse_desc"]:
                 title, summary = summary.rstrip("."), None  # the model read the filing; lead with what happened
+            filed = datetime.fromisoformat(r["filed_at"])
+            reaction = _reaction(con, r["ticker"], filed)
+            role = people[0].positions[0].title if people and people[0].positions else None
+            sensitive, _why = materiality.assess(cat, f"{title} {summary or ''} {r['text']}", role, reaction)
+            if not sensitive and not routine:
+                s = min(s, 55.0)  # can't move the price: stays visible, never "critical" or "high"
             items.append(
                 PushItem(
                     id=r["id"], kind="announcement", ticker=r["ticker"], company_name=name, category=cat,
                     priority=bucket(s), score=s,
                     title=title, summary=summary,
-                    at=datetime.fromisoformat(r["filed_at"]), source_url=r["attachment_url"], results=results,
-                    person=people[0] if people else None, network=network,
+                    at=filed, source_url=r["attachment_url"], results=results,
+                    person=people[0] if people else None, network=network, price_sensitive=sensitive, reaction_pct=reaction,
                 )
             )
     from app.services import thesis
@@ -125,6 +131,17 @@ def _live_announcements(since: datetime, rules: AlertRules) -> list[PushItem]:
     if verdicts:
         items = [i.model_copy(update={"thesis": verdicts.get(i.id)}) for i in items]
     return _dedupe(items)
+
+
+def _reaction(con, ticker: str, when: datetime) -> float | None:
+    """Close-to-close move on the first session that could react (a filing after 15:30 IST counts for the next one)."""
+    local = when.astimezone(IST)
+    op = ">" if local.hour * 60 + local.minute >= 15 * 60 + 30 else ">="
+    s = con.execute(f"SELECT date, close FROM eod WHERE ticker=? AND date {op} ? ORDER BY date LIMIT 1", (ticker, local.date().isoformat())).fetchone()
+    if not s:
+        return None
+    prev = con.execute("SELECT close FROM eod WHERE ticker=? AND date < ? ORDER BY date DESC LIMIT 1", (ticker, s["date"])).fetchone()
+    return round((s["close"] / prev["close"] - 1) * 100, 1) if prev and prev["close"] else None
 
 
 def _dedupe(items: list[PushItem]) -> list[PushItem]:

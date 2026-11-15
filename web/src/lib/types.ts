@@ -122,6 +122,8 @@ export interface PushItem {
   context: string | null;
   context_url: string | null;
   thesis: ThesisCheck | null;
+  price_sensitive: boolean;
+  reaction_pct: number | null;
 }
 
 export interface RoutineGroup {

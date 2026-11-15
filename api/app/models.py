@@ -160,6 +160,8 @@ class PushItem(BaseModel):
     context: str | None = None  # moves: the likely reason (a filing or headline from the same session)
     context_url: str | None = None
     thesis: ThesisCheck | None = None  # does this filing support or challenge your thesis?
+    price_sensitive: bool = True  # can it plausibly move the share price? (services/materiality.py)
+    reaction_pct: float | None = None  # how the stock moved in the session the market first saw it
 
 
 class RoutineGroup(BaseModel):
