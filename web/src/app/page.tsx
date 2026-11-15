@@ -20,12 +20,24 @@ function today(): string {
   return new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", timeZone: "Asia/Kolkata" });
 }
 
+/** "in the last 7 days", or "since Friday" when the 24h window stretched over a weekend. */
+function span(d: Digest, hours: number): string {
+  if (hours === 24 && d.since && Date.now() - Date.parse(d.since) > 26 * 3600e3) {
+    return `since ${new Date(d.since).toLocaleDateString("en-IN", { weekday: "long", timeZone: "Asia/Kolkata" })}`;
+  }
+  return `in the last ${windowLabel(hours)}`;
+}
+
 /** One sentence that names what matters, so the investor knows before swiping. */
 function lede(d: Digest, hours: number): string {
   const moving = d.attention.filter((i) => i.price_sensitive);
-  if (!moving.length) return d.attention.length ? `Nothing likely to move a price in the last ${windowLabel(hours)}.` : `Nothing material in the last ${windowLabel(hours)}.`;
+  if (!moving.length) return d.attention.length ? `Nothing likely to move a price ${span(d, hours)}.` : `Nothing material ${span(d, hours)}.`;
   const names = [...new Set(moving.map((i) => i.ticker))];
   const head = names.slice(0, 3).join(", ");
+  if (hours > 72 && moving.length > 6) {
+    // Over a week or a month a raw count stops meaning anything: lead with the biggest, then give the total.
+    return `Biggest: ${head}. ${moving.length} filings could move prices ${span(d, hours)}.`;
+  }
   return `${moving.length} that could move prices: ${head}${names.length > 3 ? ` and ${names.length - 3} more` : ""}.`;
 }
 
@@ -113,7 +125,7 @@ export default async function BriefPage({ searchParams }: { searchParams: Promis
           )}
         </>
       ) : (
-        <Empty>Nothing material in the last {windowLabel(hours)}. Widen the window to look further back.</Empty>
+        <Empty>Nothing material {span(d, hours)}. Widen the window to look further back.</Empty>
       )}
 
       {d.upcoming.length > 0 && (

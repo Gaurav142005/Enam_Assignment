@@ -32,6 +32,12 @@ def test_other_categories():
     assert not ok("insider_trading", "Trading Plan under PIT")
 
 
-def test_the_market_reaction_wins():
-    assert ok("management_change", "", role="CEO (Helicopter Complex)", reaction_pct=-4.2)
-    assert not ok("management_change", "", role="CEO (Helicopter Complex)", reaction_pct=1.1)
+def test_the_market_reaction_decides_only_unclear_cases():
+    # A general announcement the rules can't call: a big move beyond the market makes it price-sensitive.
+    assert ok("press_release", "Company update on operations", reaction_pct=-4.2)
+    assert not ok("press_release", "Company update on operations", reaction_pct=1.1)
+    # A clear "no" stays no, whatever the stock did that day.
+    assert not ok("management_change", "", role="CEO (Helicopter Complex)", reaction_pct=-4.2)
+    assert not ok("management_change", "", role="Chief Information Security Officer", reaction_pct=-3.3)
+    assert not ok("press_release", "Six researchers win the Infosys Prize 2026", reaction_pct=3.4)
+    assert not ok("M&A", "Incorporation of a wholly owned subsidiary in Vietnam", reaction_pct=3.9)

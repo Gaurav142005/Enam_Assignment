@@ -18,6 +18,11 @@ export default function AddHoldingPage() {
   const [results, setResults] = useState<Company[]>([]);
   const [pick, setPick] = useState<Company | null>(null);
   const [close, setClose] = useState<number | null>(null);
+  const [suggested, setSuggested] = useState<Company[]>([]);
+
+  useEffect(() => {
+    api<Company[]>("/portfolio/watchlist").then(setSuggested).catch(() => setSuggested([]));
+  }, []);
 
   useEffect(() => {
     if (pick || q.trim().length < 2) return setResults([]);
@@ -48,9 +53,10 @@ export default function AddHoldingPage() {
             <Search size={18} className="shrink-0 text-muted" />
             <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Ticker or company name" aria-label="Search companies" className="w-full bg-transparent text-[15px] outline-none placeholder:text-muted" />
           </label>
-          {results.length > 0 && (
-            <ul className="card mt-3 divide-y divide-line">
-              {results.map((c) => (
+          {q.trim().length < 2 && suggested.length > 0 && <p className="eyebrow mb-2 mt-5">From your research list</p>}
+          {(results.length > 0 || (q.trim().length < 2 && suggested.length > 0)) && (
+            <ul className={`card divide-y divide-line ${q.trim().length < 2 ? "" : "mt-3"}`}>
+              {(q.trim().length < 2 ? suggested : results).map((c) => (
                 <li key={c.ticker}>
                   <button onClick={() => setPick(c)} disabled={c.in_portfolio} className="flex w-full items-center gap-3 px-4 py-3 text-left active:bg-line/40 disabled:opacity-50">
                     <TickerBadge ticker={c.ticker} size={32} />

@@ -150,6 +150,7 @@ export interface Upcoming {
 
 export interface Digest {
   window_hours: number;
+  since?: string | null;
   generated_at: string;
   attention: PushItem[];
   moves: PushItem[];

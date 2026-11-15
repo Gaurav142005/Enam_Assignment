@@ -13,6 +13,8 @@ def search(q: str = Query("", max_length=40)) -> list[Company]:
 
 @router.get("/research/{ticker}", response_model=ResearchReport)
 def get_research(ticker: str) -> ResearchReport:
+    if not companies.listed(ticker):
+        raise HTTPException(404, f"{ticker.upper()} isn't listed on NSE")
     return research.build(ticker)
 
 
@@ -24,6 +26,8 @@ def recent_deep_research() -> list[dict]:
 @router.post("/deep/{ticker}", response_model=ResearchJob)
 def start_deep_research(ticker: str, refresh: bool = False) -> ResearchJob:
     """Starts (or returns a fresh cached) deep-research run. Poll /pull/deep/jobs/{id}."""
+    if not companies.listed(ticker):
+        raise HTTPException(404, f"{ticker.upper()} isn't listed on NSE")
     return deep_research.start(ticker, refresh=refresh)
 
 

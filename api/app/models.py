@@ -188,6 +188,7 @@ class Upcoming(BaseModel):
 
 class Digest(BaseModel):
     window_hours: int
+    since: datetime | None = None  # the window's real start (24h stretches back to Friday over a weekend)
     generated_at: datetime
     attention: list[PushItem]  # ranked: what earns the investor's time
     moves: list[PushItem]  # EOD price/volume triggers

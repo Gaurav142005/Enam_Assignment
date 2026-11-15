@@ -85,6 +85,16 @@ export function BriefCard({ item }: { item: PushItem }) {
           <h3 className={`text-base font-semibold leading-snug ${clamp}`}>{title}</h3>
           {item.results && <ResultsLine item={item} />}
           {text && <p className={`text-[14px] leading-relaxed text-muted ${clamp}`}>{text}</p>}
+          {item.category === "results" && !item.results && !text && (
+            <p className="text-[14px] leading-relaxed text-muted">
+              The numbers aren&apos;t compiled yet.{" "}
+              {item.source_url && (
+                <a href={item.source_url} target="_blank" rel="noopener noreferrer" className="font-medium text-accent">
+                  Read the filing
+                </a>
+              )}
+            </p>
+          )}
         </div>
 
         {/* The extra detail slides open in place (grid 0fr → 1fr animates to the content's real height). */}

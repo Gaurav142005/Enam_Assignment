@@ -3,7 +3,9 @@
 Price-sensitive: results; company-level CEO / MD / CFO / Chair changes; real deals; equity raises and buybacks;
 rating upgrades or downgrades; capex; pledges; promoter dealing; big orders; legal actions; bonus or split.
 Not: divisional or independent-director appointments, rating reaffirmations, subsidiary paperwork, compliance reports,
-trading plans, product launches and awards. Either way, a ≥3% move in the session the market saw it wins.
+trading plans, product launches and awards. When the rules can't tell (a general announcement), a ≥3% move beyond the
+Nifty in the session the market saw it decides. A clear "no" stays no: the stock moving that day doesn't make a CSR
+award or a compliance-officer change price-sensitive.
 """
 
 from __future__ import annotations
@@ -26,9 +28,18 @@ _SOFT_PR = re.compile(r"\b(launch\w*|prize|awards?\b(?! of (?:a |an |the )?(?:co
 
 
 def assess(category: Category | None, text: str, role: str | None = None, reaction_pct: float | None = None) -> tuple[bool, str]:
-    """(price_sensitive, short reason). `text` is everything we know: title, summary, the exchange line."""
-    if reaction_pct is not None and abs(reaction_pct) >= REACTION_PCT:
-        return True, f"stock moved {reaction_pct:+.1f}% that session"
+    """(price_sensitive, short reason). `text` is everything we know: title, summary, the exchange line.
+    `reaction_pct` is the move beyond the Nifty in the session that could react."""
+    sensitive, why = _rules(category, text, role)
+    if not sensitive and why in _UNSURE and reaction_pct is not None and abs(reaction_pct) >= REACTION_PCT:
+        return True, f"stock moved {reaction_pct:+.1f}% beyond the market that session"
+    return sensitive, why
+
+
+_UNSURE = {"general announcement", "routine"}
+
+
+def _rules(category: Category | None, text: str, role: str | None) -> tuple[bool, str]:
     c, t = category or "unclassified", text or ""
     if c == "results":
         return True, "results"

@@ -21,12 +21,16 @@ function niceTicks(min: number, max: number, n = 3): number[] {
   return out;
 }
 
-function tickLabel(v: number, unit: string): string {
+/** One unit per axis, chosen from its largest tick, so labels never mix "1.0L" with "50K". Values are ₹ crore. */
+function tickLabel(v: number, unit: string, top: number): string {
   if (unit === "%") return `${v}%`;
   if (unit === "x") return `${v}x`;
   if (unit === "days") return `${v}d`;
-  const a = Math.abs(v);
-  return a >= 1e5 ? `${(v / 1e5).toFixed(a >= 1e6 ? 0 : 1)}L` : a >= 1e3 ? `${(v / 1e3).toFixed(a >= 1e4 ? 0 : 1)}K` : `${v}`;
+  if (Math.abs(top) >= 1e5) {
+    const l = v / 1e5;
+    return `${Number.isInteger(l) || Math.abs(top) >= 1e6 ? l.toFixed(0) : l.toFixed(1)}L`;
+  }
+  return v.toLocaleString("en-IN", { maximumFractionDigits: 0 });
 }
 
 /** Readout above a chart: values lead (strong), series names follow; defaults to the latest period. */
@@ -79,7 +83,7 @@ function Axes({ ticks, y, unit, labels, x, annual }: { ticks: number[]; y: (v: n
         <g key={t}>
           <line x1={PAD.l} x2={W - PAD.r} y1={y(t)} y2={y(t)} stroke="rgb(var(--line))" strokeWidth={1} />
           <text x={W - PAD.r + 6} y={y(t) + 3.5} fontSize={10} fill="rgb(var(--muted))" className="num">
-            {tickLabel(t, unit)}
+            {tickLabel(t, unit, Math.max(...ticks.map(Math.abs)))}
           </text>
         </g>
       ))}

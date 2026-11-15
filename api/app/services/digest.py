@@ -13,7 +13,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from app import state
-from app.ingest import eod, events, store
+from app.ingest import enrich, eod, events, store
 from app.models import AlertRules, Category, Digest, PushItem, ResultsCut, RoutineGroup, Upcoming
 from app.services import companies, filing_people, graph, materiality, titles
 from app.services.priority import bucket, move_score, score
@@ -101,8 +101,12 @@ def _live_announcements(since: datetime, rules: AlertRules) -> list[PushItem]:
             cat: Category = r["category"]
             name = names[r["ticker"]].name if r["ticker"] in names else r["ticker"]
             people = filing_people.for_announcement(con, r["id"], name) if cat == "management_change" else []
-            results = ResultsCut.model_validate(extra["results"]) if extra.get("results") else None
             routine = bool(extra.get("routine"))
+            cut = extra.get("results")
+            if not cut and cat == "results" and not routine:
+                # Ingest ran before the quarter reached the financials; they may have arrived since.
+                cut = enrich.results_cut(con, r["ticker"], r["filed_at"], r["text"])
+            results = ResultsCut.model_validate(cut) if cut else None
             network = [] if routine else _network_for(cat, r["ticker"], people)
             s = score(cat, rules, has_network=bool(network), has_enrichment=bool(people or results))
             if routine:
@@ -134,14 +138,24 @@ def _live_announcements(since: datetime, rules: AlertRules) -> list[PushItem]:
 
 
 def _reaction(con, ticker: str, when: datetime) -> float | None:
-    """Close-to-close move on the first session that could react (a filing after 15:30 IST counts for the next one)."""
+    """Move beyond the Nifty's on the first session that could react (a filing after 15:30 IST counts for the next one).
+    Excess, not raw: on a day the whole market falls 2%, a filing shouldn't get the credit."""
     local = when.astimezone(IST)
     op = ">" if local.hour * 60 + local.minute >= 15 * 60 + 30 else ">="
-    s = con.execute(f"SELECT date, close FROM eod WHERE ticker=? AND date {op} ? ORDER BY date LIMIT 1", (ticker, local.date().isoformat())).fetchone()
-    if not s:
+
+    def move(t: str) -> tuple[str, float] | None:
+        s = con.execute(f"SELECT date, close FROM eod WHERE ticker=? AND date {op} ? ORDER BY date LIMIT 1", (t, local.date().isoformat())).fetchone()
+        if not s:
+            return None
+        prev = con.execute("SELECT close FROM eod WHERE ticker=? AND date < ? ORDER BY date DESC LIMIT 1", (t, s["date"])).fetchone()
+        return (s["date"], (s["close"] / prev["close"] - 1) * 100) if prev and prev["close"] else None
+
+    stock = move(ticker)
+    if not stock:
         return None
-    prev = con.execute("SELECT close FROM eod WHERE ticker=? AND date < ? ORDER BY date DESC LIMIT 1", (ticker, s["date"])).fetchone()
-    return round((s["close"] / prev["close"] - 1) * 100, 1) if prev and prev["close"] else None
+    index = move("NIFTY50")
+    market = index[1] if index and index[0] == stock[0] else 0.0
+    return round(stock[1] - market, 1)
 
 
 def _dedupe(items: list[PushItem]) -> list[PushItem]:
@@ -263,9 +277,22 @@ def _fixture_moves(now: datetime, rules: AlertRules) -> list[PushItem]:
 # ── assemble ───────────────────────────────────────────────────────────────
 
 
+def window_start(now: datetime, hours: int) -> datetime:
+    """The Brief's start. "24h" means the last session: if 24h back lands on a weekend, reach back to Friday's open,
+    so opening FINN on a Sunday shows Friday's filings instead of an empty page."""
+    since = now - timedelta(hours=hours)
+    if hours != 24:
+        return since
+    s = since.astimezone(IST)
+    if s.weekday() >= 5:
+        friday = (s - timedelta(days=s.weekday() - 4)).replace(hour=9, minute=0, second=0, microsecond=0)
+        return friday.astimezone(timezone.utc)
+    return since
+
+
 def build(window_hours: int, rules: AlertRules) -> Digest:
     now = datetime.now(timezone.utc)
-    since = now - timedelta(hours=window_hours)
+    since = window_start(now, window_hours)
     live = store.has_data()
     seen_raw = state.get("brief_seen_at") if live else None
     seen = datetime.fromisoformat(seen_raw) if seen_raw else None
@@ -286,6 +313,7 @@ def build(window_hours: int, rules: AlertRules) -> Digest:
             groups.setdefault(i.category or "unclassified", []).append(i)
     return Digest(
         window_hours=window_hours,
+        since=since,
         generated_at=now,
         attention=attention,
         moves=moves,

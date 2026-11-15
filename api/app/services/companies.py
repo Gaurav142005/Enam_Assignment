@@ -72,6 +72,20 @@ def resolve(ticker: str) -> Company:
     return known().get(t) or Company(ticker=t, name=t, sector="—")
 
 
+def listed(ticker: str) -> bool:
+    """Is this an NSE equity (or one of ours)? Fails open if the NSE list can't be loaded."""
+    from app.ingest.people_sources import nse_listing
+
+    t = ticker.upper().removesuffix(".NS")
+    if t in known():
+        return True
+    try:
+        symbols = {sym for sym, _ in nse_listing()}
+    except Exception:
+        return True
+    return not symbols or t in symbols
+
+
 def search(q: str, limit: int = 10) -> list[Company]:
     """Any NSE-listed company by ticker or name. Ranking: exact ticker → ticker prefix → name word-prefix → substring."""
     from app.ingest.people_sources import nse_listing
@@ -100,7 +114,7 @@ def search(q: str, limit: int = 10) -> list[Company]:
     hits = [(r, c) for c in pool.values() if (r := rank(c)) is not None]
     hits.sort(key=lambda x: (x[0], x[1].ticker not in mine, len(x[1].name)))
     out = [c for _, c in hits[:limit]]
-    if not out and re.fullmatch(r"[A-Za-z0-9&-]{2,20}", q):
+    if not out and re.fullmatch(r"[A-Za-z0-9&-]{2,20}", q) and listed(q):
         out = [Company(ticker=q.upper(), name=f"Research {q.upper()} on NSE", sector="—")]
     return out
 

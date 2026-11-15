@@ -172,8 +172,10 @@ export default async function NetworkPage({ searchParams }: { searchParams: Prom
       {themes.length > 0 && (
         <>
           <SectionTitle>Expertise map</SectionTitle>
-          <div className="flex flex-wrap gap-2 px-4">
-            {themes.map((t) => {
+          {(() => {
+            // Deepest benches first; a long tail of one-person topics hides behind "Show all".
+            const ranked = [...themes].sort((a, b) => b.people.length - a.people.length || a.theme.localeCompare(b.theme));
+            const chip = (t: ThemeGroup) => {
               const on = theme === t.theme;
               return (
                 <Link
@@ -187,8 +189,29 @@ export default async function NetworkPage({ searchParams }: { searchParams: Prom
                   <span className={`num text-xs ${on ? "text-bg/70" : "text-muted"}`}>{t.people.length}</span>
                 </Link>
               );
-            })}
-          </div>
+            };
+            const head = ranked.slice(0, 8);
+            const tail = ranked.slice(8).filter((t) => t.theme !== theme);
+            const picked = ranked.slice(8).find((t) => t.theme === theme);
+            return (
+              <div className="px-4">
+                <div className="flex flex-wrap gap-2">
+                  {head.map(chip)}
+                  {picked && chip(picked)}
+                </div>
+                {tail.length > 0 && (
+                  <details className="group mt-2">
+                    <summary className="flex cursor-pointer items-center gap-1 text-xs font-medium text-accent">
+                      <span className="group-open:hidden">Show all {ranked.length} topics</span>
+                      <span className="hidden group-open:inline">Show fewer</span>
+                      <ChevronDown size={14} className="transition-transform group-open:rotate-180" />
+                    </summary>
+                    <div className="mt-2 flex flex-wrap gap-2">{tail.map(chip)}</div>
+                  </details>
+                )}
+              </div>
+            );
+          })()}
         </>
       )}
 

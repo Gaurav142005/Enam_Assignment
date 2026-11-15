@@ -106,8 +106,12 @@ def recent(limit: int = 8) -> list[dict]:
     out = []
     for r in rows:
         res = json.loads(r["result"] or "{}")
+        summary = res.get("summary")
+        if not summary and any("Synthesis failed" in n for n in res.get("notes", [])):
+            # The data was gathered but the write-up step hit a busy model: say so, don't show a bare count.
+            summary = f"Partial report: {len(res.get('movements', []))} movements gathered, but the analysis didn't finish. Open it and tap Refresh."
         out.append({"ticker": r["ticker"], "name": res.get("name") or r["ticker"], "finished_at": r["finished_at"],
-                    "summary": res.get("summary"), "movements": len(res.get("movements", []))})
+                    "summary": summary, "movements": len(res.get("movements", []))})
     return out
 
 

@@ -8,7 +8,8 @@ import { NetworkLine } from "@/components/NetworkLine";
 import { PageHeader, SectionTitle } from "@/components/PageHeader";
 import { PriceChart } from "@/components/PriceChart";
 import { Empty } from "@/components/States";
-import { api } from "@/lib/api";
+import { api, ApiError } from "@/lib/api";
+import { notFound } from "next/navigation";
 import { ago, inr, pct, rupees, tone } from "@/lib/format";
 import type { CompanyPerson, PriceHistory, ResearchJob, Fundamentals, Holding, NewsItem, ResearchReport, Series, Signal } from "@/lib/types";
 import { Avatar } from "@/components/Avatar";
@@ -29,7 +30,10 @@ export default async function CompanyPage({ params, searchParams }: { params: Pr
   const tab: Tab = TABS.some((t) => t.key === raw) ? (raw as Tab) : "overview";
   const enc = encodeURIComponent(ticker);
   const [r, news, leaders, deep, px] = await Promise.all([
-    api<ResearchReport>(`/pull/research/${enc}`),
+    api<ResearchReport>(`/pull/research/${enc}`).catch((e) => {
+      if (e instanceof ApiError && e.status === 404) notFound();
+      throw e;
+    }),
     tab === "news" ? api<NewsItem[]>(`/news/${enc}`).catch(() => [] as NewsItem[]) : Promise.resolve([] as NewsItem[]),
     tab === "people" ? api<CompanyPerson[]>(`/network/companies/${enc}/people`).catch(() => [] as CompanyPerson[]) : Promise.resolve([] as CompanyPerson[]),
     tab === "research" ? api<ResearchJob>(`/pull/deep/${enc}/latest`).catch(() => null) : Promise.resolve(null),

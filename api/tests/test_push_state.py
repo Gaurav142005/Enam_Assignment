@@ -55,3 +55,17 @@ def test_move_context_prefers_a_material_filing():
         none, _ = digest._move_context(con, "INFY", close)
     assert ctx.startswith("Filed that session: Financial results") and url == "u"
     assert none == "No filing or headline that session"
+
+
+def test_24h_window_reaches_back_to_friday_on_weekends():
+    from datetime import datetime, timedelta
+
+    from app.services.digest import IST, window_start
+
+    sunday = datetime(2026, 11, 15, 12, 0, tzinfo=IST)
+    assert window_start(sunday, 24).astimezone(IST) == datetime(2026, 11, 13, 9, 0, tzinfo=IST)
+    monday = datetime(2026, 11, 16, 8, 0, tzinfo=IST)
+    assert window_start(monday, 24).astimezone(IST).weekday() == 4
+    wednesday = datetime(2026, 11, 18, 12, 0, tzinfo=IST)
+    assert window_start(wednesday, 24) == wednesday - timedelta(hours=24)
+    assert window_start(sunday, 168) == sunday - timedelta(hours=168)

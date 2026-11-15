@@ -1,7 +1,11 @@
 // Server components call the API directly; the browser goes through the /api rewrite (next.config.ts).
 const SERVER_BASE = process.env.API_URL ?? "http://localhost:8000";
 
-export class ApiError extends Error {}
+export class ApiError extends Error {
+  constructor(message: string, readonly status?: number) {
+    super(message);
+  }
+}
 
 export async function api<T>(path: string): Promise<T> {
   const base = typeof window === "undefined" ? SERVER_BASE : "/api";
@@ -11,7 +15,7 @@ export async function api<T>(path: string): Promise<T> {
   } catch {
     throw new ApiError("FINN's backend isn't reachable. Start it with `make api`.");
   }
-  if (!res.ok) throw new ApiError(`${path} → ${res.status}`);
+  if (!res.ok) throw new ApiError(`${path} → ${res.status}`, res.status);
   return res.json() as Promise<T>;
 }
 

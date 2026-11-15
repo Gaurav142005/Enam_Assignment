@@ -111,9 +111,17 @@ _CHANGE = [("demise", "demise"), ("resign", "resigned"), ("retire", "retired"), 
            ("re-designat", "redesignated"), ("redesignat", "redesignated"), ("appoint", "appointed")]
 
 
+def tidy_role(role: str) -> str:
+    """'Whole-time Director (designated as Executive Director)' → 'Executive Director'; drop a bracket left open by a cut."""
+    role = re.sub(r"\b(?:[\w-]+ )?Director \(designated as ([^)]+)\)", r"\1", role, flags=re.I)
+    role = re.sub(r"\s*\((?:designated as\s*)?([^)]*)$", lambda m: f" {m.group(1)}" if m.group(1).strip() and "designated" not in m.group(0).lower() else "", role)
+    role = re.sub(r"\s*\(designated as\s*([^)]+)$", r" \1", role, flags=re.I)
+    return " ".join(role.split()).strip(" -–,")
+
+
 def _clean_role(role: str) -> str | None:
     role = re.split(r"\s+(?:of the (?:company|bank|board)|w\.?e\.?f|with effect|effective|from|for a term|subject to)\b", role, flags=re.I)[0]
-    role = " ".join(role.split()).strip(" -–")
+    role = tidy_role(" ".join(role.split()).strip(" -–"))
     return role or None
 
 
