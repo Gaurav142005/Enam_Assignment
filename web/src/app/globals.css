@@ -4,13 +4,14 @@
 
 /* Design tokens. One accent, semantic up/down, warm paper background. RGB triplets so Tailwind alpha works. */
 :root {
-  --bg: 246 245 241;
+  /* FINN: cool slate + indigo. Up/down and chart colours below are unchanged (validated for colour blindness). */
+  --bg: 243 245 250; /* #F3F5FA */
   --surface: 255 255 255;
-  --ink: 21 22 26;
-  --muted: 110 110 115;
-  --line: 230 227 220;
-  --accent: 43 89 195;
-  --accent-soft: 232 238 251;
+  --ink: 15 23 42; /* #0F172A */
+  --muted: 91 100 120; /* #5B6478, 5.9:1 */
+  --line: 224 229 240;
+  --accent: 79 70 229; /* #4F46E5 indigo, 6.3:1 */
+  --accent-soft: 236 237 254;
   --up: 11 138 122; /* #0B8A7A — marks */
   --down: 210 70 42; /* #D2462A — marks */
   --up-ink: 8 117 101; /* #087565 — text, 5.6:1 */
@@ -25,13 +26,13 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: 14 15 18;
-    --surface: 23 25 29;
-    --ink: 237 237 239;
-    --muted: 154 154 162;
-    --line: 38 40 46;
-    --accent: 124 156 245;
-    --accent-soft: 30 39 66;
+    --bg: 11 16 32; /* #0B1020 navy */
+    --surface: 19 26 46; /* #131A2E */
+    --ink: 232 236 245;
+    --muted: 148 158 182; /* 6.4:1 */
+    --line: 36 45 70;
+    --accent: 145 146 250; /* #9192FA, 6.3:1 */
+    --accent-soft: 33 36 80;
     --up: 23 160 143; /* #17A08F */
     --down: 228 96 47; /* #E4602F */
     --up-ink: 23 160 143;

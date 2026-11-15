@@ -48,7 +48,7 @@ export default async function CompanyPage({ params, searchParams }: { params: Pr
           replace
           scroll={false}
           aria-current={tab === t.key ? "page" : undefined}
-          className={`-mb-px shrink-0 border-b-2 px-3 pb-2 pt-1 text-[15px] ${tab === t.key ? "border-ink font-semibold text-ink" : "border-transparent text-muted"}`}
+          className={`-mb-px shrink-0 border-b-2 px-3 pb-2 pt-1 text-[15px] ${tab === t.key ? "border-accent font-semibold text-accent" : "border-transparent text-muted"}`}
         >
           {t.label}
         </Link>

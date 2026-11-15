@@ -1,4 +1,6 @@
-/** Page title in the display serif with an accent full stop; an optional tagline; and a slot for tabs that stick with it. */
+import { Logo } from "./Logo";
+
+/** Top-level pages get the FINN logo; detail pages (compact) have a back link instead. */
 export function PageHeader({
   title,
   sub,
@@ -6,7 +8,6 @@ export function PageHeader({
   compact,
   eyebrow,
   below,
-  dot = true,
 }: {
   title: string;
   sub?: React.ReactNode;
@@ -14,21 +15,23 @@ export function PageHeader({
   compact?: boolean;
   eyebrow?: string;
   below?: React.ReactNode;
-  dot?: boolean;
 }) {
-  const top = compact ? "pt-1" : "pt-[calc(env(safe-area-inset-top)+1.1rem)]";
+  const top = compact ? "pt-1" : "pt-[calc(env(safe-area-inset-top)+0.75rem)]";
   return (
     <header className={`sticky top-0 z-10 bg-bg/90 px-4 pb-3 ${top} backdrop-blur-md`}>
+      {!compact && (
+        <div className="mb-3 flex items-center justify-between">
+          <Logo />
+          {right}
+        </div>
+      )}
       <div className="flex items-end justify-between gap-3">
         <div className="min-w-0">
           {eyebrow && <p className="eyebrow mb-1">{eyebrow}</p>}
-          <h1 className="font-display text-[32px] font-medium leading-[1.05] tracking-tight">
-            {title}
-            {dot && <span className="text-accent">.</span>}
-          </h1>
-          {sub && <p className="mt-1.5 font-display text-[17px] leading-snug text-ink/80">{sub}</p>}
+          <h1 className="font-display text-[28px] font-semibold leading-tight tracking-tight">{title}</h1>
+          {sub && <p className="mt-1 text-[15px] leading-snug text-muted">{sub}</p>}
         </div>
-        {right}
+        {compact && right}
       </div>
       {below && <div className="mt-3">{below}</div>}
     </header>
@@ -38,7 +41,7 @@ export function PageHeader({
 export function SectionTitle({ children, right }: { children: React.ReactNode; right?: React.ReactNode }) {
   return (
     <div className="mb-2.5 mt-7 flex items-baseline justify-between px-4">
-      <h2 className="eyebrow text-accent">{children}</h2>
+      <h2 className="font-display text-[17px] font-semibold tracking-tight">{children}</h2>
       {right}
     </div>
   );
