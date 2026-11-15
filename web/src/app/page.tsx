@@ -131,7 +131,7 @@ export default async function BriefPage({ searchParams }: { searchParams: Promis
 
       {d.routine.length > 0 && (
         <>
-          <SectionTitle right={<span className="num text-xs text-muted">{routineCount}</span>}>Routine, collapsed</SectionTitle>
+          <SectionTitle right={<span className="num text-xs text-muted">{routineCount}</span>}>Routine</SectionTitle>
           <div className="card mx-4 divide-y divide-line">
             {d.routine.map((g) => {
               const Icon = CATEGORY_ICON[g.category];

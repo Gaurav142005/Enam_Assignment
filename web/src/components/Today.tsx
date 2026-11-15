@@ -30,6 +30,7 @@ export function Today({ perf, items, more }: { perf: PortfolioPerformance | null
 
   return (
     <section className="card mx-4 overflow-hidden" aria-label="Today at a glance">
+      <div className="bg-gradient-to-br from-tint-peach via-tint-peach/40 to-transparent">
       {perf && (
         <div className="p-4 pb-3">
           <p className="eyebrow">Last session{perf.as_of ? ` · ${shortDate(perf.as_of)}` : ""}</p>
@@ -65,6 +66,7 @@ export function Today({ perf, items, more }: { perf: PortfolioPerformance | null
         </div>
       )}
 
+      </div>
       {items.length > 0 && (
         <ol className="divide-y divide-line border-t border-line">
           {items.map((i) => (

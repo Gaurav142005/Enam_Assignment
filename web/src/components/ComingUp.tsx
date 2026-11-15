@@ -28,7 +28,7 @@ export function ComingUp({ items }: { items: Upcoming[] }) {
   const days = new Map<string, Upcoming[]>();
   for (const u of items) days.set(u.date, [...(days.get(u.date) ?? []), u]);
   return (
-    <ol className="card mx-4 divide-y divide-line">
+    <ol className="card mx-4 divide-y divide-line overflow-hidden bg-gradient-to-b from-tint-mint/70 to-surface">
       {[...days.entries()].map(([day, list]) => (
         <li key={day} className="flex gap-3 px-4 py-3">
           <span className="w-[4.5rem] shrink-0 pt-px text-xs font-semibold">{dayLabel(day)}</span>

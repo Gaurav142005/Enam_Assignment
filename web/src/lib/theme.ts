@@ -26,7 +26,7 @@ export function applyTheme(choice: ThemeChoice): void {
   if (choice === "system") root.removeAttribute("data-theme");
   else root.setAttribute("data-theme", choice);
   const meta = document.querySelector('meta[name="theme-color"]:not([media])') ?? Object.assign(document.createElement("meta"), { name: "theme-color" });
-  meta.setAttribute("content", effectiveTheme(choice) === "dark" ? "#0B1020" : "#F3F5FA");
+  meta.setAttribute("content", effectiveTheme(choice) === "dark" ? "#0B1020" : "#FAF6EF");
   if (!meta.parentNode) document.head.appendChild(meta);
   window.dispatchEvent(new Event(THEME_EVENT));
 }

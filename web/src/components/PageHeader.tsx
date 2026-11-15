@@ -45,7 +45,10 @@ export function PageHeader({
 export function SectionTitle({ children, right }: { children: React.ReactNode; right?: React.ReactNode }) {
   return (
     <div className="mb-2.5 mt-7 flex items-baseline justify-between px-4">
-      <h2 className="font-display text-[17px] font-semibold tracking-tight">{children}</h2>
+      <h2 className="flex items-center gap-2 font-display text-[17px] font-semibold tracking-tight">
+        <span className="h-4 w-1 rounded-full bg-marker" aria-hidden />
+        {children}
+      </h2>
       {right}
     </div>
   );
