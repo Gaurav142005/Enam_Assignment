@@ -2,7 +2,7 @@
 
 import { use, useCallback, useEffect, useRef, useState } from "react";
 import {
-  Activity, ArrowUpRight, BarChart3, Check, ChevronDown, CircleAlert, CircleDashed, Loader2, Minus, PieChart, RefreshCw, TrendingDown,
+  Activity, ArrowUpRight, BarChart3, Check, ChevronRight, CircleAlert, CircleDashed, Loader2, Minus, PieChart, RefreshCw, TrendingDown,
   TrendingUp, UserRound,
 } from "lucide-react";
 import { BackLink } from "@/components/BackLink";
@@ -58,6 +58,8 @@ export default function ResearchPage({ params }: { params: Promise<{ ticker: str
   }, [run]);
 
   const busy = !job || job.status === "queued" || job.status === "running";
+  const [tab, setTab] = useState<Tab>("summary");
+  const report = job?.status === "done" ? job.result : null;
   useEffect(() => {
     if (!busy) return;
     const t = setInterval(() => setElapsed((s) => s + 1), 1000);
@@ -69,7 +71,13 @@ export default function ResearchPage({ params }: { params: Promise<{ ticker: str
       <div className="px-4">
         <BackLink />
       </div>
-      <PageHeader compact eyebrow="Deep research" title={ticker.toUpperCase()} sub={job?.result?.name ?? "Primary sources only: filings, transcripts, decks, annual report"} />
+      <PageHeader
+        compact
+        eyebrow="Deep research"
+        title={ticker.toUpperCase()}
+        sub={job?.result?.name ?? "Primary sources only: filings, transcripts, decks, annual report"}
+        below={report ? <Tabs r={report} tab={tab} onTab={setTab} /> : undefined}
+      />
       {error && <p className="mx-4 text-sm text-down-ink">{error}</p>}
       {job && busy && <Progress job={job} elapsed={elapsed} />}
       {job?.status === "error" && (
@@ -81,7 +89,7 @@ export default function ResearchPage({ params }: { params: Promise<{ ticker: str
           </button>
         </div>
       )}
-      {job?.status === "done" && job.result && <Report r={job.result} onRefresh={() => run(true)} />}
+      {report && <Report r={report} tab={tab} onTab={setTab} onRefresh={() => run(true)} />}
     </main>
   );
 }
@@ -143,18 +151,54 @@ function Cites({ cites, sources }: { cites: Cite[]; sources: Map<string, SourceD
   );
 }
 
-function Section({ title, count, open = true, children }: { title: string; count?: number; open?: boolean; children: React.ReactNode }) {
+function Panel({ title, count, children }: { title?: string; count?: number; children: React.ReactNode }) {
   return (
-    <details open={open} className="card group mx-4 mt-3">
-      <summary className="flex cursor-pointer items-center justify-between p-4">
-        <span className="text-[15px] font-semibold">
+    <section className="card mx-4 mt-3 p-4">
+      {title && (
+        <h2 className="mb-2 text-[15px] font-semibold">
           {title}
           {count !== undefined && <span className="num ml-2 text-xs font-normal text-muted">{count}</span>}
-        </span>
-        <ChevronDown size={18} className="text-muted transition-transform group-open:rotate-180" />
-      </summary>
-      <div className="px-4 pb-4">{children}</div>
-    </details>
+        </h2>
+      )}
+      {children}
+    </section>
+  );
+}
+
+type Tab = "summary" | "promises" | "timeline" | "views" | "questions" | "sources";
+
+function tabsFor(r: DeepResearch): { key: Tab; label: string; count?: number }[] {
+  const all: { key: Tab; label: string; count?: number; show: boolean }[] = [
+    { key: "summary", label: "Summary", show: true },
+    { key: "promises", label: "Promises", count: r.promised_vs_delivered.length, show: r.promised_vs_delivered.length + r.guidance.length > 0 },
+    { key: "timeline", label: "Timeline", count: r.movements.length, show: r.movements.length > 0 },
+    { key: "views", label: "Bull & bear", show: r.bull.length + r.bear.length + r.themes.length + r.risks.length > 0 },
+    { key: "questions", label: "Questions", count: r.questions.length, show: r.questions.length > 0 },
+    { key: "sources", label: "Sources", count: r.sources.length, show: true },
+  ];
+  return all.filter((t) => t.show);
+}
+
+/** Pinned under the header, like the company page: the report reads one section at a time instead of one long scroll. */
+function Tabs({ r, tab, onTab }: { r: DeepResearch; tab: Tab; onTab: (t: Tab) => void }) {
+  return (
+    <nav className="no-scrollbar -mx-4 flex gap-1 overflow-x-auto border-b border-line px-4" aria-label="Report sections" role="tablist">
+      {tabsFor(r).map((t) => (
+        <button
+          key={t.key}
+          role="tab"
+          aria-selected={tab === t.key}
+          onClick={() => {
+            onTab(t.key);
+            window.scrollTo({ top: 0 });
+          }}
+          className={`-mb-px shrink-0 border-b-2 px-3 pb-2 pt-1 text-[15px] transition-colors ${tab === t.key ? "border-accent font-semibold text-accent" : "border-transparent text-muted"}`}
+        >
+          {t.label}
+          {t.count !== undefined && t.count > 0 && <span className="num ml-1 text-xs font-normal opacity-70">{t.count}</span>}
+        </button>
+      ))}
+    </nav>
   );
 }
 
@@ -261,13 +305,20 @@ function Points({ items, sources }: { items: (CitedPoint | Theme)[]; sources: Ma
   );
 }
 
-function Report({ r, onRefresh }: { r: DeepResearch; onRefresh: () => void }) {
+function Report({ r, tab, onTab, onRefresh }: { r: DeepResearch; tab: Tab; onTab: (t: Tab) => void; onRefresh: () => void }) {
   const sources = new Map(r.sources.map((s) => [s.id, s]));
   const docs = r.sources.filter((s) => s.kind !== "filing");
   const filings = r.sources.filter((s) => s.kind === "filing");
+  const score = (["beat", "met", "missed", "unclear"] as const)
+    .map((v) => ({ v, n: r.promised_vs_delivered.filter((p) => p.verdict === v).length }))
+    .filter((x) => x.n > 0);
+  const jump = (t: Tab) => {
+    onTab(t);
+    window.scrollTo({ top: 0 });
+  };
   return (
     <>
-      <div className="mx-4 flex items-center justify-between text-[12px] text-muted">
+      <div className="mx-4 mt-3 flex items-center justify-between text-[12px] text-muted">
         <span>
           {ago(r.generated_at)} ago · {docs.length} documents · {r.stats.pages_read.toLocaleString("en-IN")} pages · {filings.length} filings
         </span>
@@ -276,113 +327,177 @@ function Report({ r, onRefresh }: { r: DeepResearch; onRefresh: () => void }) {
         </button>
       </div>
 
-      {r.summary && (
-        <section className="card mx-4 mt-3 p-4">
-          <p className="eyebrow mb-1.5">What changed</p>
-          <p className="text-[15px] leading-relaxed">{r.summary}</p>
-        </section>
-      )}
-
-      {r.promised_vs_delivered.length > 0 && (
-        <Section title="Promised vs delivered" count={r.promised_vs_delivered.length}>
-          <Promises items={r.promised_vs_delivered} sources={sources} />
-        </Section>
-      )}
-
-      <Section title="Major movements, last 12 months" count={r.movements.length}>
-        <Timeline items={r.movements} sources={sources} />
-      </Section>
-
-      {r.guidance.length > 0 && (
-        <Section title="Guidance on record" count={r.guidance.length}>
-          <ul className="divide-y divide-line">
-            {r.guidance.map((g, i) => (
-              <li key={i} className="py-2.5 text-[14px] leading-snug">
-                <p className="text-muted">
-                  {g.metric}
-                  {g.horizon && <span className="text-[12px]"> · {g.horizon}</span>}
-                </p>
-                <p className="mt-0.5 font-semibold">
-                  {g.value}
-                  <Cites cites={g.cites} sources={sources} />
-                </p>
-              </li>
-            ))}
-          </ul>
-        </Section>
-      )}
-
-      {(r.bull.length > 0 || r.bear.length > 0) && (
-        <Section title="Bull vs bear">
-          <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-up-ink">
-            <TrendingUp size={14} /> Bull case
-          </p>
-          <Points items={r.bull} sources={sources} />
-          <p className="mb-2 mt-4 flex items-center gap-1.5 text-xs font-semibold text-down-ink">
-            <TrendingDown size={14} /> Bear case
-          </p>
-          <Points items={r.bear} sources={sources} />
-        </Section>
-      )}
-
-      {r.themes.length > 0 && (
-        <Section title="Themes" count={r.themes.length} open={false}>
-          <Points items={r.themes} sources={sources} />
-        </Section>
-      )}
-      {r.risks.length > 0 && (
-        <Section title="Risks" count={r.risks.length} open={false}>
-          <Points items={r.risks} sources={sources} />
-        </Section>
-      )}
-
-      {r.questions.length > 0 && (
-        <Section title="Questions worth asking" count={r.questions.length}>
-          <ul className="space-y-4">
-            {r.questions.map((q, i) => (
-              <li key={i} className="text-[14px] leading-snug">
-                <p className="font-medium">{q.question}</p>
-                {q.why && <p className="mt-0.5 text-muted">{q.why}</p>}
-                {q.ask && (
-                  <div className="mt-2">
-                    <NetworkLine hint={q.ask} />
-                  </div>
-                )}
-              </li>
-            ))}
-          </ul>
-        </Section>
-      )}
-
-      <Section title="Sources read" count={r.sources.length} open={false}>
-        <ul className="space-y-2 text-[14px]">
-          {r.sources.map((s) => (
-            <li key={s.id} className="flex gap-2">
-              <span className="num w-7 shrink-0 text-[12px] font-medium text-muted">{s.id}</span>
-              <span className="min-w-0 flex-1">
-                {s.url ? (
-                  <a href={s.url} target="_blank" rel="noopener noreferrer" className="hover:text-accent">
-                    {s.title} <ArrowUpRight size={12} className="inline" />
-                  </a>
-                ) : (
-                  s.title
-                )}
-                {s.pages > 0 && (
-                  <span className="block text-[12px] text-muted">
-                    {s.pages} pages{s.used_pages && s.used_pages < s.pages ? ` · ${s.used_pages} most relevant read` : ""}
+      <div key={tab} className="animate-fade-in motion-reduce:animate-none">
+        {tab === "summary" && (
+          <>
+            {r.summary ? (
+              <Panel>
+                <p className="eyebrow mb-1.5">What changed</p>
+                <p className="text-[15px] leading-relaxed">{r.summary}</p>
+              </Panel>
+            ) : (
+              <Panel>
+                <p className="text-[14px] text-muted">The write-up didn&apos;t finish last time. Refresh to complete it; everything already read is reused.</p>
+              </Panel>
+            )}
+            {score.length > 0 && (
+              <button onClick={() => jump("promises")} className="card mx-4 mt-3 flex w-[calc(100%-2rem)] items-center justify-between gap-3 p-4 text-left">
+                <span>
+                  <span className="block text-[15px] font-semibold">Promised vs delivered</span>
+                  <span className="mt-1.5 flex flex-wrap gap-1.5">
+                    {score.map(({ v, n }) => (
+                      <span key={v} className={`num rounded-full px-2 py-0.5 text-[12px] font-medium ${VERDICT[v].cls}`}>
+                        {n} {VERDICT[v].label.toLowerCase()}
+                      </span>
+                    ))}
+                  </span>
+                </span>
+                <ChevronRight size={16} className="shrink-0 text-muted" />
+              </button>
+            )}
+            {(r.bull[0] || r.bear[0]) && (
+              <button onClick={() => jump("views")} className="card mx-4 mt-3 block w-[calc(100%-2rem)] space-y-3 p-4 text-left">
+                {r.bull[0] && (
+                  <span className="block text-[14px] leading-snug">
+                    <span className="mb-0.5 flex items-center gap-1.5 text-xs font-semibold text-up-ink">
+                      <TrendingUp size={14} /> Strongest bull point
+                    </span>
+                    {r.bull[0].text}
                   </span>
                 )}
-              </span>
-            </li>
-          ))}
-        </ul>
-      </Section>
+                {r.bear[0] && (
+                  <span className="block text-[14px] leading-snug">
+                    <span className="mb-0.5 flex items-center gap-1.5 text-xs font-semibold text-down-ink">
+                      <TrendingDown size={14} /> Strongest bear point
+                    </span>
+                    {r.bear[0].text}
+                  </span>
+                )}
+                <span className="flex items-center gap-0.5 text-xs font-medium text-accent">
+                  Both cases, themes and risks <ChevronRight size={14} />
+                </span>
+              </button>
+            )}
+            {r.questions[0] && (
+              <button onClick={() => jump("questions")} className="card mx-4 mt-3 block w-[calc(100%-2rem)] p-4 text-left">
+                <span className="eyebrow mb-1 block">Worth asking</span>
+                <span className="block text-[14px] font-medium leading-snug">{r.questions[0].question}</span>
+                {r.questions[0].ask && <span className="mt-1 block text-xs text-accent">Ask {r.questions[0].ask.name}</span>}
+              </button>
+            )}
+          </>
+        )}
 
-      {r.notes.length > 0 && (
-        <p className="mx-4 mt-4 text-[12px] leading-relaxed text-muted">
-          Some documents weren&apos;t read this time. Refresh to include them; everything already read is reused.
-        </p>
-      )}
+        {tab === "promises" && (
+          <>
+            {r.promised_vs_delivered.length > 0 && (
+              <Panel title="Promised vs delivered" count={r.promised_vs_delivered.length}>
+                <Promises items={r.promised_vs_delivered} sources={sources} />
+              </Panel>
+            )}
+            {r.guidance.length > 0 && (
+              <Panel title="Guidance on record" count={r.guidance.length}>
+                <ul className="divide-y divide-line">
+                  {r.guidance.map((g, i) => (
+                    <li key={i} className="py-2.5 text-[14px] leading-snug">
+                      <p className="text-muted">
+                        {g.metric}
+                        {g.horizon && <span className="text-[12px]"> · {g.horizon}</span>}
+                      </p>
+                      <p className="mt-0.5 font-semibold">
+                        {g.value}
+                        <Cites cites={g.cites} sources={sources} />
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              </Panel>
+            )}
+          </>
+        )}
+
+        {tab === "timeline" && (
+          <Panel title="Major movements, last 12 months" count={r.movements.length}>
+            <Timeline items={r.movements} sources={sources} />
+          </Panel>
+        )}
+
+        {tab === "views" && (
+          <>
+            {(r.bull.length > 0 || r.bear.length > 0) && (
+              <Panel>
+                <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-up-ink">
+                  <TrendingUp size={14} /> Bull case
+                </p>
+                <Points items={r.bull} sources={sources} />
+                <p className="mb-2 mt-4 flex items-center gap-1.5 text-xs font-semibold text-down-ink">
+                  <TrendingDown size={14} /> Bear case
+                </p>
+                <Points items={r.bear} sources={sources} />
+              </Panel>
+            )}
+            {r.themes.length > 0 && (
+              <Panel title="Themes" count={r.themes.length}>
+                <Points items={r.themes} sources={sources} />
+              </Panel>
+            )}
+            {r.risks.length > 0 && (
+              <Panel title="Risks" count={r.risks.length}>
+                <Points items={r.risks} sources={sources} />
+              </Panel>
+            )}
+          </>
+        )}
+
+        {tab === "questions" && (
+          <Panel title="Questions worth asking" count={r.questions.length}>
+            <ul className="space-y-4">
+              {r.questions.map((q, i) => (
+                <li key={i} className="text-[14px] leading-snug">
+                  <p className="font-medium">{q.question}</p>
+                  {q.why && <p className="mt-0.5 text-muted">{q.why}</p>}
+                  {q.ask && (
+                    <div className="mt-2">
+                      <NetworkLine hint={q.ask} />
+                    </div>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </Panel>
+        )}
+
+        {tab === "sources" && (
+          <Panel title="Sources read" count={r.sources.length}>
+            <ul className="space-y-2 text-[14px]">
+              {r.sources.map((s) => (
+                <li key={s.id} className="flex gap-2">
+                  <span className="num w-7 shrink-0 text-[12px] font-medium text-muted">{s.id}</span>
+                  <span className="min-w-0 flex-1">
+                    {s.url ? (
+                      <a href={s.url} target="_blank" rel="noopener noreferrer" className="hover:text-accent">
+                        {s.title} <ArrowUpRight size={12} className="inline" />
+                      </a>
+                    ) : (
+                      s.title
+                    )}
+                    {s.pages > 0 && (
+                      <span className="block text-[12px] text-muted">
+                        {s.pages} pages{s.used_pages && s.used_pages < s.pages ? ` · ${s.used_pages} most relevant read` : ""}
+                      </span>
+                    )}
+                  </span>
+                </li>
+              ))}
+            </ul>
+            {r.notes.length > 0 && (
+              <p className="mt-4 text-[12px] leading-relaxed text-muted">
+                Some documents weren&apos;t read this time. Refresh to include them; everything already read is reused.
+              </p>
+            )}
+          </Panel>
+        )}
+      </div>
     </>
   );
 }
