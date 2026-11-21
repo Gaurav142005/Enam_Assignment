@@ -1,13 +1,14 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono, Space_Grotesk } from "next/font/google";
+import localFont from "next/font/local";
 import { TabBar } from "@/components/TabBar";
 import { Welcome } from "@/components/Welcome";
 import { themeBootScript } from "@/lib/theme";
 import "./globals.css";
 
-const sans = Geist({ variable: "--font-sans", subsets: ["latin"] });
-const mono = Geist_Mono({ variable: "--font-mono", subsets: ["latin"] });
-const display = Space_Grotesk({ variable: "--font-display", subsets: ["latin"], weight: ["500", "600", "700"] });
+// Self-hosted (latin, variable weight) so the build never depends on reaching Google Fonts.
+const sans = localFont({ src: "./fonts/geist.woff2", variable: "--font-sans", weight: "100 900", display: "swap" });
+const mono = localFont({ src: "./fonts/geist-mono.woff2", variable: "--font-mono", weight: "100 900", display: "swap" });
+const display = localFont({ src: "./fonts/space-grotesk.woff2", variable: "--font-display", weight: "300 700", display: "swap" });
 
 export const metadata: Metadata = {
   title: "FINN",
