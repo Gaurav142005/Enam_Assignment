@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import math
 import sqlite3
 from datetime import datetime, time, timedelta, timezone
 
@@ -29,6 +30,8 @@ def fetch_eod(ticker: str, period: str = "5y") -> list[dict]:
         d = ts.date()
         if d == now.date() and now.time() < MARKET_CLOSE:
             continue  # today's bar is still forming — not end-of-day yet
+        if any(math.isnan(r[k]) for k in ("Open", "High", "Low", "Close", "Volume")):
+            continue  # incomplete bar (Yahoo hasn't published the close yet); the next fetch fills it in
         rows.append(
             {"ticker": ticker, "date": d.isoformat(), "open": float(r["Open"]), "high": float(r["High"]),
              "low": float(r["Low"]), "close": float(r["Close"]), "volume": int(r["Volume"])}

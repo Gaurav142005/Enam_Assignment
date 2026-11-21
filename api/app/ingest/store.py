@@ -138,6 +138,8 @@ def _ensure_schema(con: sqlite3.Connection, path: str) -> None:
                 con.execute(ddl)
             except sqlite3.OperationalError:
                 pass  # already applied
+        # Yahoo sometimes returns a session with no close yet (NaN → NULL); one such row breaks every return calc.
+        con.execute("DELETE FROM eod WHERE close IS NULL")
         con.commit()
         _ready.add(path)
 
