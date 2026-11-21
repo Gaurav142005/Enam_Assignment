@@ -22,6 +22,10 @@ class FetchError(RuntimeError):
     pass
 
 
+class TooLarge(FetchError):
+    """The file is bigger than the caller's cap. That won't change on a retry."""
+
+
 def get(url: str, *, params: dict | None = None, referer: str | None = None, accept: str = "*/*", tries: int = 3) -> httpx.Response:
     host = urlparse(url).netloc
     headers = {"Accept": accept}
@@ -61,12 +65,12 @@ def get_bytes(url: str, *, referer: str | None = None, accept: str = "*/*", max_
                 raise FetchError(f"{url}: HTTP {r.status_code}")
             size = int(r.headers.get("content-length") or 0)
             if size > max_bytes:
-                raise FetchError(f"{url}: {size / 1e6:.0f} MB is over the {max_bytes / 1e6:.0f} MB limit")
+                raise TooLarge(f"{url}: {size / 1e6:.0f} MB is over the {max_bytes / 1e6:.0f} MB limit")
             buf = bytearray()
             for chunk in r.iter_bytes():
                 buf.extend(chunk)
                 if len(buf) > max_bytes:
-                    raise FetchError(f"{url}: over the {max_bytes / 1e6:.0f} MB limit")
+                    raise TooLarge(f"{url}: over the {max_bytes / 1e6:.0f} MB limit")
                 if time.monotonic() - start > deadline:
                     raise FetchError(f"{url}: download took over {deadline:.0f}s")
             return bytes(buf)

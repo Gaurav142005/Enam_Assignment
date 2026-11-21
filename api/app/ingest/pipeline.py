@@ -113,6 +113,8 @@ def ingest_company(
                         pdf_text[r["id"]] = documents.text(con, r["attachment_url"])
                         if x := documents.xbrl(con, r["attachment_url"]):
                             xbrl[r["id"]] = x
+                    except documents.Skipped:
+                        pass  # too big last time too; logged once already
                     except http.FetchError as e:
                         log.warning("attachment %s: %s", r["attachment_url"], e)
             con.commit()  # release the write lock before slow model calls
@@ -130,6 +132,8 @@ def ingest_company(
                             documents.ingest(con, r["attachment_url"], ticker=ticker, kind="filing", period=r["filed_at"][:10],
                                              title=r["nse_desc"], max_pages=6)
                             pdf_text[r["id"]] = documents.text(con, r["attachment_url"], max_pages=3)
+                        except documents.Skipped:
+                            pass
                         except http.FetchError as e:
                             log.warning("attachment %s: %s", r["attachment_url"], e)
                 con.commit()

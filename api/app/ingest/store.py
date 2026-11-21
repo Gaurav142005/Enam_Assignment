@@ -26,6 +26,10 @@ CREATE TABLE IF NOT EXISTS eod (
   ticker TEXT, date TEXT, open REAL, high REAL, low REAL, close REAL, volume INTEGER,
   PRIMARY KEY (ticker, date)
 );
+-- Attachments too big to read under a given cap, so the hourly refresh doesn't download them again.
+CREATE TABLE IF NOT EXISTS skipped_documents (
+  url TEXT PRIMARY KEY, max_bytes INTEGER, reason TEXT, skipped_at TEXT
+);
 CREATE TABLE IF NOT EXISTS eod_meta (
   ticker TEXT PRIMARY KEY, fetched_at TEXT, period TEXT
 );

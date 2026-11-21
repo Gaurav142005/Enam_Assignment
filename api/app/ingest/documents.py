@@ -14,6 +14,10 @@ from app.ingest import http, store
 _REFERER = {"nsearchives.nseindia.com": "https://www.nseindia.com/", "www.bseindia.com": "https://www.bseindia.com/"}
 
 
+class Skipped(http.FetchError):
+    """Already known to be over this cap; not downloaded again."""
+
+
 # Filing attachments only need their first pages; transcripts and annual reports are the real reading.
 LIMITS = {"filing": (12_000_000, 25.0), "default": (60_000_000, 90.0)}
 
@@ -50,7 +54,15 @@ def ingest(con: sqlite3.Connection, url: str, *, ticker: str, kind: str, period:
     row = con.execute("SELECT pages FROM documents WHERE url=? AND pages IS NOT NULL", (url,)).fetchone()
     if row:
         return row["pages"]
-    sha, data, xbrl = _download(url, kind)
+    max_bytes = LIMITS.get(kind, LIMITS["default"])[0]
+    skip = con.execute("SELECT reason FROM skipped_documents WHERE url=? AND max_bytes>=?", (url, max_bytes)).fetchone()
+    if skip:
+        raise Skipped(skip["reason"])
+    try:
+        sha, data, xbrl = _download(url, kind)
+    except http.TooLarge as e:
+        store.upsert(con, "skipped_documents", [{"url": url, "max_bytes": max_bytes, "reason": str(e), "skipped_at": store.now_iso()}])
+        raise
     pages: list[dict] = []
     if data:
         import pymupdf  # ~35 MB: loaded the first time a PDF is read
